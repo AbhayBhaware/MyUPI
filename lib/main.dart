@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'tts_service.dart';
 import 'upi_detector.dart';
 
 void main() {
@@ -77,12 +78,23 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   StreamSubscription<dynamic>? _notificationSubscription;
 
+  /// Convenience getter for TTS status (drives UI rebuild).
+  TtsStatus get _ttsStatus => TtsService.instance.status;
+  String? get _ttsSpeech => TtsService.instance.currentSpeech;
+
   // ── Lifecycle ────────────────────────────────────────────────────────────────
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Initialize TTS and register status-change callback for UI updates.
+    TtsService.instance.onStatusChanged = () {
+      if (mounted) setState(() {});
+    };
+    TtsService.instance.initialize();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAccess();
       _startListening();
@@ -92,6 +104,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   @override
   void dispose() {
     _notificationSubscription?.cancel();
+    TtsService.instance.onStatusChanged = null;
+    TtsService.instance.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -207,6 +221,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       'Status: ${detection.isPayment ? "PAYMENT" : "NOT_PAYMENT"} | '
       'Reason: ${detection.reason}',
     );
+    // NOTE: Payment TTS is now handled by NativeTtsHelper in the Kotlin
+    // NotificationListenerService — this ensures speech works even when
+    // the Flutter UI is closed. Do NOT call TtsService.speakPayment() here
+    // to avoid double-speaking the same payment.
 
     final item = NotificationItem(
       packageName: packageName,
@@ -255,6 +273,16 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
           // ── Access status ────────────────────────────────────────────────
           _buildAccessStatus(),
+
+          const SizedBox(height: 12),
+
+          // ── Soundbox status ──────────────────────────────────────────────
+          _buildSoundboxStatus(),
+
+          const SizedBox(height: 8),
+
+          // ── Test Soundbox button ─────────────────────────────────────────
+          _buildTestSoundboxButton(),
 
           const SizedBox(height: 20),
           const Divider(),
@@ -318,6 +346,78 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   // ── Widget helpers ───────────────────────────────────────────────────────────
+
+  Widget _buildSoundboxStatus() {
+    switch (_ttsStatus) {
+      case TtsStatus.uninitialized:
+        return Chip(
+          avatar: const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          label: const Text('🔊 Soundbox initializing…'),
+        );
+
+      case TtsStatus.ready:
+        return Chip(
+          avatar: const Icon(Icons.volume_up, color: Colors.deepPurple),
+          label: const Text('🟢 Background Soundbox Ready'),
+          backgroundColor: Colors.deepPurple.withAlpha(18),
+        );
+
+      case TtsStatus.speaking:
+        return Chip(
+          avatar: const Icon(Icons.graphic_eq, color: Colors.indigo),
+          label: Text(
+            '🔊 Speaking: "${_ttsSpeech ?? "..."}"',
+            overflow: TextOverflow.ellipsis,
+          ),
+          backgroundColor: Colors.indigo.withAlpha(18),
+        );
+
+      case TtsStatus.unavailable:
+        return const Chip(
+          avatar: Icon(Icons.volume_off, color: Colors.orange),
+          label: Text('⚠️ Text-to-Speech unavailable'),
+        );
+
+      case TtsStatus.error:
+        return Chip(
+          avatar: const Icon(Icons.error_outline, color: Colors.red),
+          label: const Text('⚠️ Soundbox error — will retry'),
+          backgroundColor: Colors.red.withAlpha(15),
+        );
+    }
+  }
+
+  Widget _buildTestSoundboxButton() {
+    final isUnavailable = _ttsStatus == TtsStatus.unavailable;
+    return Row(
+      children: [
+        OutlinedButton.icon(
+          onPressed: isUnavailable
+              ? null
+              : () async {
+                  // Route through native Kotlin TTS (same engine as payments).
+                  try {
+                    await _methodChannel.invokeMethod('speakTest');
+                  } on PlatformException catch (_) {
+                    // Fallback: flutter_tts (e.g. during testing on emulator).
+                    TtsService.instance.speakTest();
+                  }
+                },
+          icon: const Icon(Icons.play_circle_outline),
+          label: const Text('Test Soundbox'),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '(dev test)',
+          style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+        ),
+      ],
+    );
+  }
 
   Widget _buildAccessStatus() {
     if (_notificationAccessEnabled == null) {

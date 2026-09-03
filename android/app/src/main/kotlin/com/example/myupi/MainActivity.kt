@@ -18,7 +18,7 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        // ── MethodChannel (permission check + open settings) ──────────────────
+        // ── MethodChannel (permission check + open settings + TTS test) ──────
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, METHOD_CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -31,6 +31,12 @@ class MainActivity : FlutterActivity() {
                         val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         startActivity(intent)
+                        result.success(null)
+                    }
+                    "speakTest" -> {
+                        // Route Test Soundbox button through native TTS.
+                        // This uses the same engine as real payment announcements.
+                        PaymentNotificationListener.ttsHelper?.speakTest()
                         result.success(null)
                     }
                     else -> result.notImplemented()

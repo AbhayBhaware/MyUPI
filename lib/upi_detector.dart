@@ -69,7 +69,10 @@ const Map<String, String> kUpiAppPackages = {
   'net.one97.paytm': 'Paytm',
   'com.google.android.apps.nbu.paisa.user': 'Google Pay',
   'in.org.npci.upiapp': 'BHIM',
-  'com.amazon.mShop.android.shopping': 'Amazon Pay',
+  // Correct Amazon Pay package (confirmed via reference format).
+  // The old entry 'com.amazon.mShop.android.shopping' is intentionally
+  // replaced — only one Amazon Pay package should be in the allowlist.
+  'in.amazon.mShop.android.shopping': 'Amazon Pay',
   'com.mobikwik_new': 'MobiKwik',
   'com.freecharge.android': 'Freecharge',
   'com.axis.mobile': 'Axis Mobile',
@@ -232,10 +235,409 @@ class _PhonePeDetector {
   }
 }
 
-// ─── Generic UPI detector (Paytm, GPay, BHIM, others) ────────────────────────
+// ─── Paytm-specific detector ─────────────────────────────────────────────────
 //
-// Used when an app-specific detector has not yet been implemented.
-// Amount extraction is NOT attempted — set to null.
+// Confirmed incoming-payment notification format (from real device test):
+//
+//   Title: "PAYMENT"
+//   Text:  "Received ₹1 from Kaushal · Deposited in you..."
+//
+// Pattern: Received ₹<amount> from <sender> [optional trailing text]
+//
+// The amount can be:
+//   • Integer:              1, 10, 500
+//   • Comma-formatted:      1,250  10,00,000
+//   • Decimal:              25.50
+//   • Comma + decimal:      1,250.75
+//
+// IMPORTANT:
+//   • "Received ₹<amount> from" is required — loose keywords like just
+//     "Received" or just "₹" are NOT sufficient to confirm a payment.
+//   • Outgoing patterns like "Sent ₹500 to Rahul" do NOT match.
+//   • SMS/Google Messages notifications never reach this class because
+//     com.google.android.apps.messaging is not in kUpiAppPackages.
+
+class _PaytmDetector {
+  // Regex: "received ₹<amount> from" — case-insensitive.
+  // Trailing content after sender is intentionally not constrained,
+  // so "Received ₹1 from Kaushal · Deposited in you..." is matched.
+  static final _incomingPattern = RegExp(
+    r'received\s+₹\s*([\d,]+(?:\.\d{1,2})?)\s+from',
+    caseSensitive: false,
+  );
+
+  /// Negatives that indicate a non-incoming-payment Paytm notification.
+  static const _negatives = [
+    'failed',
+    'failure',
+    'declined',
+    'pending',
+    'cancelled',
+    'cancel',
+    'refund',
+    'refunded',
+    'reversed',
+    'expired',
+    'request',
+    'collect request',
+    'reminder',
+    'debit',
+    'debited',
+    'sent to',
+    'paid to',
+  ];
+
+  static PaymentDetectionResult detect({
+    required String packageName,
+    required String appName,
+    required String title,
+    required String text,
+  }) {
+    final combined = '${title.toLowerCase()} ${text.toLowerCase()}';
+
+    // 1. Check negatives first — any match means NOT a payment.
+    for (final neg in _negatives) {
+      if (combined.contains(neg)) {
+        return PaymentDetectionResult(
+          status: DetectionStatus.notPayment,
+          packageName: packageName,
+          title: title,
+          text: text,
+          appName: appName,
+          reason: 'Paytm: Negative signal found: "$neg"',
+        );
+      }
+    }
+
+    // 2. Try to match the confirmed incoming-payment pattern.
+    //    Search across title + text — Paytm may put text in either field.
+    final searchIn = '$title $text';
+    final match = _incomingPattern.firstMatch(searchIn);
+
+    if (match != null) {
+      final rawAmount = match.group(1) ?? '';
+      if (rawAmount.isNotEmpty) {
+        debugLog('Paytm incoming payment matched. Raw amount: "$rawAmount"');
+        return PaymentDetectionResult(
+          status: DetectionStatus.payment,
+          packageName: packageName,
+          title: title,
+          text: text,
+          appName: appName,
+          reason: 'Paytm incoming payment notification',
+          amount: rawAmount,
+          currency: '₹',
+        );
+      }
+    }
+
+    // 3. No matching pattern — not a payment we recognise.
+    return PaymentDetectionResult(
+      status: DetectionStatus.notPayment,
+      packageName: packageName,
+      title: title,
+      text: text,
+      appName: appName,
+      reason: 'Paytm notification does not match incoming-payment pattern.',
+    );
+  }
+}
+
+// ─── Google Pay-specific detector ────────────────────────────────────────────
+//
+// Reference incoming-payment notification format (NOT yet verified on device):
+//
+//   Title: "Kaushal Patil Dattakala: Kaushal Patil Dattakala"
+//   Text:  "Kaushal Patil Dattakala sent ₹1 to you."
+//
+// Pattern: <sender> sent ₹<amount> to you
+//
+// IMPORTANT:
+//   • "You sent ₹500 to Rahul" (outgoing) does NOT match because the regex
+//     requires text *before* "sent" that is NOT "you".
+//   • Bare "₹", "sent", or "payment" alone are NOT sufficient.
+
+class _GooglePayDetector {
+  // Regex: "<something-not-'you'> sent ₹<amount> to you"
+  // The leading \S+ ensures at least one non-whitespace sender token exists
+  // before the word "sent", which rules out "You sent ₹..."
+  static final _incomingPattern = RegExp(
+    r'(?<!\byou\b.{0,5})\bsent\s+₹\s*([\d,]+(?:\.\d{1,2})?)\s+to\s+you',
+    caseSensitive: false,
+  );
+
+  // Simpler complementary approach: reject if the text starts with "you sent"
+  static final _outgoingYouSent = RegExp(
+    r'^\s*you\s+sent\b',
+    caseSensitive: false,
+  );
+
+  static const _negatives = [
+    'failed',
+    'failure',
+    'declined',
+    'pending',
+    'cancelled',
+    'canceled',
+    'refund',
+    'refunded',
+    'reversed',
+    'expired',
+    'request',
+    'collect request',
+    'reminder',
+    'debit',
+    'debited',
+    'paid to',
+  ];
+
+  static PaymentDetectionResult detect({
+    required String packageName,
+    required String appName,
+    required String title,
+    required String text,
+  }) {
+    final combined = '${title.toLowerCase()} ${text.toLowerCase()}';
+    final searchIn = '$title $text';
+
+    // 1. Explicit outgoing rejection: "you sent ₹... to <someone>".
+    if (_outgoingYouSent.hasMatch(text) || _outgoingYouSent.hasMatch(title)) {
+      return PaymentDetectionResult(
+        status: DetectionStatus.notPayment,
+        packageName: packageName,
+        title: title,
+        text: text,
+        appName: appName,
+        reason: 'Google Pay: Outgoing payment ("you sent ...") — not incoming.',
+      );
+    }
+
+    // 2. Negative keywords.
+    for (final neg in _negatives) {
+      if (combined.contains(neg)) {
+        return PaymentDetectionResult(
+          status: DetectionStatus.notPayment,
+          packageName: packageName,
+          title: title,
+          text: text,
+          appName: appName,
+          reason: 'Google Pay: Negative signal found: "$neg"',
+        );
+      }
+    }
+
+    // 3. Match incoming-payment pattern: "<sender> sent ₹<amount> to you".
+    final match = _incomingPattern.firstMatch(searchIn);
+    if (match != null) {
+      final rawAmount = match.group(1) ?? '';
+      if (rawAmount.isNotEmpty) {
+        debugLog('Google Pay incoming payment matched. Amount: "$rawAmount"');
+        return PaymentDetectionResult(
+          status: DetectionStatus.payment,
+          packageName: packageName,
+          title: title,
+          text: text,
+          appName: appName,
+          reason: 'Google Pay incoming payment notification',
+          amount: rawAmount,
+          currency: '₹',
+        );
+      }
+    }
+
+    return PaymentDetectionResult(
+      status: DetectionStatus.notPayment,
+      packageName: packageName,
+      title: title,
+      text: text,
+      appName: appName,
+      reason: 'Google Pay: Notification does not match incoming-payment pattern.',
+    );
+  }
+}
+
+// ─── Amazon Pay-specific detector ─────────────────────────────────────────────
+//
+// Reference incoming-payment notification format (NOT yet verified on device):
+//
+//   Title: "Amazon Pay"
+//   Text:  "You received ₹1 from Kaushal Patil Dattakala."
+//
+// Pattern: You received ₹<amount> from <sender>
+
+class _AmazonPayDetector {
+  // Regex: "you received ₹<amount> from" — case-insensitive.
+  static final _incomingPattern = RegExp(
+    r'you\s+received\s+₹\s*([\d,]+(?:\.\d{1,2})?)\s+from',
+    caseSensitive: false,
+  );
+
+  static const _negatives = [
+    'failed',
+    'failure',
+    'declined',
+    'pending',
+    'cancelled',
+    'canceled',
+    'refund',
+    'refunded',
+    'reversed',
+    'expired',
+    'request',
+    'collect request',
+    'reminder',
+    'debit',
+    'debited',
+    'sent to',
+    'paid to',
+  ];
+
+  static PaymentDetectionResult detect({
+    required String packageName,
+    required String appName,
+    required String title,
+    required String text,
+  }) {
+    final combined = '${title.toLowerCase()} ${text.toLowerCase()}';
+    final searchIn = '$title $text';
+
+    // 1. Negative keywords first.
+    for (final neg in _negatives) {
+      if (combined.contains(neg)) {
+        return PaymentDetectionResult(
+          status: DetectionStatus.notPayment,
+          packageName: packageName,
+          title: title,
+          text: text,
+          appName: appName,
+          reason: 'Amazon Pay: Negative signal found: "$neg"',
+        );
+      }
+    }
+
+    // 2. Match incoming-payment pattern: "You received ₹<amount> from <sender>".
+    final match = _incomingPattern.firstMatch(searchIn);
+    if (match != null) {
+      final rawAmount = match.group(1) ?? '';
+      if (rawAmount.isNotEmpty) {
+        debugLog('Amazon Pay incoming payment matched. Amount: "$rawAmount"');
+        return PaymentDetectionResult(
+          status: DetectionStatus.payment,
+          packageName: packageName,
+          title: title,
+          text: text,
+          appName: appName,
+          reason: 'Amazon Pay incoming payment notification',
+          amount: rawAmount,
+          currency: '₹',
+        );
+      }
+    }
+
+    return PaymentDetectionResult(
+      status: DetectionStatus.notPayment,
+      packageName: packageName,
+      title: title,
+      text: text,
+      appName: appName,
+      reason: 'Amazon Pay: Notification does not match incoming-payment pattern.',
+    );
+  }
+}
+
+// ─── BHIM-specific detector ───────────────────────────────────────────────────
+//
+// Reference incoming-payment notification format (NOT yet verified on device):
+//
+//   Title: "BHIM"
+//   Text:  "₹1 received from Kaushal Patil Dattakala."
+//
+// Pattern: ₹<amount> received from <sender>
+
+class _BhimDetector {
+  // Regex: "₹<amount> received from" — case-insensitive.
+  static final _incomingPattern = RegExp(
+    r'₹\s*([\d,]+(?:\.\d{1,2})?)\s+received\s+from',
+    caseSensitive: false,
+  );
+
+  static const _negatives = [
+    'failed',
+    'failure',
+    'declined',
+    'pending',
+    'cancelled',
+    'canceled',
+    'refund',
+    'refunded',
+    'reversed',
+    'expired',
+    'request',
+    'collect request',
+    'reminder',
+    'debit',
+    'debited',
+    'sent to',
+    'paid to',
+  ];
+
+  static PaymentDetectionResult detect({
+    required String packageName,
+    required String appName,
+    required String title,
+    required String text,
+  }) {
+    final combined = '${title.toLowerCase()} ${text.toLowerCase()}';
+    final searchIn = '$title $text';
+
+    // 1. Negative keywords first.
+    for (final neg in _negatives) {
+      if (combined.contains(neg)) {
+        return PaymentDetectionResult(
+          status: DetectionStatus.notPayment,
+          packageName: packageName,
+          title: title,
+          text: text,
+          appName: appName,
+          reason: 'BHIM: Negative signal found: "$neg"',
+        );
+      }
+    }
+
+    // 2. Match incoming-payment pattern: "₹<amount> received from <sender>".
+    final match = _incomingPattern.firstMatch(searchIn);
+    if (match != null) {
+      final rawAmount = match.group(1) ?? '';
+      if (rawAmount.isNotEmpty) {
+        debugLog('BHIM incoming payment matched. Amount: "$rawAmount"');
+        return PaymentDetectionResult(
+          status: DetectionStatus.payment,
+          packageName: packageName,
+          title: title,
+          text: text,
+          appName: appName,
+          reason: 'BHIM incoming payment notification',
+          amount: rawAmount,
+          currency: '₹',
+        );
+      }
+    }
+
+    return PaymentDetectionResult(
+      status: DetectionStatus.notPayment,
+      packageName: packageName,
+      title: title,
+      text: text,
+      appName: appName,
+      reason: 'BHIM: Notification does not match incoming-payment pattern.',
+    );
+  }
+}
+
+// ─── Generic UPI detector (MobiKwik, Freecharge, bank apps, etc.) ─────────────
+//
+// True last-resort fallback — only used when no app-specific detector exists.
+// Amount extraction is NOT attempted.
 
 class _GenericUpiDetector {
   static PaymentDetectionResult detect({
@@ -323,7 +725,7 @@ class UpiNotificationDetector {
 
     debugLog('Detecting | Package: $packageName | Title: "$safeTitle" | Text: "$safeText"');
 
-    // 2. Route to app-specific detector.
+    // 2. Route to the appropriate app-specific detector.
     switch (packageName) {
       case 'com.phonepe.app':
       case 'com.phonepe.app.b2b':
@@ -334,8 +736,41 @@ class UpiNotificationDetector {
           text: safeText,
         );
 
+      case 'net.one97.paytm':
+        return _PaytmDetector.detect(
+          packageName: packageName,
+          appName: appName,
+          title: safeTitle,
+          text: safeText,
+        );
+
+      case 'com.google.android.apps.nbu.paisa.user':
+        return _GooglePayDetector.detect(
+          packageName: packageName,
+          appName: appName,
+          title: safeTitle,
+          text: safeText,
+        );
+
+      case 'in.amazon.mShop.android.shopping':
+        return _AmazonPayDetector.detect(
+          packageName: packageName,
+          appName: appName,
+          title: safeTitle,
+          text: safeText,
+        );
+
+      case 'in.org.npci.upiapp':
+        return _BhimDetector.detect(
+          packageName: packageName,
+          appName: appName,
+          title: safeTitle,
+          text: safeText,
+        );
+
       default:
-        // All other UPI apps use the generic detector for now.
+        // All other known UPI apps fall back to the generic keyword detector
+        // until their real notification format has been confirmed on a device.
         return _GenericUpiDetector.detect(
           packageName: packageName,
           appName: appName,
