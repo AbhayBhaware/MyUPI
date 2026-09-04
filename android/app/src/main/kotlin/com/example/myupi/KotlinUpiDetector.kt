@@ -51,10 +51,15 @@ private val UPI_PACKAGES: Map<String, String> = mapOf(
 // ─── Common negative keywords ─────────────────────────────────────────────────
 
 private val COMMON_NEGATIVES = listOf(
-    "failed", "failure", "declined", "pending", "cancelled", "canceled",
-    "refund", "refunded", "refunding", "reversed", "reversal", "expired",
-    "request", "collect request", "requesting", "remind", "reminder",
-    "debit", "debited", "paid to",
+    "failed", "failure", "declined", "pending",
+    "cancelled", "canceled", "cancel", "cancellation",
+    "refund", "refunded", "refunding",
+    "reversed", "reversal",
+    "expired",
+    "request", "collect request", "requesting",
+    "remind", "reminder",
+    "debit", "debited",
+    "paid to",
 )
 
 // ─── Amount regex ─────────────────────────────────────────────────────────────

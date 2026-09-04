@@ -2,24 +2,28 @@ package com.example.myupi
 
 // PaymentNotificationListener.kt
 //
-// MyUPI NotificationListenerService — Background Soundbox
+// MyUPI NotificationListenerService — Background Soundbox (Milestone 8)
 // -------------------------------------------------------
-// Architecture (Milestone 7):
+// Architecture:
 //
 //   Android notification
 //       ↓
 //   onNotificationPosted()
 //       ↓
-//   Dedup (seenKeys Set)          ← service-owned, survives Activity close
+//   Dedup (seenKeys Set)             ← service-owned, survives Activity close
 //       ↓
-//   KotlinUpiDetector.detect()   ← app-specific, strict, mirrors Dart rules
+//   KotlinUpiDetector.detect()      ← app-specific, strict, mirrors Dart rules
 //       ↓
-//   NativeTtsHelper.speakPayment() ← android.speech.tts — works with no Flutter
+//   SharedPreferencesManager         ← save payment history
 //       ↓
-//   EventChannel → Flutter UI    ← optional, best-effort, null-safe
+//   Soundbox ON?                     ← check persisted setting before speaking
+//       ↓
+//   NativeTtsHelper.speakPayment()  ← android.speech.tts — works with no Flutter
+//       ↓
+//   EventChannel → Flutter UI       ← optional, best-effort, null-safe
 //
 // The Flutter EventChannel / Flutter engine is NOT required for
-// background payment detection or TTS.
+// background payment detection, history, or TTS.
 
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
@@ -52,7 +56,9 @@ class PaymentNotificationListener : NotificationListenerService() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "PaymentNotificationListener created — initializing TTS.")
+        Log.d(TAG, "PaymentNotificationListener created — initializing storage and TTS.")
+        // Initialize persistent storage first (required before TTS reads speech rate).
+        SharedPreferencesManager.init(applicationContext)
         ttsHelper = NativeTtsHelper(applicationContext)
     }
 
@@ -93,18 +99,18 @@ class PaymentNotificationListener : NotificationListenerService() {
 
         // ── 1. Service-level deduplication ───────────────────────────────────
         // This runs before any detection. If we have already processed this
-        // exact notification (same key), skip detection AND TTS entirely.
+        // exact notification (same key), skip detection, history, and TTS.
         // We still forward to Flutter UI so the display can show it if needed.
         val isDuplicate: Boolean
         synchronized(seenKeys) {
             isDuplicate = !seenKeys.add(notificationKey)
-            // Keep the set from growing unbounded.
+            // Keep the set from growing unbounded (in-memory only).
             if (seenKeys.size > 300) seenKeys.clear()
         }
 
         if (isDuplicate) {
             Log.d(TAG, "Duplicate notification ignored — key: $notificationKey")
-            // Do NOT speak. Still send to Flutter if sink is available (UI update).
+            // Do NOT speak or save. Still forward to Flutter (UI update only).
             sendToFlutter(packageName, title, text, notificationKey)
             return
         }
@@ -126,14 +132,38 @@ class PaymentNotificationListener : NotificationListenerService() {
             "Reason: ${result.reason}"
         )
 
-        // ── 3. Native TTS — only for confirmed payments with extracted amount ─
+        // ── 3. Save to payment history (if valid payment with extracted amount) ─
         if (result.isPayment && !result.amount.isNullOrEmpty()) {
-            Log.d(TAG, "TTS: Payment detected — speaking amount: ${result.amount}")
-            ttsHelper?.speakPayment(result.amount)
-                ?: Log.w(TAG, "TTS: ttsHelper is null — cannot speak (service may be restarting).")
+            try {
+                SharedPreferencesManager.addPayment(
+                    amount  = result.amount,
+                    appName = result.appName,
+                )
+                Log.d(TAG, "Payment history: saved ₹${result.amount} from ${result.appName}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Payment history: save failed — ${e.message}. TTS will still proceed.")
+            }
         }
 
-        // ── 4. EventChannel → Flutter UI (best-effort, not required) ─────────
+        // ── 4. Native TTS — only if Soundbox is ON AND payment confirmed ─────
+        if (result.isPayment && !result.amount.isNullOrEmpty()) {
+            val soundboxEnabled = try {
+                SharedPreferencesManager.isSoundboxEnabled()
+            } catch (e: Exception) {
+                Log.e(TAG, "Could not read Soundbox setting — defaulting to ON: ${e.message}")
+                true
+            }
+
+            if (soundboxEnabled) {
+                Log.d(TAG, "TTS: Soundbox ON — speaking amount: ${result.amount}")
+                ttsHelper?.speakPayment(result.amount)
+                    ?: Log.w(TAG, "TTS: ttsHelper is null — cannot speak (service may be restarting).")
+            } else {
+                Log.d(TAG, "TTS: Soundbox OFF — payment detected but NOT speaking.")
+            }
+        }
+
+        // ── 5. EventChannel → Flutter UI (best-effort, not required) ─────────
         sendToFlutter(packageName, title, text, notificationKey)
     }
 

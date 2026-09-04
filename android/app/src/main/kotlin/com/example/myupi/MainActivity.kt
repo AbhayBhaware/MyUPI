@@ -11,17 +11,22 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
 
     companion object {
-        private const val METHOD_CHANNEL   = "com.example.myupi/notification_access"
-        private const val EVENT_CHANNEL    = "com.example.myupi/notification_stream"
+        private const val METHOD_CHANNEL = "com.example.myupi/notification_access"
+        private const val EVENT_CHANNEL  = "com.example.myupi/notification_stream"
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        // ── MethodChannel (permission check + open settings + TTS test) ──────
+        // Initialize SharedPreferences (safe to call multiple times — idempotent).
+        SharedPreferencesManager.init(applicationContext)
+
+        // ── MethodChannel ─────────────────────────────────────────────────────
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, METHOD_CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
+
+                    // ── Notification access ───────────────────────────────────
                     "isNotificationAccessEnabled" -> {
                         val enabledPackages =
                             NotificationManagerCompat.getEnabledListenerPackages(this)
@@ -33,12 +38,60 @@ class MainActivity : FlutterActivity() {
                         startActivity(intent)
                         result.success(null)
                     }
+
+                    // ── TTS test ──────────────────────────────────────────────
                     "speakTest" -> {
                         // Route Test Soundbox button through native TTS.
-                        // This uses the same engine as real payment announcements.
+                        // This is a dev/test action and does NOT save payment history.
                         PaymentNotificationListener.ttsHelper?.speakTest()
                         result.success(null)
                     }
+
+                    // ── Soundbox ON/OFF ───────────────────────────────────────
+                    "isSoundboxEnabled" -> {
+                        result.success(SharedPreferencesManager.isSoundboxEnabled())
+                    }
+                    "setSoundboxEnabled" -> {
+                        val enabled = call.argument<Boolean>("enabled") ?: true
+                        SharedPreferencesManager.setSoundboxEnabled(enabled)
+                        result.success(null)
+                    }
+
+                    // ── Speech speed ──────────────────────────────────────────
+                    "getSpeechSpeed" -> {
+                        result.success(SharedPreferencesManager.getSpeechSpeed())
+                    }
+                    "setSpeechSpeed" -> {
+                        val speed = call.argument<String>("speed") ?: "normal"
+                        try {
+                            SharedPreferencesManager.setSpeechSpeed(speed)
+                            // Apply immediately to running TTS engine.
+                            PaymentNotificationListener.ttsHelper?.updateSpeechRate()
+                        } catch (e: IllegalArgumentException) {
+                            result.error("INVALID_SPEED", e.message, null)
+                            return@setMethodCallHandler
+                        }
+                        result.success(null)
+                    }
+
+                    // ── Payment history ───────────────────────────────────────
+                    "getPaymentHistory" -> {
+                        val records = SharedPreferencesManager.getHistory()
+                        // Convert to a list of maps for Flutter (JSON-compatible).
+                        val list = records.map { rec ->
+                            mapOf(
+                                "amount"      to rec.amount,
+                                "appName"     to rec.appName,
+                                "timestampMs" to rec.timestampMs,
+                            )
+                        }
+                        result.success(list)
+                    }
+                    "clearPaymentHistory" -> {
+                        SharedPreferencesManager.clearHistory()
+                        result.success(null)
+                    }
+
                     else -> result.notImplemented()
                 }
             }

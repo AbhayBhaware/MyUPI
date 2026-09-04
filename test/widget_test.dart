@@ -1,30 +1,46 @@
-// This is a basic Flutter widget test.
+// test/widget_test.dart
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Smoke test — verifies MyUpiApp boots without crashing.
+// Detailed UPI detection tests are in test/upi_detector_test.dart.
 
-import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:myupi/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  // Stub every MethodChannel call so the widget can initialise without a
+  // real Android host.
+  TestWidgetsFlutterBinding.ensureInitialized();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  const channel = MethodChannel('com.example.myupi/notification_access');
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  setUp(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall call) async {
+      switch (call.method) {
+        case 'isNotificationAccessEnabled': return false;
+        case 'isSoundboxEnabled':           return true;
+        case 'getSpeechSpeed':              return 'normal';
+        case 'getPaymentHistory':           return <dynamic>[];
+        default:                            return null;
+      }
+    });
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
+  });
+
+  testWidgets('MyUpiApp smoke test — renders without crash',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const MyUpiApp());
+    await tester.pump(); // settle first frame
+
+    // The bottom navigation bar must be visible.
+    expect(find.text('Home'),     findsOneWidget);
+    expect(find.text('History'),  findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
   });
 }

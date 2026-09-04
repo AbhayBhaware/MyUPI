@@ -60,10 +60,11 @@ class NativeTtsHelper(context: Context) : TextToSpeech.OnInitListener {
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
             setLanguageWithFallback()
-            tts.setSpeechRate(0.9f)   // slightly slower than default for clarity
+            // Read persisted speech speed (Slow/Normal/Fast).
+            tts.setSpeechRate(SharedPreferencesManager.getSpeechRate())
             tts.setPitch(1.0f)
             isReady = true
-            Log.d(TAG, "TTS initialized successfully.")
+            Log.d(TAG, "TTS initialized successfully (rate=${SharedPreferencesManager.getSpeechRate()}).")
             drainQueue()             // speak anything that was queued before init
         } else {
             Log.e(TAG, "TTS initialization failed (status=$status). Background TTS unavailable.")
@@ -111,6 +112,19 @@ class NativeTtsHelper(context: Context) : TextToSpeech.OnInitListener {
     fun speakTest(text: String = "This is a MyUPI soundbox test.") {
         Log.d(TAG, "TTS test: \"$text\"")
         enqueue(text)
+    }
+
+    /**
+     * Apply a new speech rate immediately (called after user changes speed setting).
+     */
+    fun updateSpeechRate() {
+        val rate = SharedPreferencesManager.getSpeechRate()
+        try {
+            tts.setSpeechRate(rate)
+            Log.d(TAG, "TTS speech rate updated to: $rate")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to update speech rate: ${e.message}")
+        }
     }
 
     /** Release the TTS engine. Call from NotificationListenerService.onDestroy(). */

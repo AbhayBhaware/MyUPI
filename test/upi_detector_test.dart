@@ -426,4 +426,306 @@ void main() {
       expect(r.displayAmount, isNull);
     });
   });
+
+  // ─── Milestone 10: Additional hardening tests ─────────────────────────────
+
+  group('M10: PhonePe Business (b2b package)', () {
+    const phonepeBiz = 'com.phonepe.app.b2b';
+
+    test('Detects valid incoming payment via b2b package', () {
+      final r = _detect(package: phonepeBiz, text: 'sent ₹250 to you.');
+      expect(r.isPayment, isTrue);
+      expect(r.amount, '250');
+      expect(r.appName, 'PhonePe for Business');
+    });
+
+    test('Rejects outgoing via b2b package', () {
+      final r = _detect(package: phonepeBiz, text: '₹250 sent to Rahul');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('Rejects failed via b2b package', () {
+      final r = _detect(package: phonepeBiz, text: 'Payment failed ₹250');
+      expect(r.isPayment, isFalse);
+    });
+  });
+
+  group('M10: cancel / cancellation rejection', () {
+    test('PhonePe: rejects notification with "cancel"', () {
+      final r = _detect(package: _phonepe, text: 'sent ₹500 to you. cancel');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('PhonePe: rejects notification with "cancellation"', () {
+      final r = _detect(package: _phonepe, text: 'cancellation: sent ₹500 to you.');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('Paytm: rejects "Payment cancel ₹500"', () {
+      final r = _detect(package: _paytm, text: 'Payment cancel ₹500 from Rahul');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('Google Pay: rejects "Payment cancellation ₹500"', () {
+      final r = _detect(package: _gpay, text: 'Rahul sent ₹500 to you. Cancellation initiated.');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('Amazon Pay: rejects "cancel" keyword', () {
+      final r = _detect(package: _amazon, text: 'You received ₹500 from Rahul. Cancel requested.');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('BHIM: rejects "cancellation" keyword', () {
+      final r = _detect(package: _bhim, text: '₹500 received from Rahul. Cancellation.');
+      expect(r.isPayment, isFalse);
+    });
+  });
+
+  group('M10: collect request rejection', () {
+    test('PhonePe: rejects "collect request"', () {
+      final r = _detect(package: _phonepe, text: 'collect request ₹500 from Rahul');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('Paytm: rejects "Collect Request ₹500"', () {
+      final r = _detect(package: _paytm, text: 'Collect Request ₹500 from Rahul');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('Google Pay: rejects "collect request"', () {
+      final r = _detect(package: _gpay, text: 'Rahul sent a collect request ₹500 to you.');
+      expect(r.isPayment, isFalse);
+    });
+  });
+
+  group('M10: reversal / reversed rejection', () {
+    test('PhonePe: rejects "reversed"', () {
+      final r = _detect(package: _phonepe, text: 'sent ₹500 to you. Transaction reversed.');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('PhonePe: rejects "reversal"', () {
+      final r = _detect(package: _phonepe, text: 'Reversal: sent ₹500 to you.');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('Paytm: rejects "Reversal of ₹500"', () {
+      final r = _detect(package: _paytm, text: 'Reversal of ₹500 processed.');
+      expect(r.isPayment, isFalse);
+    });
+  });
+
+  group('M10: debited / paid to rejection', () {
+    test('PhonePe: rejects "debited"', () {
+      final r = _detect(package: _phonepe, text: '₹500 debited from your account');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('Paytm: rejects "paid to"', () {
+      final r = _detect(package: _paytm, text: '₹500 paid to merchant');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('BHIM: rejects "debited"', () {
+      final r = _detect(package: _bhim, text: '₹500 debited from your account');
+      expect(r.isPayment, isFalse);
+    });
+  });
+
+  group('M10: reminder rejection', () {
+    test('PhonePe: rejects "reminder"', () {
+      final r = _detect(package: _phonepe, text: 'Reminder: sent ₹500 to you.');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('Paytm: rejects "remind"', () {
+      final r = _detect(package: _paytm, text: 'Remind Rahul to pay ₹500');
+      expect(r.isPayment, isFalse);
+    });
+  });
+
+  group('M10: notification update duplicate scenario', () {
+    // Same payment from the same sender, notification updated with extra text.
+    // Both should be detected as payment (Flutter/Kotlin dedup by key prevents
+    // double-counting — the parser itself sees each independently).
+    // We verify that the AMOUNT is the same in both, so no false amount mismatch.
+
+    test('Original notification detected', () {
+      final r1 = _detect(
+        package: _paytm,
+        title: 'PAYMENT',
+        text: 'Received ₹500 from Rahul',
+      );
+      expect(r1.isPayment, isTrue);
+      expect(r1.amount, '500');
+    });
+
+    test('Updated notification (same payment) detected with same amount', () {
+      // Paytm sometimes appends "· Deposited in your account" as an update.
+      final r2 = _detect(
+        package: _paytm,
+        title: 'PAYMENT',
+        text: 'Received ₹500 from Rahul · Deposited in your account',
+      );
+      expect(r2.isPayment, isTrue);
+      expect(r2.amount, '500'); // Same amount — dedup is handled by notification key, not parser.
+    });
+
+    test('PhonePe extended text — same amount', () {
+      final r1 = _detect(package: _phonepe, text: 'sent ₹1 to you.');
+      final r2 = _detect(package: _phonepe, text: 'sent ₹1 to you. Tap to view details.');
+      expect(r1.amount, r2.amount);
+    });
+  });
+
+  group('M10: security boundary — unknown packages', () {
+    test('Fake payment app — rejected at package gate', () {
+      final r = _detect(
+        package: 'com.fake.payment.app',
+        text: 'You received ₹10,000 from Rahul',
+      );
+      expect(r.isPayment, isFalse);
+      expect(r.reason, contains('not a known UPI app'));
+    });
+
+    test('Bank SMS via messaging app — rejected', () {
+      final r = _detect(
+        package: 'com.google.android.apps.messaging',
+        text: 'Rs. 500 credited to your account',
+      );
+      expect(r.isPayment, isFalse);
+      expect(r.reason, contains('not a known UPI app'));
+    });
+
+    test('SMS Organizer — rejected', () {
+      final r = _detect(
+        package: 'com.microsoft.android.smsorganizer',
+        text: 'Received ₹500 from Rahul',
+      );
+      expect(r.isPayment, isFalse);
+      expect(r.reason, contains('not a known UPI app'));
+    });
+
+    test('Random package with perfect payment text — rejected', () {
+      final r = _detect(
+        package: 'com.some.random.notifier',
+        text: 'sent ₹500 to you.',
+      );
+      expect(r.isPayment, isFalse);
+      expect(r.reason, contains('not a known UPI app'));
+    });
+  });
+
+  group('M10: amount extraction safety', () {
+    test('Paytm: transaction ID after amount — only amount extracted', () {
+      final r = _detect(
+        package: _paytm,
+        text: 'Received ₹500 from Rahul. Txn ID: T2409041234567890',
+      );
+      expect(r.isPayment, isTrue);
+      expect(r.amount, '500'); // NOT the transaction ID digits
+    });
+
+    test('PhonePe: reference number in text — only amount extracted', () {
+      final r = _detect(
+        package: _phonepe,
+        text: 'sent ₹1,250 to you. Ref: 409041234567',
+      );
+      expect(r.isPayment, isTrue);
+      expect(r.amount, '1,250'); // NOT the reference number
+    });
+
+    test('Google Pay: UPI ID in notification — only amount extracted', () {
+      final r = _detect(
+        package: _gpay,
+        text: 'Rahul sent ₹100 to you. From rahul@upi',
+      );
+      expect(r.isPayment, isTrue);
+      expect(r.amount, '100');
+    });
+
+    test('BHIM: large amount with lakh formatting', () {
+      final r = _detect(package: _bhim, text: '₹1,00,000 received from Rahul.');
+      expect(r.isPayment, isTrue);
+      expect(r.amount, '1,00,000');
+    });
+
+    test('PhonePe: large amount with lakh formatting', () {
+      final r = _detect(package: _phonepe, text: 'sent ₹1,00,000 to you.');
+      expect(r.isPayment, isTrue);
+      expect(r.amount, '1,00,000');
+    });
+  });
+
+  group('M10: outgoing direction rejection — exhaustive', () {
+    test('PhonePe: "Sent ₹500 to Rahul" — rejected', () {
+      final r = _detect(package: _phonepe, text: 'Sent ₹500 to Rahul');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('PhonePe: "Paid ₹500 to merchant" — rejected', () {
+      final r = _detect(package: _phonepe, text: 'Paid ₹500 to merchant');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('Google Pay: "You sent ₹500 to Rahul" — rejected', () {
+      final r = _detect(package: _gpay, text: 'You sent ₹500 to Rahul.');
+      expect(r.isPayment, isFalse);
+      expect(r.reason, contains('Outgoing'));
+    });
+
+    test('Google Pay: "Sent ₹500 to Rahul" (no "you") — rejected by pattern miss', () {
+      final r = _detect(package: _gpay, text: 'Sent ₹500 to Rahul.');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('Paytm: "Sent ₹500 to Rahul" — rejected', () {
+      final r = _detect(package: _paytm, text: 'Sent ₹500 to Rahul');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('Amazon Pay: "You sent ₹500 to Rahul" — rejected', () {
+      final r = _detect(package: _amazon, text: 'You sent ₹500 to Rahul');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('BHIM: "₹500 sent to Rahul" — rejected', () {
+      final r = _detect(package: _bhim, text: '₹500 sent to Rahul.');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('Any UPI app: "Debited ₹500 from account" — rejected', () {
+      for (final pkg in [_phonepe, _paytm, _gpay, _amazon, _bhim]) {
+        final r = _detect(package: pkg, text: 'Debited ₹500 from your account');
+        expect(r.isPayment, isFalse,
+            reason: 'Debited must be rejected for $pkg');
+      }
+    });
+
+    test('Any UPI app: "Payment of ₹500 made to" — rejected', () {
+      for (final pkg in [_phonepe, _paytm, _gpay, _amazon, _bhim]) {
+        final r = _detect(package: pkg, text: 'Payment of ₹500 made to Rahul');
+        expect(r.isPayment, isFalse,
+            reason: 'Outgoing "made to" must be rejected for $pkg');
+      }
+    });
+  });
+
+  group('M10: refund rejection', () {
+    test('PhonePe: refund initiated — rejected', () {
+      final r = _detect(package: _phonepe, text: 'Refund of ₹500 initiated to your account');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('Paytm: refunded — rejected', () {
+      final r = _detect(package: _paytm, text: 'Refunded ₹500 to Rahul');
+      expect(r.isPayment, isFalse);
+    });
+
+    test('Google Pay: refunding — rejected', () {
+      final r = _detect(package: _gpay, text: 'Rahul sent ₹500 to you. Refunding.');
+      expect(r.isPayment, isFalse);
+    });
+  });
 }

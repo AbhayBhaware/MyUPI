@@ -95,6 +95,8 @@ const List<String> _genericNegativeKeywords = [
   'pending',
   'cancelled',
   'canceled',
+  'cancel',
+  'cancellation',
   'refund',
   'refunded',
   'refunding',
@@ -109,23 +111,7 @@ const List<String> _genericNegativeKeywords = [
   'debit',
   'debited',
   'paid to',
-];
-
-// ─── Positive signals — generic ───────────────────────────────────────────────
-
-const List<String> _genericPositiveKeywords = [
-  'received',
-  'credited',
-  'credit',
-  'money received',
-  'payment received',
-  'upi payment received',
-  'amount received',
-  'amount credited',
-  'rs. received',
-  'rs received',
-  '₹',
-  'inr',
+  'sent to',
 ];
 
 // ─── PhonePe-specific detector ────────────────────────────────────────────────
@@ -156,6 +142,9 @@ class _PhonePeDetector {
   );
 
   /// Negative keywords specific to PhonePe outgoing / non-payment notifications.
+  /// NOTE: 'sent to' is intentionally ABSENT — "sent ₹X to you" is the valid
+  /// incoming pattern. The regex will still reject bare "sent to Rahul" forms
+  /// because the pattern requires the full "sent ₹amount to you" structure.
   static const _negatives = [
     'failed',
     'failure',
@@ -163,12 +152,18 @@ class _PhonePeDetector {
     'pending',
     'cancelled',
     'canceled',
+    'cancel',
+    'cancellation',
     'refund',
     'refunded',
+    'refunding',
     'reversed',
+    'reversal',
     'expired',
     'request',
+    'collect request',
     'remind',
+    'reminder',
     'debit',
     'debited',
     'paid to',
@@ -273,13 +268,18 @@ class _PaytmDetector {
     'declined',
     'pending',
     'cancelled',
+    'canceled',
     'cancel',
+    'cancellation',
     'refund',
     'refunded',
+    'refunding',
     'reversed',
+    'reversal',
     'expired',
     'request',
     'collect request',
+    'remind',
     'reminder',
     'debit',
     'debited',
@@ -379,12 +379,17 @@ class _GooglePayDetector {
     'pending',
     'cancelled',
     'canceled',
+    'cancel',
+    'cancellation',
     'refund',
     'refunded',
+    'refunding',
     'reversed',
+    'reversal',
     'expired',
     'request',
     'collect request',
+    'remind',
     'reminder',
     'debit',
     'debited',
@@ -479,12 +484,17 @@ class _AmazonPayDetector {
     'pending',
     'cancelled',
     'canceled',
+    'cancel',
+    'cancellation',
     'refund',
     'refunded',
+    'refunding',
     'reversed',
+    'reversal',
     'expired',
     'request',
     'collect request',
+    'remind',
     'reminder',
     'debit',
     'debited',
@@ -568,12 +578,17 @@ class _BhimDetector {
     'pending',
     'cancelled',
     'canceled',
+    'cancel',
+    'cancellation',
     'refund',
     'refunded',
+    'refunding',
     'reversed',
+    'reversal',
     'expired',
     'request',
     'collect request',
+    'remind',
     'reminder',
     'debit',
     'debited',
@@ -636,8 +651,14 @@ class _BhimDetector {
 
 // ─── Generic UPI detector (MobiKwik, Freecharge, bank apps, etc.) ─────────────
 //
-// True last-resort fallback — only used when no app-specific detector exists.
-// Amount extraction is NOT attempted.
+// Last-resort fallback — only used when no app-specific detector exists.
+// Requires BOTH a positive keyword AND an amount-like pattern (₹\d).
+// Amount extraction is NOT attempted — format is not yet confirmed.
+// Conservative: an ambiguous notification is silently rejected.
+
+/// Matches a rupee amount pattern: ₹ followed immediately by a digit.
+/// Used to guard the generic detector against bare keyword-only matches.
+final _genericAmountPresent = RegExp(r'₹\s*\d', caseSensitive: false);
 
 class _GenericUpiDetector {
   static PaymentDetectionResult detect({
@@ -648,7 +669,7 @@ class _GenericUpiDetector {
   }) {
     final combined = '${title.toLowerCase()} ${text.toLowerCase()}';
 
-    // 1. Negative signals.
+    // 1. Negative signals — checked first.
     for (final neg in _genericNegativeKeywords) {
       if (combined.contains(neg)) {
         return PaymentDetectionResult(
@@ -662,9 +683,34 @@ class _GenericUpiDetector {
       }
     }
 
-    // 2. Positive signals.
+    // 2. Must have a ₹-amount pattern — bare keywords like 'received' alone
+    //    are insufficient to confirm a payment from an unverified app.
+    final hasAmount = _genericAmountPresent.hasMatch('$title $text');
+    if (!hasAmount) {
+      return PaymentDetectionResult(
+        status: DetectionStatus.notPayment,
+        packageName: packageName,
+        title: title,
+        text: text,
+        appName: appName,
+        reason: 'No ₹-amount pattern found — not confirming as payment.',
+      );
+    }
+
+    // 3. Positive signals — at least one must match.
     final matched = <String>[];
-    for (final pos in _genericPositiveKeywords) {
+    // Use a tighter subset — exclude bare '₹' and 'inr' as standalone signals.
+    const positiveSubset = [
+      'received',
+      'credited',
+      'credit',
+      'money received',
+      'payment received',
+      'upi payment received',
+      'amount received',
+      'amount credited',
+    ];
+    for (final pos in positiveSubset) {
       if (combined.contains(pos)) matched.add(pos);
     }
 
@@ -688,7 +734,7 @@ class _GenericUpiDetector {
       title: title,
       text: text,
       appName: appName,
-      reason: 'From UPI app "$appName" but no payment keywords found.',
+      reason: 'From UPI app "$appName" but no confirmed payment pattern found.',
     );
   }
 }
