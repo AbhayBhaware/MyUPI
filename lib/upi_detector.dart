@@ -14,10 +14,10 @@
 
 // ─── Result types ─────────────────────────────────────────────────────────────
 
-enum DetectionStatus { payment, notPayment }
+enum TrustLevel { high, medium, low }
 
 class PaymentDetectionResult {
-  final DetectionStatus status;
+  final TrustLevel trustLevel;
   final String packageName;
   final String title;
   final String text;
@@ -36,7 +36,7 @@ class PaymentDetectionResult {
   final String? currency;
 
   const PaymentDetectionResult({
-    required this.status,
+    required this.trustLevel,
     required this.packageName,
     required this.title,
     required this.text,
@@ -46,7 +46,7 @@ class PaymentDetectionResult {
     this.currency,
   });
 
-  bool get isPayment => status == DetectionStatus.payment;
+  bool get isPayment => trustLevel == TrustLevel.high || trustLevel == TrustLevel.medium;
 
   /// Display-ready amount string, e.g. "₹1,250" or null.
   String? get displayAmount {
@@ -183,7 +183,7 @@ class _PhonePeDetector {
     for (final neg in _negatives) {
       if (combined.contains(neg)) {
         return PaymentDetectionResult(
-          status: DetectionStatus.notPayment,
+          trustLevel: TrustLevel.low,
           packageName: packageName,
           title: title,
           text: text,
@@ -206,7 +206,7 @@ class _PhonePeDetector {
           'PhonePe incoming payment matched. Raw amount: "$rawAmount"',
         );
         return PaymentDetectionResult(
-          status: DetectionStatus.payment,
+          trustLevel: TrustLevel.high,
           packageName: packageName,
           title: title,
           text: text,
@@ -218,14 +218,12 @@ class _PhonePeDetector {
       }
     }
 
-    // 3. No matching pattern — not a payment we recognise.
-    return PaymentDetectionResult(
-      status: DetectionStatus.notPayment,
+    // 3. Fallback: Delegate to generic detector
+    return _GenericUpiDetector.detect(
       packageName: packageName,
+      appName: appName,
       title: title,
       text: text,
-      appName: appName,
-      reason: 'PhonePe notification does not match incoming-payment pattern.',
     );
   }
 }
@@ -299,7 +297,7 @@ class _PaytmDetector {
     for (final neg in _negatives) {
       if (combined.contains(neg)) {
         return PaymentDetectionResult(
-          status: DetectionStatus.notPayment,
+          trustLevel: TrustLevel.low,
           packageName: packageName,
           title: title,
           text: text,
@@ -319,7 +317,7 @@ class _PaytmDetector {
       if (rawAmount.isNotEmpty) {
         debugLog('Paytm incoming payment matched. Raw amount: "$rawAmount"');
         return PaymentDetectionResult(
-          status: DetectionStatus.payment,
+          trustLevel: TrustLevel.high,
           packageName: packageName,
           title: title,
           text: text,
@@ -331,14 +329,12 @@ class _PaytmDetector {
       }
     }
 
-    // 3. No matching pattern — not a payment we recognise.
-    return PaymentDetectionResult(
-      status: DetectionStatus.notPayment,
+    // 3. Fallback: Delegate to generic detector
+    return _GenericUpiDetector.detect(
       packageName: packageName,
+      appName: appName,
       title: title,
       text: text,
-      appName: appName,
-      reason: 'Paytm notification does not match incoming-payment pattern.',
     );
   }
 }
@@ -408,7 +404,7 @@ class _GooglePayDetector {
     // 1. Explicit outgoing rejection: "you sent ₹... to <someone>".
     if (_outgoingYouSent.hasMatch(text) || _outgoingYouSent.hasMatch(title)) {
       return PaymentDetectionResult(
-        status: DetectionStatus.notPayment,
+        trustLevel: TrustLevel.low,
         packageName: packageName,
         title: title,
         text: text,
@@ -421,7 +417,7 @@ class _GooglePayDetector {
     for (final neg in _negatives) {
       if (combined.contains(neg)) {
         return PaymentDetectionResult(
-          status: DetectionStatus.notPayment,
+          trustLevel: TrustLevel.low,
           packageName: packageName,
           title: title,
           text: text,
@@ -438,7 +434,7 @@ class _GooglePayDetector {
       if (rawAmount.isNotEmpty) {
         debugLog('Google Pay incoming payment matched. Amount: "$rawAmount"');
         return PaymentDetectionResult(
-          status: DetectionStatus.payment,
+          trustLevel: TrustLevel.high,
           packageName: packageName,
           title: title,
           text: text,
@@ -450,13 +446,11 @@ class _GooglePayDetector {
       }
     }
 
-    return PaymentDetectionResult(
-      status: DetectionStatus.notPayment,
+    return _GenericUpiDetector.detect(
       packageName: packageName,
+      appName: appName,
       title: title,
       text: text,
-      appName: appName,
-      reason: 'Google Pay: Notification does not match incoming-payment pattern.',
     );
   }
 }
@@ -515,7 +509,7 @@ class _AmazonPayDetector {
     for (final neg in _negatives) {
       if (combined.contains(neg)) {
         return PaymentDetectionResult(
-          status: DetectionStatus.notPayment,
+          trustLevel: TrustLevel.low,
           packageName: packageName,
           title: title,
           text: text,
@@ -532,7 +526,7 @@ class _AmazonPayDetector {
       if (rawAmount.isNotEmpty) {
         debugLog('Amazon Pay incoming payment matched. Amount: "$rawAmount"');
         return PaymentDetectionResult(
-          status: DetectionStatus.payment,
+          trustLevel: TrustLevel.high,
           packageName: packageName,
           title: title,
           text: text,
@@ -544,13 +538,11 @@ class _AmazonPayDetector {
       }
     }
 
-    return PaymentDetectionResult(
-      status: DetectionStatus.notPayment,
+    return _GenericUpiDetector.detect(
       packageName: packageName,
+      appName: appName,
       title: title,
       text: text,
-      appName: appName,
-      reason: 'Amazon Pay: Notification does not match incoming-payment pattern.',
     );
   }
 }
@@ -609,7 +601,7 @@ class _BhimDetector {
     for (final neg in _negatives) {
       if (combined.contains(neg)) {
         return PaymentDetectionResult(
-          status: DetectionStatus.notPayment,
+          trustLevel: TrustLevel.low,
           packageName: packageName,
           title: title,
           text: text,
@@ -626,7 +618,7 @@ class _BhimDetector {
       if (rawAmount.isNotEmpty) {
         debugLog('BHIM incoming payment matched. Amount: "$rawAmount"');
         return PaymentDetectionResult(
-          status: DetectionStatus.payment,
+          trustLevel: TrustLevel.high,
           packageName: packageName,
           title: title,
           text: text,
@@ -638,13 +630,11 @@ class _BhimDetector {
       }
     }
 
-    return PaymentDetectionResult(
-      status: DetectionStatus.notPayment,
+    return _GenericUpiDetector.detect(
       packageName: packageName,
+      appName: appName,
       title: title,
       text: text,
-      appName: appName,
-      reason: 'BHIM: Notification does not match incoming-payment pattern.',
     );
   }
 }
@@ -673,7 +663,7 @@ class _GenericUpiDetector {
     for (final neg in _genericNegativeKeywords) {
       if (combined.contains(neg)) {
         return PaymentDetectionResult(
-          status: DetectionStatus.notPayment,
+          trustLevel: TrustLevel.low,
           packageName: packageName,
           title: title,
           text: text,
@@ -688,7 +678,7 @@ class _GenericUpiDetector {
     final hasAmount = _genericAmountPresent.hasMatch('$title $text');
     if (!hasAmount) {
       return PaymentDetectionResult(
-        status: DetectionStatus.notPayment,
+        trustLevel: TrustLevel.low,
         packageName: packageName,
         title: title,
         text: text,
@@ -716,7 +706,7 @@ class _GenericUpiDetector {
 
     if (matched.isNotEmpty) {
       return PaymentDetectionResult(
-        status: DetectionStatus.payment,
+        trustLevel: TrustLevel.medium,
         packageName: packageName,
         title: title,
         text: text,
@@ -729,7 +719,7 @@ class _GenericUpiDetector {
     }
 
     return PaymentDetectionResult(
-      status: DetectionStatus.notPayment,
+      trustLevel: TrustLevel.low,
       packageName: packageName,
       title: title,
       text: text,
@@ -760,7 +750,7 @@ class UpiNotificationDetector {
     final appName = kUpiAppPackages[packageName];
     if (appName == null) {
       return PaymentDetectionResult(
-        status: DetectionStatus.notPayment,
+        trustLevel: TrustLevel.low,
         packageName: packageName,
         title: safeTitle,
         text: safeText,

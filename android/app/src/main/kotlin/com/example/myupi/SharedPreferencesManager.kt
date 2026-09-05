@@ -29,6 +29,7 @@ private const val PREFS_NAME        = "myupi_prefs"
 private const val KEY_SOUNDBOX_ON   = "soundbox_enabled"
 private const val KEY_SPEECH_SPEED  = "speech_speed"   // "slow" | "normal" | "fast"
 private const val KEY_HISTORY       = "payment_history" // JSON array
+private const val KEY_ONBOARDING    = "onboarding_completed" // bool
 private const val MAX_HISTORY_SIZE  = 1000
 
 // ─── Data class for a payment history record ──────────────────────────────────
@@ -36,6 +37,7 @@ private const val MAX_HISTORY_SIZE  = 1000
 data class PaymentRecord(
     val amount: String,
     val appName: String,
+    val trustLevel: String,
     val timestampMs: Long,
 )
 
@@ -59,6 +61,17 @@ object SharedPreferencesManager {
     fun setSoundboxEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_SOUNDBOX_ON, enabled).apply()
         Log.d(TAG, "Soundbox enabled: $enabled")
+    }
+
+    // ── Onboarding ────────────────────────────────────────────────────────────
+
+    /** Returns true if the user has completed first-time onboarding (default: false). */
+    fun isOnboardingCompleted(): Boolean = prefs.getBoolean(KEY_ONBOARDING, false)
+
+    /** Mark onboarding as completed. Irreversible from the app side. */
+    fun setOnboardingCompleted() {
+        prefs.edit().putBoolean(KEY_ONBOARDING, true).apply()
+        Log.d(TAG, "Onboarding marked complete.")
     }
 
     // ── Speech speed ──────────────────────────────────────────────────────────
@@ -89,11 +102,12 @@ object SharedPreferencesManager {
      * Duplicate protection is handled by the caller (seenKeys in the service).
      */
     @Synchronized
-    fun addPayment(amount: String, appName: String) {
+    fun addPayment(amount: String, appName: String, trustLevel: String) {
         val list = loadHistoryList().toMutableList()
         val record = JSONObject().apply {
             put("amount", amount)
             put("appName", appName)
+            put("trustLevel", trustLevel)
             put("timestampMs", System.currentTimeMillis())
         }
         // Insert at front (newest first).
@@ -115,6 +129,7 @@ object SharedPreferencesManager {
                 PaymentRecord(
                     amount      = obj.getString("amount"),
                     appName     = obj.getString("appName"),
+                    trustLevel  = obj.optString("trustLevel", "HIGH"),
                     timestampMs = obj.getLong("timestampMs"),
                 )
             } catch (e: Exception) {

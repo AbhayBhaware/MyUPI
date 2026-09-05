@@ -41,7 +41,7 @@ void main() {
   group('PhonePe detector (device-verified)', () {
     test('Detects ₹1 incoming payment', () {
       final r = _detect(package: _phonepe, title: 'Kaushal Patil Dattakala: Kaushal Patil Dattakala', text: 'sent ₹1 to you.');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '1');
       expect(r.currency, '₹');
       expect(r.appName, 'PhonePe');
@@ -50,51 +50,51 @@ void main() {
 
     test('Detects ₹500 incoming payment', () {
       final r = _detect(package: _phonepe, text: 'sent ₹500 to you.');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '500');
     });
 
     test('Detects ₹1,250 (comma-formatted) incoming payment', () {
       final r = _detect(package: _phonepe, text: 'sent ₹1,250 to you.');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '1,250');
     });
 
     test('Detects ₹25.50 (decimal) incoming payment', () {
       final r = _detect(package: _phonepe, text: 'sent ₹25.50 to you.');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '25.50');
     });
 
     test('Rejects outgoing: "₹500 sent to Rahul"', () {
       final r = _detect(package: _phonepe, text: '₹500 sent to Rahul');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Rejects "Payment failed ₹500"', () {
       final r = _detect(package: _phonepe, text: 'Payment failed ₹500');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
       expect(r.reason, contains('failed'));
     });
 
     test('Rejects "₹500 payment pending"', () {
       final r = _detect(package: _phonepe, text: '₹500 payment pending');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Rejects "Refund of ₹200 initiated"', () {
       final r = _detect(package: _phonepe, text: 'Refund of ₹200 initiated');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Rejects empty text', () {
       final r = _detect(package: _phonepe, text: '');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Rejects text with only ₹ symbol', () {
       final r = _detect(package: _phonepe, text: '₹');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
   });
 
@@ -105,7 +105,7 @@ void main() {
         title: 'PAYMENT',
         text: 'Received ₹1 from Kaushal · Deposited in you...',
       );
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '1');
       expect(r.currency, '₹');
       expect(r.appName, 'Paytm');
@@ -114,19 +114,19 @@ void main() {
 
     test('Detects ₹500 incoming', () {
       final r = _detect(package: _paytm, text: 'Received ₹500 from Amit');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '500');
     });
 
     test('Detects ₹1,250 comma-formatted', () {
       final r = _detect(package: _paytm, text: 'Received ₹1,250 from Priya');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '1,250');
     });
 
     test('Detects ₹25.50 decimal', () {
       final r = _detect(package: _paytm, text: 'Received ₹25.50 from Raj');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '25.50');
     });
 
@@ -135,33 +135,33 @@ void main() {
         package: _paytm,
         text: 'Received ₹500 from Rahul. Transaction ID 123456789',
       );
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '500');  // NOT 123456789
     });
 
     test('Rejects "Sent ₹500 to Rahul"', () {
       final r = _detect(package: _paytm, text: 'Sent ₹500 to Rahul');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Rejects payment failure', () {
       final r = _detect(package: _paytm, text: 'Payment of ₹500 failed');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Rejects pending', () {
       final r = _detect(package: _paytm, text: '₹500 payment pending');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Rejects refund', () {
       final r = _detect(package: _paytm, text: 'Refund of ₹200 processed');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Rejects empty text', () {
       final r = _detect(package: _paytm, title: 'PAYMENT', text: '');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
   });
 
@@ -172,7 +172,7 @@ void main() {
         title: 'Kaushal Patil Dattakala: Kaushal Patil Dattakala',
         text: 'Kaushal Patil Dattakala sent ₹1 to you.',
       );
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '1');
       expect(r.currency, '₹');
       expect(r.appName, 'Google Pay');
@@ -181,51 +181,51 @@ void main() {
 
     test('Detects ₹500 incoming', () {
       final r = _detect(package: _gpay, text: 'Rahul sent ₹500 to you.');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '500');
     });
 
     test('Detects ₹1,250 comma-formatted', () {
       final r = _detect(package: _gpay, text: 'Amit sent ₹1,250 to you.');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '1,250');
     });
 
     test('Detects ₹25.50 decimal', () {
       final r = _detect(package: _gpay, text: 'Priya sent ₹25.50 to you.');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '25.50');
     });
 
     test('Rejects outgoing: "You sent ₹500 to Rahul."', () {
       final r = _detect(package: _gpay, text: 'You sent ₹500 to Rahul.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
       expect(r.reason, contains('Outgoing'));
     });
 
     test('Rejects "Sent ₹500 to Rahul."', () {
       final r = _detect(package: _gpay, text: 'Sent ₹500 to Rahul.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Rejects "₹500 sent to Rahul."', () {
       final r = _detect(package: _gpay, text: '₹500 sent to Rahul.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Rejects payment failure', () {
       final r = _detect(package: _gpay, text: 'Rahul sent ₹500 to you. Payment failed.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Rejects pending', () {
       final r = _detect(package: _gpay, text: '₹500 payment pending');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Rejects empty text', () {
       final r = _detect(package: _gpay, text: '');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
   });
 
@@ -236,7 +236,7 @@ void main() {
         title: 'Amazon Pay',
         text: 'You received ₹1 from Kaushal Patil Dattakala.',
       );
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '1');
       expect(r.currency, '₹');
       expect(r.appName, 'Amazon Pay');
@@ -245,36 +245,36 @@ void main() {
 
     test('Detects ₹500 incoming', () {
       final r = _detect(package: _amazon, text: 'You received ₹500 from Amit');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '500');
     });
 
     test('Detects ₹1,250 comma-formatted', () {
       final r = _detect(package: _amazon, text: 'You received ₹1,250 from Rahul.');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '1,250');
     });
 
     test('Detects ₹25.50 decimal', () {
       final r = _detect(package: _amazon, text: 'You received ₹25.50 from Priya.');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '25.50');
     });
 
-    test('Rejects — "Received ₹500" alone (no "from")', () {
+    test('Medium Trust — "Received ₹500" alone (no "from")', () {
       // "received" without "you received ... from" structure
       final r = _detect(package: _amazon, text: 'Received ₹500');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.medium);
     });
 
     test('Rejects payment failure', () {
       final r = _detect(package: _amazon, text: 'You received ₹500 from Rahul. Payment failed.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Rejects empty text', () {
       final r = _detect(package: _amazon, text: '');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
   });
 
@@ -285,7 +285,7 @@ void main() {
         title: 'BHIM',
         text: '₹1 received from Kaushal Patil Dattakala.',
       );
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '1');
       expect(r.currency, '₹');
       expect(r.appName, 'BHIM');
@@ -294,45 +294,45 @@ void main() {
 
     test('Detects ₹500 incoming', () {
       final r = _detect(package: _bhim, text: '₹500 received from Rahul.');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '500');
     });
 
     test('Detects ₹1,250 comma-formatted', () {
       final r = _detect(package: _bhim, text: '₹1,250 received from Priya.');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '1,250');
     });
 
     test('Detects ₹25.50 decimal', () {
       final r = _detect(package: _bhim, text: '₹25.50 received from Raj.');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '25.50');
     });
 
     test('Rejects outgoing: "₹500 sent to Rahul."', () {
       final r = _detect(package: _bhim, text: '₹500 sent to Rahul.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Rejects "₹500 paid to Rahul."', () {
       final r = _detect(package: _bhim, text: '₹500 paid to Rahul.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Rejects payment failure', () {
       final r = _detect(package: _bhim, text: '₹500 received from Rahul. Payment failed.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Rejects pending', () {
       final r = _detect(package: _bhim, text: '₹500 payment pending');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Rejects empty text', () {
       final r = _detect(package: _bhim, text: '');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
   });
 
@@ -342,7 +342,7 @@ void main() {
         package: _messages,
         text: 'You have received a payment of Rs. 1.00 from Kaushal.',
       );
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
       expect(r.reason, contains('not a known UPI app'));
     });
 
@@ -351,7 +351,7 @@ void main() {
         package: 'com.whatsapp',
         text: 'Rahul: I sent you ₹500 via PhonePe',
       );
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
       expect(r.reason, contains('not a known UPI app'));
     });
 
@@ -360,7 +360,7 @@ void main() {
         package: 'com.some.random.app',
         text: 'You received ₹1 from someone',
       );
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
       expect(r.reason, contains('not a known UPI app'));
     });
   });
@@ -434,114 +434,114 @@ void main() {
 
     test('Detects valid incoming payment via b2b package', () {
       final r = _detect(package: phonepeBiz, text: 'sent ₹250 to you.');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '250');
       expect(r.appName, 'PhonePe for Business');
     });
 
     test('Rejects outgoing via b2b package', () {
       final r = _detect(package: phonepeBiz, text: '₹250 sent to Rahul');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Rejects failed via b2b package', () {
       final r = _detect(package: phonepeBiz, text: 'Payment failed ₹250');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
   });
 
   group('M10: cancel / cancellation rejection', () {
     test('PhonePe: rejects notification with "cancel"', () {
       final r = _detect(package: _phonepe, text: 'sent ₹500 to you. cancel');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('PhonePe: rejects notification with "cancellation"', () {
       final r = _detect(package: _phonepe, text: 'cancellation: sent ₹500 to you.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Paytm: rejects "Payment cancel ₹500"', () {
       final r = _detect(package: _paytm, text: 'Payment cancel ₹500 from Rahul');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Google Pay: rejects "Payment cancellation ₹500"', () {
       final r = _detect(package: _gpay, text: 'Rahul sent ₹500 to you. Cancellation initiated.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Amazon Pay: rejects "cancel" keyword', () {
       final r = _detect(package: _amazon, text: 'You received ₹500 from Rahul. Cancel requested.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('BHIM: rejects "cancellation" keyword', () {
       final r = _detect(package: _bhim, text: '₹500 received from Rahul. Cancellation.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
   });
 
   group('M10: collect request rejection', () {
     test('PhonePe: rejects "collect request"', () {
       final r = _detect(package: _phonepe, text: 'collect request ₹500 from Rahul');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Paytm: rejects "Collect Request ₹500"', () {
       final r = _detect(package: _paytm, text: 'Collect Request ₹500 from Rahul');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Google Pay: rejects "collect request"', () {
       final r = _detect(package: _gpay, text: 'Rahul sent a collect request ₹500 to you.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
   });
 
   group('M10: reversal / reversed rejection', () {
     test('PhonePe: rejects "reversed"', () {
       final r = _detect(package: _phonepe, text: 'sent ₹500 to you. Transaction reversed.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('PhonePe: rejects "reversal"', () {
       final r = _detect(package: _phonepe, text: 'Reversal: sent ₹500 to you.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Paytm: rejects "Reversal of ₹500"', () {
       final r = _detect(package: _paytm, text: 'Reversal of ₹500 processed.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
   });
 
   group('M10: debited / paid to rejection', () {
     test('PhonePe: rejects "debited"', () {
       final r = _detect(package: _phonepe, text: '₹500 debited from your account');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Paytm: rejects "paid to"', () {
       final r = _detect(package: _paytm, text: '₹500 paid to merchant');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('BHIM: rejects "debited"', () {
       final r = _detect(package: _bhim, text: '₹500 debited from your account');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
   });
 
   group('M10: reminder rejection', () {
     test('PhonePe: rejects "reminder"', () {
       final r = _detect(package: _phonepe, text: 'Reminder: sent ₹500 to you.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Paytm: rejects "remind"', () {
       final r = _detect(package: _paytm, text: 'Remind Rahul to pay ₹500');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
   });
 
@@ -585,7 +585,7 @@ void main() {
         package: 'com.fake.payment.app',
         text: 'You received ₹10,000 from Rahul',
       );
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
       expect(r.reason, contains('not a known UPI app'));
     });
 
@@ -594,7 +594,7 @@ void main() {
         package: 'com.google.android.apps.messaging',
         text: 'Rs. 500 credited to your account',
       );
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
       expect(r.reason, contains('not a known UPI app'));
     });
 
@@ -603,7 +603,7 @@ void main() {
         package: 'com.microsoft.android.smsorganizer',
         text: 'Received ₹500 from Rahul',
       );
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
       expect(r.reason, contains('not a known UPI app'));
     });
 
@@ -612,7 +612,7 @@ void main() {
         package: 'com.some.random.notifier',
         text: 'sent ₹500 to you.',
       );
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
       expect(r.reason, contains('not a known UPI app'));
     });
   });
@@ -623,7 +623,7 @@ void main() {
         package: _paytm,
         text: 'Received ₹500 from Rahul. Txn ID: T2409041234567890',
       );
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '500'); // NOT the transaction ID digits
     });
 
@@ -632,7 +632,7 @@ void main() {
         package: _phonepe,
         text: 'sent ₹1,250 to you. Ref: 409041234567',
       );
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '1,250'); // NOT the reference number
     });
 
@@ -641,19 +641,19 @@ void main() {
         package: _gpay,
         text: 'Rahul sent ₹100 to you. From rahul@upi',
       );
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '100');
     });
 
     test('BHIM: large amount with lakh formatting', () {
       final r = _detect(package: _bhim, text: '₹1,00,000 received from Rahul.');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '1,00,000');
     });
 
     test('PhonePe: large amount with lakh formatting', () {
       final r = _detect(package: _phonepe, text: 'sent ₹1,00,000 to you.');
-      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
       expect(r.amount, '1,00,000');
     });
   });
@@ -661,38 +661,38 @@ void main() {
   group('M10: outgoing direction rejection — exhaustive', () {
     test('PhonePe: "Sent ₹500 to Rahul" — rejected', () {
       final r = _detect(package: _phonepe, text: 'Sent ₹500 to Rahul');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('PhonePe: "Paid ₹500 to merchant" — rejected', () {
       final r = _detect(package: _phonepe, text: 'Paid ₹500 to merchant');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Google Pay: "You sent ₹500 to Rahul" — rejected', () {
       final r = _detect(package: _gpay, text: 'You sent ₹500 to Rahul.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
       expect(r.reason, contains('Outgoing'));
     });
 
     test('Google Pay: "Sent ₹500 to Rahul" (no "you") — rejected by pattern miss', () {
       final r = _detect(package: _gpay, text: 'Sent ₹500 to Rahul.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Paytm: "Sent ₹500 to Rahul" — rejected', () {
       final r = _detect(package: _paytm, text: 'Sent ₹500 to Rahul');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Amazon Pay: "You sent ₹500 to Rahul" — rejected', () {
       final r = _detect(package: _amazon, text: 'You sent ₹500 to Rahul');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('BHIM: "₹500 sent to Rahul" — rejected', () {
       final r = _detect(package: _bhim, text: '₹500 sent to Rahul.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Any UPI app: "Debited ₹500 from account" — rejected', () {
@@ -715,17 +715,45 @@ void main() {
   group('M10: refund rejection', () {
     test('PhonePe: refund initiated — rejected', () {
       final r = _detect(package: _phonepe, text: 'Refund of ₹500 initiated to your account');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Paytm: refunded — rejected', () {
       final r = _detect(package: _paytm, text: 'Refunded ₹500 to Rahul');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
     });
 
     test('Google Pay: refunding — rejected', () {
       final r = _detect(package: _gpay, text: 'Rahul sent ₹500 to you. Refunding.');
-      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
+    });
+  });
+
+  group('M12: Medium trust / Fallback amount detection', () {
+    test('PhonePe: Unknown wording but amount present', () {
+      final r = _detect(package: _phonepe, text: 'Payment received ₹500 from Rahul recently.');
+      expect(r.trustLevel, TrustLevel.medium);
+      expect(r.amount, isNull); // Fallback does not extract amount yet
+    });
+
+    test('Paytm: Unknown wording but amount present', () {
+      final r = _detect(package: _paytm, text: 'Rahul credited ₹1,200 to your wallet');
+      expect(r.trustLevel, TrustLevel.medium);
+    });
+
+    test('Google Pay: Unknown wording but amount present', () {
+      final r = _detect(package: _gpay, text: 'Amount received: ₹250 from Amit');
+      expect(r.trustLevel, TrustLevel.medium);
+    });
+
+    test('Amazon Pay: Unknown wording but amount present', () {
+      final r = _detect(package: _amazon, text: 'Credit of ₹10 from cashback');
+      expect(r.trustLevel, TrustLevel.medium);
+    });
+
+    test('BHIM: Unknown wording but amount present', () {
+      final r = _detect(package: _bhim, text: '₹50 credited successfully.');
+      expect(r.trustLevel, TrustLevel.medium);
     });
   });
 }

@@ -39,6 +39,7 @@ class _HistoryScreenState extends State<HistoryScreen>
           .map((m) => PaymentRecord(
                 amount:    (m['amount']  as String?) ?? '',
                 appName:   (m['appName'] as String?) ?? '',
+                trustLevel: (m['trustLevel'] as String?) ?? 'HIGH',
                 timestamp: DateTime.fromMillisecondsSinceEpoch(
                     (m['timestampMs'] as int?) ?? 0),
               ))
@@ -252,10 +253,65 @@ class _HistoryTile extends StatelessWidget {
           const SizedBox(width: 14),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(
-                record.displayAmount,
-                style: const TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.bold),
+              Row(
+                children: [
+                  Text(
+                    record.displayAmount,
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  if (record.trustLevel == 'MEDIUM') ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withAlpha(40),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.amber.shade300),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.warning_amber_rounded, size: 12, color: Colors.amber.shade700),
+                          const SizedBox(width: 4),
+                          Text(
+                            'MEDIUM TRUST',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.amber.shade800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  if (record.trustLevel == 'HIGH') ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withAlpha(20),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.verified, size: 12, color: Colors.green.shade600),
+                          const SizedBox(width: 4),
+                          Text(
+                            'HIGH TRUST',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
               ),
               const SizedBox(height: 2),
               Text(record.appName,

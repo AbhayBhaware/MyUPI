@@ -15,11 +15,13 @@ const kEventChannel  = EventChannel('com.example.myupi/notification_stream');
 class PaymentRecord {
   final String amount;
   final String appName;
+  final String trustLevel;
   final DateTime timestamp;
 
   const PaymentRecord({
     required this.amount,
     required this.appName,
+    this.trustLevel = 'HIGH',
     required this.timestamp,
   });
 

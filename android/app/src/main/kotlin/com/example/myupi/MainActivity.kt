@@ -82,6 +82,7 @@ class MainActivity : FlutterActivity() {
                             mapOf(
                                 "amount"      to rec.amount,
                                 "appName"     to rec.appName,
+                                "trustLevel"  to rec.trustLevel,
                                 "timestampMs" to rec.timestampMs,
                             )
                         }
@@ -89,6 +90,15 @@ class MainActivity : FlutterActivity() {
                     }
                     "clearPaymentHistory" -> {
                         SharedPreferencesManager.clearHistory()
+                        result.success(null)
+                    }
+
+                    // ── Onboarding ────────────────────────────────────────────
+                    "isOnboardingCompleted" -> {
+                        result.success(SharedPreferencesManager.isOnboardingCompleted())
+                    }
+                    "setOnboardingCompleted" -> {
+                        SharedPreferencesManager.setOnboardingCompleted()
                         result.success(null)
                     }
 

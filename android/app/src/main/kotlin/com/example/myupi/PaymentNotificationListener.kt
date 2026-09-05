@@ -118,9 +118,9 @@ class PaymentNotificationListener : NotificationListenerService() {
         // ── 2. Background UPI detection ──────────────────────────────────────
         val result = KotlinUpiDetector.detect(packageName, title, text)
 
-        if (result == null) {
-            // Not a known UPI app (e.g. SMS, WhatsApp) — ignored entirely.
-            Log.v(TAG, "Non-UPI package: $packageName — skipped.")
+        if (result == null || result.trustLevel == "LOW") {
+            // Not a known UPI app or explicitly rejected (LOW trust)
+            Log.v(TAG, "Package: $packageName | TrustLevel: LOW — skipped.")
             // Still send to Flutter so the UI can display non-payment notifications.
             sendToFlutter(packageName, title, text, notificationKey)
             return
@@ -128,25 +128,27 @@ class PaymentNotificationListener : NotificationListenerService() {
 
         Log.d(TAG,
             "Detection | App: ${result.appName} | " +
-            "isPayment: ${result.isPayment} | Amount: ${result.amount} | " +
+            "TrustLevel: ${result.trustLevel} | Amount: ${result.amount} | " +
             "Reason: ${result.reason}"
         )
 
-        // ── 3. Save to payment history (if valid payment with extracted amount) ─
-        if (result.isPayment && !result.amount.isNullOrEmpty()) {
+        // ── 3. Save to payment history ───────────────────────────────────────
+        // Both HIGH and MEDIUM trust payments are saved to history.
+        if (!result.amount.isNullOrEmpty()) {
             try {
                 SharedPreferencesManager.addPayment(
                     amount  = result.amount,
                     appName = result.appName,
+                    trustLevel = result.trustLevel,
                 )
-                Log.d(TAG, "Payment history: saved ₹${result.amount} from ${result.appName}")
+                Log.d(TAG, "Payment history: saved ₹${result.amount} from ${result.appName} (Trust: ${result.trustLevel})")
             } catch (e: Exception) {
                 Log.e(TAG, "Payment history: save failed — ${e.message}. TTS will still proceed.")
             }
         }
 
-        // ── 4. Native TTS — only if Soundbox is ON AND payment confirmed ─────
-        if (result.isPayment && !result.amount.isNullOrEmpty()) {
+        // ── 4. Native TTS — only if Soundbox is ON AND payment is HIGH TRUST ─
+        if (result.trustLevel == "HIGH" && !result.amount.isNullOrEmpty()) {
             val soundboxEnabled = try {
                 SharedPreferencesManager.isSoundboxEnabled()
             } catch (e: Exception) {
@@ -161,6 +163,8 @@ class PaymentNotificationListener : NotificationListenerService() {
             } else {
                 Log.d(TAG, "TTS: Soundbox OFF — payment detected but NOT speaking.")
             }
+        } else if (result.trustLevel == "MEDIUM") {
+            Log.d(TAG, "TTS: MEDIUM trust payment — NOT speaking.")
         }
 
         // ── 5. EventChannel → Flutter UI (best-effort, not required) ─────────
