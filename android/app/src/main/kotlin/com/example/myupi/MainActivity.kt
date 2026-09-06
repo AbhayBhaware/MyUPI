@@ -80,10 +80,13 @@ class MainActivity : FlutterActivity() {
                         // Convert to a list of maps for Flutter (JSON-compatible).
                         val list = records.map { rec ->
                             mapOf(
-                                "amount"      to rec.amount,
-                                "appName"     to rec.appName,
-                                "trustLevel"  to rec.trustLevel,
-                                "timestampMs" to rec.timestampMs,
+                                "amount"             to rec.amount,
+                                "appName"            to rec.appName,
+                                "trustLevel"         to rec.trustLevel,
+                                "timestampMs"        to rec.timestampMs,
+                                "verificationStatus" to rec.verificationStatus,
+                                "source"             to rec.source,
+                                "parserVersion"      to rec.parserVersion,
                             )
                         }
                         result.success(list)
@@ -100,6 +103,87 @@ class MainActivity : FlutterActivity() {
                     "setOnboardingCompleted" -> {
                         SharedPreferencesManager.setOnboardingCompleted()
                         result.success(null)
+                    }
+
+                    // ── Merchant Settings ─────────────────────────────────────
+                    "getMerchantName" -> {
+                        result.success(SharedPreferencesManager.getMerchantName())
+                    }
+                    "setMerchantName" -> {
+                        val name = call.argument<String>("name") ?: "MyUPI"
+                        SharedPreferencesManager.setMerchantName(name)
+                        result.success(null)
+                    }
+                    "getAnnouncementFormat" -> {
+                        result.success(SharedPreferencesManager.getAnnouncementFormat())
+                    }
+                    "setAnnouncementFormat" -> {
+                        val format = call.argument<String>("format") ?: "A"
+                        try {
+                            SharedPreferencesManager.setAnnouncementFormat(format)
+                        } catch (e: IllegalArgumentException) {
+                            result.error("INVALID_FORMAT", e.message, null)
+                            return@setMethodCallHandler
+                        }
+                        result.success(null)
+                    }
+                    "getIncludeShopName" -> {
+                        result.success(SharedPreferencesManager.isIncludeShopNameEnabled())
+                    }
+                    "setIncludeShopName" -> {
+                        val enabled = call.argument<Boolean>("enabled") ?: false
+                        SharedPreferencesManager.setIncludeShopNameEnabled(enabled)
+                        result.success(null)
+                    }
+                    
+                    // ── Language ──────────────────────────────────────────────
+                    "getLanguage" -> {
+                        result.success(SharedPreferencesManager.getLanguage())
+                    }
+                    "setLanguage" -> {
+                        val lang = call.argument<String>("language") ?: "en-IN"
+                        SharedPreferencesManager.setLanguage(lang)
+                        PaymentNotificationListener.ttsHelper?.updateLanguage()
+                        result.success(null)
+                    }
+                    "checkLanguageAvailability" -> {
+                        val lang = call.argument<String>("language") ?: "en-IN"
+                        val available = PaymentNotificationListener.ttsHelper?.isLanguageAvailable(lang) ?: false
+                        result.success(available)
+                    }
+
+                    // ── Architecture & Verification Readiness (M18) ────────────
+                    "getMerchantProfile" -> {
+                        result.success(SharedPreferencesManager.getMerchantProfile())
+                    }
+                    "getFeatureFlags" -> {
+                        result.success(SharedPreferencesManager.getFeatureFlags())
+                    }
+                    "getSubscriptionTier" -> {
+                        result.success(SharedPreferencesManager.getSubscriptionTier())
+                    }
+                    "getDiagnostics" -> {
+                        val enabledPackages =
+                            NotificationManagerCompat.getEnabledListenerPackages(this)
+                        val accessGranted = enabledPackages.contains(packageName)
+                        val trustedMap = KotlinUpiDetector.getTrustedPackages()
+                        val diagnostics = mapOf(
+                            "notificationAccessGranted" to accessGranted,
+                            "serviceBound"              to (PaymentNotificationListener.eventSink != null),
+                            "parserVersion"             to KotlinUpiDetector.UPI_PARSER_VERSION,
+                            "supportedPackagesCount"    to trustedMap.size,
+                            "supportedPackages"         to trustedMap.keys.toList(),
+                            "soundboxEnabled"           to SharedPreferencesManager.isSoundboxEnabled(),
+                            "speechSpeed"               to SharedPreferencesManager.getSpeechSpeed(),
+                            "language"                  to SharedPreferencesManager.getLanguage(),
+                            "announcementFormat"        to SharedPreferencesManager.getAnnouncementFormat(),
+                            "includeShopName"           to SharedPreferencesManager.isIncludeShopNameEnabled(),
+                            "totalStoredPayments"       to SharedPreferencesManager.getHistory().size,
+                            "merchantId"                to SharedPreferencesManager.getMerchantId(),
+                            "subscriptionTier"          to SharedPreferencesManager.getSubscriptionTier(),
+                            "featureFlags"              to SharedPreferencesManager.getFeatureFlags(),
+                        )
+                        result.success(diagnostics)
                     }
 
                     else -> result.notImplemented()

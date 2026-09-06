@@ -25,12 +25,17 @@ import org.json.JSONObject
 
 private const val TAG = "MyUPI_BACKGROUND"
 
-private const val PREFS_NAME        = "myupi_prefs"
-private const val KEY_SOUNDBOX_ON   = "soundbox_enabled"
-private const val KEY_SPEECH_SPEED  = "speech_speed"   // "slow" | "normal" | "fast"
-private const val KEY_HISTORY       = "payment_history" // JSON array
-private const val KEY_ONBOARDING    = "onboarding_completed" // bool
-private const val MAX_HISTORY_SIZE  = 1000
+private const val PREFS_NAME            = "myupi_prefs"
+private const val KEY_SOUNDBOX_ON       = "soundbox_enabled"
+private const val KEY_SPEECH_SPEED      = "speech_speed"   // "slow" | "normal" | "fast"
+private const val KEY_MERCHANT_NAME     = "merchant_name"
+private const val KEY_ANNOUNCE_FORMAT   = "announce_format" // "A" | "B" | "C"
+private const val KEY_INCLUDE_SHOP_NAME = "include_shop_name" // bool
+private const val KEY_LANGUAGE          = "language" // e.g. "en-IN"
+private const val KEY_HISTORY           = "payment_history" // JSON array
+private const val KEY_MERCHANT_ID      = "merchant_id"
+private const val KEY_ONBOARDING        = "onboarding_completed" // bool
+private const val MAX_HISTORY_SIZE      = 1000
 
 // ─── Data class for a payment history record ──────────────────────────────────
 
@@ -39,6 +44,9 @@ data class PaymentRecord(
     val appName: String,
     val trustLevel: String,
     val timestampMs: Long,
+    val verificationStatus: String = "NOT_VERIFIED",
+    val source: String = "NOTIFICATION",
+    val parserVersion: Int = 1,
 )
 
 // ─── Manager singleton ────────────────────────────────────────────────────────
@@ -94,6 +102,76 @@ object SharedPreferencesManager {
         else     -> 0.9f   // "normal"
     }
 
+    // ── Merchant & Voice Settings ─────────────────────────────────────────────
+
+    fun getLanguage(): String = prefs.getString(KEY_LANGUAGE, "en-IN") ?: "en-IN"
+
+    fun setLanguage(lang: String) {
+        prefs.edit().putString(KEY_LANGUAGE, lang).apply()
+        Log.d(TAG, "Language updated: $lang")
+    }
+
+    fun getMerchantName(): String = prefs.getString(KEY_MERCHANT_NAME, "MyUPI") ?: "MyUPI"
+
+    fun setMerchantName(name: String) {
+        prefs.edit().putString(KEY_MERCHANT_NAME, name).apply()
+        Log.d(TAG, "Merchant name updated: $name")
+    }
+
+    fun getAnnouncementFormat(): String = prefs.getString(KEY_ANNOUNCE_FORMAT, "A") ?: "A"
+
+    fun setAnnouncementFormat(format: String) {
+        require(format in listOf("A", "B", "C")) {
+            "Invalid announcement format: $format"
+        }
+        prefs.edit().putString(KEY_ANNOUNCE_FORMAT, format).apply()
+        Log.d(TAG, "Announcement format updated: $format")
+    }
+
+    fun isIncludeShopNameEnabled(): Boolean = prefs.getBoolean(KEY_INCLUDE_SHOP_NAME, false)
+
+    fun setIncludeShopNameEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_INCLUDE_SHOP_NAME, enabled).apply()
+        Log.d(TAG, "Include shop name updated: $enabled")
+    }
+
+    // ── Merchant Profile Foundation ──────────────────────────────────────────
+
+    fun getMerchantId(): String {
+        var id = prefs.getString(KEY_MERCHANT_ID, null)
+        if (id.isNullOrBlank()) {
+            id = java.util.UUID.randomUUID().toString()
+            prefs.edit().putString(KEY_MERCHANT_ID, id).apply()
+            Log.d(TAG, "Generated local merchant ID: $id")
+        }
+        return id
+    }
+
+    fun getMerchantProfile(): Map<String, Any> {
+        return mapOf(
+            "merchantId"         to getMerchantId(),
+            "shopName"           to getMerchantName(),
+            "preferredLanguage"  to getLanguage(),
+            "speechSpeed"        to getSpeechSpeed(),
+            "announcementFormat" to getAnnouncementFormat(),
+            "soundboxEnabled"    to isSoundboxEnabled(),
+            "includeShopName"    to isIncludeShopNameEnabled(),
+        )
+    }
+
+    // ── Feature Flags & Entitlements ─────────────────────────────────────────
+
+    fun getFeatureFlags(): Map<String, Boolean> {
+        return mapOf(
+            "notificationSoundbox" to true,
+            "verifiedPayments"     to false,
+            "backendSync"          to false,
+            "premiumFeatures"      to false,
+        )
+    }
+
+    fun getSubscriptionTier(): String = "FREE"
+
     // ── Payment history ───────────────────────────────────────────────────────
 
     /**
@@ -102,13 +180,23 @@ object SharedPreferencesManager {
      * Duplicate protection is handled by the caller (seenKeys in the service).
      */
     @Synchronized
-    fun addPayment(amount: String, appName: String, trustLevel: String) {
+    fun addPayment(
+        amount: String,
+        appName: String,
+        trustLevel: String,
+        verificationStatus: String = "NOT_VERIFIED",
+        source: String = "NOTIFICATION",
+        parserVersion: Int = 1,
+    ) {
         val list = loadHistoryList().toMutableList()
         val record = JSONObject().apply {
             put("amount", amount)
             put("appName", appName)
             put("trustLevel", trustLevel)
             put("timestampMs", System.currentTimeMillis())
+            put("verificationStatus", verificationStatus)
+            put("source", source)
+            put("parserVersion", parserVersion)
         }
         // Insert at front (newest first).
         list.add(0, record)
@@ -116,21 +204,25 @@ object SharedPreferencesManager {
         val trimmed = if (list.size > MAX_HISTORY_SIZE) list.take(MAX_HISTORY_SIZE) else list
         val arr = JSONArray().apply { trimmed.forEach { put(it) } }
         prefs.edit().putString(KEY_HISTORY, arr.toString()).apply()
-        Log.d(TAG, "Payment history saved: ₹$amount from $appName (total: ${trimmed.size})")
+        Log.d(TAG, "Payment history saved: ₹$amount from $appName ($verificationStatus, total: ${trimmed.size})")
     }
 
     /**
      * Load all payment history records, newest first.
+     * Handles missing fields from older stored records with safe defaults.
      */
     @Synchronized
     fun getHistory(): List<PaymentRecord> {
         return loadHistoryList().mapNotNull { obj ->
             try {
                 PaymentRecord(
-                    amount      = obj.getString("amount"),
-                    appName     = obj.getString("appName"),
-                    trustLevel  = obj.optString("trustLevel", "HIGH"),
-                    timestampMs = obj.getLong("timestampMs"),
+                    amount             = obj.getString("amount"),
+                    appName            = obj.getString("appName"),
+                    trustLevel         = obj.optString("trustLevel", "HIGH"),
+                    timestampMs        = obj.getLong("timestampMs"),
+                    verificationStatus = obj.optString("verificationStatus", "NOT_VERIFIED"),
+                    source             = obj.optString("source", "NOTIFICATION"),
+                    parserVersion      = obj.optInt("parserVersion", 1),
                 )
             } catch (e: Exception) {
                 Log.w(TAG, "Skipping malformed history record: ${e.message}")

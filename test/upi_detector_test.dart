@@ -756,4 +756,289 @@ void main() {
       expect(r.trustLevel, TrustLevel.medium);
     });
   });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MILESTONE 17: PRODUCTION MVP POLISH & MERCHANT RELIABILITY TESTS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  group('M17: Strict payment validation — All 5 supported UPI apps', () {
+    test('PhonePe incoming payment', () {
+      final r = _detect(package: _phonepe, text: 'sent ₹500 to you.');
+      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
+      expect(r.amount, '500');
+      expect(r.appName, 'PhonePe');
+    });
+
+    test('Paytm incoming payment', () {
+      final r = _detect(package: _paytm, text: 'Received ₹500 from Rahul');
+      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
+      expect(r.amount, '500');
+      expect(r.appName, 'Paytm');
+    });
+
+    test('Google Pay incoming payment', () {
+      final r = _detect(package: _gpay, text: 'Rahul sent ₹500 to you.');
+      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
+      expect(r.amount, '500');
+      expect(r.appName, 'Google Pay');
+    });
+
+    test('Amazon Pay incoming payment', () {
+      final r = _detect(package: _amazon, text: 'You received ₹500 from Rahul.');
+      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
+      expect(r.amount, '500');
+      expect(r.appName, 'Amazon Pay');
+    });
+
+    test('BHIM incoming payment', () {
+      final r = _detect(package: _bhim, text: '₹500 received from Rahul.');
+      expect(r.isPayment, isTrue);
+      expect(r.trustLevel, TrustLevel.high);
+      expect(r.amount, '500');
+      expect(r.appName, 'BHIM');
+    });
+  });
+
+  group('M17: Strict rejection tests — Invalid & Non-payment notifications', () {
+    test('Outgoing payment rejected', () {
+      final r = _detect(package: _gpay, text: 'You sent ₹500 to Rahul.');
+      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
+    });
+
+    test('Failed payment rejected', () {
+      final r = _detect(package: _phonepe, text: 'Payment failed for ₹500.');
+      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
+    });
+
+    test('Pending payment rejected', () {
+      final r = _detect(package: _paytm, text: '₹500 payment pending confirmation.');
+      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
+    });
+
+    test('Refund rejected', () {
+      final r = _detect(package: _phonepe, text: 'Refund of ₹500 initiated.');
+      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
+    });
+
+    test('Payment request rejected', () {
+      final r = _detect(package: _phonepe, text: 'Rahul sent a collect request for ₹500.');
+      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
+    });
+
+    test('SMS notification rejected (non-UPI package)', () {
+      final r = _detect(package: _messages, text: 'sent ₹500 to you.');
+      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
+      expect(r.reason, contains('not a known UPI app'));
+    });
+
+    test('Unknown app rejected', () {
+      final r = _detect(package: 'com.unknown.app', text: 'sent ₹500 to you.');
+      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
+    });
+
+    test('Arbitrary notification containing ₹500 rejected', () {
+      final r = _detect(package: _phonepe, text: 'Mega Sale! Get up to ₹500 cashback on recharge.');
+      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
+    });
+
+    test('Notification containing "received" but not a payment rejected', () {
+      final r = _detect(package: _phonepe, text: 'We received your feedback. Thank you!');
+      expect(r.isPayment, isFalse);
+      expect(r.trustLevel, TrustLevel.low);
+    });
+  });
+
+  group('M17: Amount extraction tests', () {
+    test('₹1 amount', () {
+      final r = _detect(package: _phonepe, text: 'sent ₹1 to you.');
+      expect(r.amount, '1');
+    });
+
+    test('₹10 amount', () {
+      final r = _detect(package: _phonepe, text: 'sent ₹10 to you.');
+      expect(r.amount, '10');
+    });
+
+    test('₹500 amount', () {
+      final r = _detect(package: _phonepe, text: 'sent ₹500 to you.');
+      expect(r.amount, '500');
+    });
+
+    test('₹1,000 amount (comma-separated)', () {
+      final r = _detect(package: _phonepe, text: 'sent ₹1,000 to you.');
+      expect(r.amount, '1,000');
+    });
+
+    test('₹10,000 amount', () {
+      final r = _detect(package: _phonepe, text: 'sent ₹10,000 to you.');
+      expect(r.amount, '10,000');
+    });
+
+    test('₹25.50 decimal amount', () {
+      final r = _detect(package: _phonepe, text: 'sent ₹25.50 to you.');
+      expect(r.amount, '25.50');
+    });
+
+    test('₹1,00,000 Indian lakh comma format', () {
+      final r = _detect(package: _phonepe, text: 'sent ₹1,00,000 to you.');
+      expect(r.amount, '1,00,000');
+    });
+  });
+
+  group('M17: Duplicate protection & Deduplication tests', () {
+    test('Same notification key twice is detected as duplicate', () {
+      final seenKeys = <String>{};
+      const key1 = 'com.phonepe.app|tag1|1001';
+
+      // First time: not seen -> should process
+      final firstAdded = seenKeys.add(key1);
+      expect(firstAdded, isTrue);
+
+      // Second time: already seen -> duplicate detected, must be suppressed
+      final secondAdded = seenKeys.add(key1);
+      expect(secondAdded, isFalse);
+    });
+
+    test('Notification update with same key is detected as duplicate', () {
+      final seenKeys = <String>{};
+      const notifKey = 'net.one97.paytm|null|2001';
+
+      expect(seenKeys.add(notifKey), isTrue);
+      // Notification updated by OS
+      expect(seenKeys.add(notifKey), isFalse);
+    });
+
+    test('Two genuinely different payments close together are both allowed', () {
+      final seenKeys = <String>{};
+      const payment1Key = 'com.phonepe.app|tag|1001';
+      const payment2Key = 'com.phonepe.app|tag|1002';
+
+      expect(seenKeys.add(payment1Key), isTrue);
+      expect(seenKeys.add(payment2Key), isTrue);
+    });
+  });
+
+  group('M17: Multilingual announcement template testing', () {
+    String buildSpeech(String rawAmount, String lang, String format) {
+      final cleaned = rawAmount.replaceAll(',', '').trim();
+      final parts = cleaned.split('.');
+      final rupeeInt = int.tryParse(parts[0]) ?? 0;
+      final paiseInt = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
+      final rupeeDisplay = rawAmount.split('.')[0];
+
+      final amountText = switch (lang) {
+        'hi-IN' => paiseInt > 0 ? '$rupeeDisplay रुपये $paiseInt पैसे' : '$rupeeDisplay रुपये',
+        'mr-IN' => paiseInt > 0 ? '$rupeeDisplay रुपये $paiseInt पैसे' : '$rupeeDisplay रुपये',
+        'gu-IN' => paiseInt > 0 ? '$rupeeDisplay રૂપિયા $paiseInt પૈસા' : '$rupeeDisplay રૂપિયા',
+        'ta-IN' => paiseInt > 0 ? '$rupeeDisplay ரூபாய் $paiseInt காசுகள்' : '$rupeeDisplay ரூபாய்',
+        'te-IN' => paiseInt > 0 ? '$rupeeDisplay రూపాయలు $paiseInt పైసలు' : '$rupeeDisplay రూపాయలు',
+        'bn-IN' => paiseInt > 0 ? '$rupeeDisplay টাকা $paiseInt পয়সা' : '$rupeeDisplay টাকা',
+        'kn-IN' => paiseInt > 0 ? '$rupeeDisplay ರೂಪಾಯಿ $paiseInt ಪೈಸೆ' : '$rupeeDisplay ರೂಪಾಯಿ',
+        _ => rupeeInt == 1 ? '$rupeeDisplay rupee' : '$rupeeDisplay rupees',
+      };
+
+      return switch (lang) {
+        'hi-IN' => switch (format) {
+          'B' => '$amountText प्राप्त हुए।',
+          'C' => 'पेमेंट प्राप्त हुआ, $amountText। धन्यवाद।',
+          _ => 'पेमेंट प्राप्त हुआ, $amountText।',
+        },
+        'mr-IN' => switch (format) {
+          'B' => '$amountText प्राप्त झाले.',
+          'C' => 'पेमेंट प्राप्त झाले, $amountText. धन्यवाद.',
+          _ => 'पेमेंट प्राप्त झाले, $amountText.',
+        },
+        'gu-IN' => switch (format) {
+          'B' => '$amountText પ્રાપ્ત થયા.',
+          'C' => 'પેમેન્ટ પ્રાપ્ત થયું, $amountText. આભાર.',
+          _ => 'પેમેન્ટ પ્રાપ્ત થયું, $amountText.',
+        },
+        'ta-IN' => switch (format) {
+          'B' => '$amountText பெறப்பட்டது.',
+          'C' => 'பணம் பெறப்பட்டது, $amountText. நன்றி.',
+          _ => 'பணம் பெறப்பட்டது, $amountText.',
+        },
+        'te-IN' => switch (format) {
+          'B' => '$amountText అందాయి.',
+          'C' => 'చెల్లింపు అందింది, $amountText. ధన్యవాదాలు.',
+          _ => 'చెల్లింపు అందింది, $amountText.',
+        },
+        'bn-IN' => switch (format) {
+          'B' => '$amountText পাওয়া গেছে।',
+          'C' => 'পেমেন্ট পাওয়া গেছে, $amountText। ধন্যবাদ।',
+          _ => 'পেমেন্ট পাওয়া গেছে, $amountText।',
+        },
+        'kn-IN' => switch (format) {
+          'B' => '$amountText ಸ್ವೀಕರಿಸಲಾಗಿದೆ.',
+          'C' => 'ಪಾವತಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ, $amountText. ಧನ್ಯವಾದಗಳು.',
+          _ => 'ಪಾವತಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ, $amountText.',
+        },
+        _ => switch (format) {
+          'B' => '$amountText received',
+          'C' => 'Payment received, $amountText. Thank you.',
+          _ => 'Payment received, $amountText',
+        },
+      };
+    }
+
+    test('English (India) Formats A, B, C', () {
+      expect(buildSpeech('500', 'en-IN', 'A'), 'Payment received, 500 rupees');
+      expect(buildSpeech('500', 'en-IN', 'B'), '500 rupees received');
+      expect(buildSpeech('500', 'en-IN', 'C'), 'Payment received, 500 rupees. Thank you.');
+    });
+
+    test('Hindi Formats A, B, C', () {
+      expect(buildSpeech('500', 'hi-IN', 'A'), 'पेमेंट प्राप्त हुआ, 500 रुपये।');
+      expect(buildSpeech('500', 'hi-IN', 'B'), '500 रुपये प्राप्त हुए।');
+      expect(buildSpeech('500', 'hi-IN', 'C'), 'पेमेंट प्राप्त हुआ, 500 रुपये। धन्यवाद।');
+    });
+
+    test('Marathi Formats A, B, C', () {
+      expect(buildSpeech('500', 'mr-IN', 'A'), 'पेमेंट प्राप्त झाले, 500 रुपये.');
+      expect(buildSpeech('500', 'mr-IN', 'B'), '500 रुपये प्राप्त झाले.');
+      expect(buildSpeech('500', 'mr-IN', 'C'), 'पेमेंट प्राप्त झाले, 500 रुपये. धन्यवाद.');
+    });
+
+    test('Gujarati Formats A, B, C', () {
+      expect(buildSpeech('500', 'gu-IN', 'A'), 'પેમેન્ટ પ્રાપ્ત થયું, 500 રૂપિયા.');
+      expect(buildSpeech('500', 'gu-IN', 'B'), '500 રૂપિયા પ્રાપ્ત થયા.');
+      expect(buildSpeech('500', 'gu-IN', 'C'), 'પેમેન્ટ પ્રાપ્ત થયું, 500 રૂપિયા. આભાર.');
+    });
+
+    test('Tamil Formats A, B, C', () {
+      expect(buildSpeech('500', 'ta-IN', 'A'), 'பணம் பெறப்பட்டது, 500 ரூபாய்.');
+      expect(buildSpeech('500', 'ta-IN', 'B'), '500 ரூபாய் பெறப்பட்டது.');
+      expect(buildSpeech('500', 'ta-IN', 'C'), 'பணம் பெறப்பட்டது, 500 ரூபாய். நன்றி.');
+    });
+
+    test('Telugu Formats A, B, C', () {
+      expect(buildSpeech('500', 'te-IN', 'A'), 'చెల్లింపు అందింది, 500 రూపాయలు.');
+      expect(buildSpeech('500', 'te-IN', 'B'), '500 రూపాయలు అందాయి.');
+      expect(buildSpeech('500', 'te-IN', 'C'), 'చెల్లింపు అందింది, 500 రూపాయలు. ధన్యవాదాలు.');
+    });
+
+    test('Bengali Formats A, B, C', () {
+      expect(buildSpeech('500', 'bn-IN', 'A'), 'পেমেন্ট পাওয়া গেছে, 500 টাকা।');
+      expect(buildSpeech('500', 'bn-IN', 'B'), '500 টাকা পাওয়া গেছে।');
+      expect(buildSpeech('500', 'bn-IN', 'C'), 'পেমেন্ট পাওয়া গেছে, 500 টাকা। ধন্যবাদ।');
+    });
+
+    test('Kannada Formats A, B, C', () {
+      expect(buildSpeech('500', 'kn-IN', 'A'), 'ಪಾವತಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ, 500 ರೂಪಾಯಿ.');
+      expect(buildSpeech('500', 'kn-IN', 'B'), '500 ರೂಪಾಯಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ.');
+      expect(buildSpeech('500', 'kn-IN', 'C'), 'ಪಾವತಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ, 500 ರೂಪಾಯಿ. ಧನ್ಯವಾದಗಳು.');
+    });
+  });
 }

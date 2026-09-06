@@ -132,10 +132,14 @@ class _ShellPage extends StatefulWidget {
 class _ShellPageState extends State<_ShellPage> {
   int _selectedIndex = 0;
 
-  static const _pages = <Widget>[
-    HomeScreen(),
-    HistoryScreen(),
-    SettingsScreen(),
+  void _navigateToTab(int index) {
+    if (mounted) setState(() => _selectedIndex = index);
+  }
+
+  late final List<Widget> _pages = [
+    HomeScreen(onNavigateToTab: _navigateToTab),
+    const HistoryScreen(),
+    const SettingsScreen(),
   ];
 
   @override

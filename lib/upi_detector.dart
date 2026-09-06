@@ -759,7 +759,7 @@ class UpiNotificationDetector {
       );
     }
 
-    debugLog('Detecting | Package: $packageName | Title: "$safeTitle" | Text: "$safeText"');
+    debugLog('Detecting | Package: $packageName');
 
     // 2. Route to the appropriate app-specific detector.
     switch (packageName) {

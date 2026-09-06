@@ -1,51 +1,42 @@
 // lib/app_channels.dart
 //
-// Shared channel constants and data models for all screens.
-// Kotlin files are NOT modified — this is Flutter-side only.
+// Shared channel constants, exports, and backward-compatible models.
+// Milestone 18 — Architecture Foundation & Future Verification Readiness
 
 import 'package:flutter/services.dart';
+
+import 'models/payment_event.dart';
+
+export 'models/payment_event.dart';
+export 'models/merchant_profile.dart';
+export 'models/feature_flags.dart';
+export 'models/subscription_tier.dart';
+export 'repositories/payment_repository.dart';
+export 'services/payment_source.dart';
 
 // ─── Channel references ───────────────────────────────────────────────────────
 
 const kMethodChannel = MethodChannel('com.example.myupi/notification_access');
 const kEventChannel  = EventChannel('com.example.myupi/notification_stream');
 
-// ─── Payment record ───────────────────────────────────────────────────────────
+// ─── Backward-compatible PaymentRecord ────────────────────────────────────────
 
-class PaymentRecord {
-  final String amount;
-  final String appName;
-  final String trustLevel;
-  final DateTime timestamp;
-
+class PaymentRecord extends PaymentEvent {
   const PaymentRecord({
-    required this.amount,
-    required this.appName,
-    this.trustLevel = 'HIGH',
-    required this.timestamp,
-  });
-
-  /// Display-friendly amount string, e.g. "₹500".
-  String get displayAmount => '₹$amount';
-
-  /// Formatted date/time label.
-  String get timeLabel {
-    final now   = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yest  = today.subtract(const Duration(days: 1));
-    final d     = DateTime(timestamp.year, timestamp.month, timestamp.day);
-    final t     = _fmtTime(timestamp);
-    if (d == today) return 'Today, $t';
-    if (d == yest)  return 'Yesterday, $t';
-    return '${timestamp.day}/${timestamp.month}/${timestamp.year}, $t';
-  }
-
-  static String _fmtTime(DateTime dt) {
-    final h    = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
-    final m    = dt.minute.toString().padLeft(2, '0');
-    final ampm = dt.hour < 12 ? 'AM' : 'PM';
-    return '$h:$m $ampm';
-  }
+    required super.amount,
+    required super.appName,
+    required super.timestamp,
+    dynamic trustLevel = TrustLevel.high,
+    super.verificationStatus = VerificationStatus.notVerified,
+    super.source = PaymentSource.notification,
+    super.parserVersion = 1,
+  }) : super(
+          trustLevel: trustLevel is TrustLevel
+              ? trustLevel
+              : (trustLevel == 'MEDIUM'
+                  ? TrustLevel.medium
+                  : (trustLevel == 'LOW' ? TrustLevel.low : TrustLevel.high)),
+        );
 }
 
 // ─── Live payment event (from EventChannel while UI is open) ─────────────────
@@ -62,5 +53,5 @@ class LivePaymentEvent {
   });
 
   String get displayAmount => '₹$amount';
-  String get timeLabel     => PaymentRecord._fmtTime(receivedAt);
+  String get timeLabel     => PaymentEvent.formatTimeOnly(receivedAt);
 }

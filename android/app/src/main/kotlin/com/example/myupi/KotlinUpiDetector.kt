@@ -27,6 +27,7 @@ data class KotlinPaymentResult(
     val appName: String,
     val amount: String?,    // raw amount string, e.g. "1", "1,250", "25.50"
     val reason: String,
+    val parserVersion: Int = KotlinUpiDetector.UPI_PARSER_VERSION,
 )
 
 // ─── Trusted package allowlist ────────────────────────────────────────────────
@@ -232,6 +233,10 @@ private fun detectGeneric(pkg: String, title: String, text: String, appName: Str
 
 object KotlinUpiDetector {
 
+    const val UPI_PARSER_VERSION = 1
+
+    fun getTrustedPackages(): Map<String, String> = UPI_PACKAGES
+
     /**
      * Analyse a single notification.
      *
@@ -249,7 +254,7 @@ object KotlinUpiDetector {
             return null
         }
 
-        Log.d(TAG, "Detecting | Package: $packageName | Title: \"$safeTitle\" | Text: \"$safeText\"")
+        Log.d(TAG, "Detecting | Package: $packageName")
 
         // 2. Route to app-specific detector.
         return when (packageName) {

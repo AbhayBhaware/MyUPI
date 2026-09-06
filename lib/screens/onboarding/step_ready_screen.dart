@@ -162,6 +162,12 @@ class _StepReadyScreenState extends State<StepReadyScreen> {
           ),
           const Divider(height: 20),
           const _ChecklistItem(
+            icon: Icons.language,
+            color: Colors.blue,
+            label: '8 Indian languages supported in Settings',
+          ),
+          const Divider(height: 20),
+          const _ChecklistItem(
             icon: Icons.check_circle,
             color: Colors.green,
             label: 'Setup complete',

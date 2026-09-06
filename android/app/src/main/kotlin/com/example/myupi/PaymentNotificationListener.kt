@@ -65,6 +65,15 @@ class PaymentNotificationListener : NotificationListenerService() {
     override fun onListenerConnected() {
         super.onListenerConnected()
         Log.d(TAG, "Listener connected — MyUPI is now listening for notifications.")
+        // Ensure initialization if service was recovered by Android
+        try {
+            SharedPreferencesManager.init(applicationContext)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to initialize SharedPreferencesManager: ${e.message}")
+        }
+        if (ttsHelper == null) {
+            ttsHelper = NativeTtsHelper(applicationContext)
+        }
     }
 
     override fun onListenerDisconnected() {
@@ -85,17 +94,24 @@ class PaymentNotificationListener : NotificationListenerService() {
         if (sbn == null) return
 
         val packageName = sbn.packageName ?: "unknown"
-        val extras      = sbn.notification?.extras
-
-        val title = extras?.getCharSequence("android.title")?.toString() ?: ""
-        val text  = extras?.getCharSequence("android.text")?.toString()  ?: ""
+        val title: String
+        val text: String
+        
+        try {
+            val extras = sbn.notification?.extras
+            title = extras?.getCharSequence("android.title")?.toString() ?: ""
+            text  = extras?.getCharSequence("android.text")?.toString()  ?: ""
+        } catch (e: Exception) {
+            Log.e(TAG, "Malformed notification extras from $packageName: ${e.message}")
+            return
+        }
 
         // Notification identity key — same format used by Flutter.
         val notifTag = sbn.tag ?: ""
         val notifId  = sbn.id
         val notificationKey = "$packageName|$notifTag|$notifId"
 
-        Log.d(TAG, "POSTED | Key: $notificationKey | Title: \"$title\" | Text: \"$text\"")
+        Log.d(TAG, "POSTED | Package: $packageName | Key: $notificationKey")
 
         // ── 1. Service-level deduplication ───────────────────────────────────
         // This runs before any detection. If we have already processed this
@@ -104,8 +120,14 @@ class PaymentNotificationListener : NotificationListenerService() {
         val isDuplicate: Boolean
         synchronized(seenKeys) {
             isDuplicate = !seenKeys.add(notificationKey)
-            // Keep the set from growing unbounded (in-memory only).
-            if (seenKeys.size > 300) seenKeys.clear()
+            // Keep the set from growing unbounded (in-memory only). Act as LRU.
+            if (seenKeys.size > 300) {
+                val iterator = seenKeys.iterator()
+                if (iterator.hasNext()) {
+                    iterator.next()
+                    iterator.remove()
+                }
+            }
         }
 
         if (isDuplicate) {
@@ -140,8 +162,11 @@ class PaymentNotificationListener : NotificationListenerService() {
                     amount  = result.amount,
                     appName = result.appName,
                     trustLevel = result.trustLevel,
+                    verificationStatus = "NOT_VERIFIED",
+                    source = "NOTIFICATION",
+                    parserVersion = result.parserVersion,
                 )
-                Log.d(TAG, "Payment history: saved ₹${result.amount} from ${result.appName} (Trust: ${result.trustLevel})")
+                Log.d(TAG, "Payment history: saved ₹${result.amount} from ${result.appName} (Trust: ${result.trustLevel}, Verification: NOT_VERIFIED, Source: NOTIFICATION, Parser: v${result.parserVersion})")
             } catch (e: Exception) {
                 Log.e(TAG, "Payment history: save failed — ${e.message}. TTS will still proceed.")
             }
