@@ -1,13 +1,20 @@
 // lib/screens/settings_screen.dart
 //
-// Settings screen — Soundbox, Speech, Notification Access, About.
-// All settings are persisted in Kotlin SharedPreferences via MethodChannel.
+// Settings screen — organized strictly into 3 merchant categories:
+// 1. SOUNDBOX (toggle, shop name, language, speed, format)
+// 2. SUBSCRIPTION (MyUPI Premium status, upgrade plans, restore purchases)
+// 3. APP (notification access, Help & Support, About MyUPI)
+//
+// Developer Diagnostics is removed from direct view and placed behind
+// a 7-tap version gesture in AboutScreen.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app_channels.dart';
-import 'diagnostics_screen.dart';
+import 'about_screen.dart';
+import 'help_support_screen.dart';
+import 'paywall_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -29,6 +36,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   String _announceFormat  = 'A';
   bool   _includeShopName = false;
   bool?  _notifAccess;
+  bool   _isRestoring     = false;
 
   @override
   void initState() {
@@ -102,7 +110,7 @@ class _SettingsScreenState extends State<SettingsScreen>
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Selected language is not available on this device.'),
+            content: Text('Selected language is not available on this device voice engine.'),
             backgroundColor: Colors.orange,
             behavior: SnackBarBehavior.floating,
           ),
@@ -134,6 +142,33 @@ class _SettingsScreenState extends State<SettingsScreen>
     on PlatformException catch (_) {}
   }
 
+  Future<void> _handleRestorePurchases() async {
+    if (_isRestoring) return;
+    setState(() => _isRestoring = true);
+    try {
+      final result = await BillingService.instance.restorePurchases();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.message),
+          backgroundColor: result.success ? Colors.green : Colors.orange,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to reach Google Play Store. Please check connection.'),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isRestoring = false);
+    }
+  }
+
   // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
@@ -143,37 +178,27 @@ class _SettingsScreenState extends State<SettingsScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Settings', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: cs.primary,
         foregroundColor: cs.onPrimary,
       ),
       body: ListView(
         children: [
 
-          // ── MERCHANT ────────────────────────────────────────────────────────
-          _sectionHeader('MERCHANT'),
-          ListTile(
-            leading: const Icon(Icons.storefront),
-            title: const Text('Shop / Business Name',
-                style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: Text(_merchantName),
-            trailing: const Icon(Icons.edit, size: 20, color: Colors.grey),
-            onTap: _showEditMerchantNameDialog,
-          ),
-
-          // ── SOUNDBOX ──────────────────────────────────────────────────────
+          // ════════════════════════════════════════════════════════════════════
+          // 1. SOUNDBOX SECTION
+          // ════════════════════════════════════════════════════════════════════
           _sectionHeader('SOUNDBOX'),
           SwitchListTile(
-            title: const Text('Soundbox',
-                style: TextStyle(fontWeight: FontWeight.w500)),
+            title: const Text('Soundbox', style: TextStyle(fontWeight: FontWeight.w500)),
             subtitle: Text(
               _soundboxEnabled
                   ? 'Payment announcements are on'
-                  : 'Payment announcements are off',
+                  : 'Payment announcements are paused',
               style: TextStyle(
-                  fontSize: 12,
-                  color: _soundboxEnabled ? Colors.green : Colors.grey),
+                fontSize: 12,
+                color: _soundboxEnabled ? Colors.green : Colors.grey,
+              ),
             ),
             secondary: Icon(
               _soundboxEnabled ? Icons.volume_up : Icons.volume_off,
@@ -182,13 +207,31 @@ class _SettingsScreenState extends State<SettingsScreen>
             value: _soundboxEnabled,
             onChanged: _setSoundbox,
           ),
-
-          // ── VOICE ────────────────────────────────────────────────────────
-          _sectionHeader('VOICE'),
+          const Divider(height: 1, indent: 72, endIndent: 16),
+          ListTile(
+            leading: const Icon(Icons.storefront),
+            title: const Text('Shop / Business Name', style: TextStyle(fontWeight: FontWeight.w500)),
+            subtitle: Text(_merchantName),
+            trailing: const Icon(Icons.edit, size: 20, color: Colors.grey),
+            onTap: _showEditMerchantNameDialog,
+          ),
+          const Divider(height: 1, indent: 72, endIndent: 16),
+          SwitchListTile(
+            secondary: const Icon(Icons.store),
+            title: const Text('Include Shop Name', style: TextStyle(fontWeight: FontWeight.w500)),
+            subtitle: Text(
+              _includeShopName
+                  ? 'Shop name included in announcement'
+                  : 'Standard announcement without shop name',
+              style: const TextStyle(fontSize: 12),
+            ),
+            value: _includeShopName,
+            onChanged: _setIncludeShopName,
+          ),
+          const Divider(height: 1, indent: 72, endIndent: 16),
           ListTile(
             leading: const Icon(Icons.language),
-            title: const Text('Language',
-                style: TextStyle(fontWeight: FontWeight.w500)),
+            title: const Text('Announcement Language', style: TextStyle(fontWeight: FontWeight.w500)),
             subtitle: Text(_getLanguageLabel(_language)),
             trailing: DropdownButton<String>(
               value: _language,
@@ -209,8 +252,7 @@ class _SettingsScreenState extends State<SettingsScreen>
           const Divider(height: 1, indent: 72, endIndent: 16),
           ListTile(
             leading: const Icon(Icons.speed),
-            title: const Text('Speech Speed',
-                style: TextStyle(fontWeight: FontWeight.w500)),
+            title: const Text('Speech Speed', style: TextStyle(fontWeight: FontWeight.w500)),
             subtitle: const Text('How fast payments are announced'),
             trailing: DropdownButton<String>(
               value: _speechSpeed,
@@ -226,43 +268,151 @@ class _SettingsScreenState extends State<SettingsScreen>
           const Divider(height: 1, indent: 72, endIndent: 16),
           ListTile(
             leading: const Icon(Icons.record_voice_over),
-            title: const Text('Announcement Format',
-                style: TextStyle(fontWeight: FontWeight.w500)),
+            title: const Text('Announcement Format', style: TextStyle(fontWeight: FontWeight.w500)),
             subtitle: Text(_getFormatLabel(_announceFormat)),
             trailing: DropdownButton<String>(
               value: _announceFormat,
               underline: const SizedBox(),
               items: const [
-                DropdownMenuItem(value: 'A', child: Text('Format A')),
-                DropdownMenuItem(value: 'B', child: Text('Format B')),
-                DropdownMenuItem(value: 'C', child: Text('Format C')),
+                DropdownMenuItem(value: 'A', child: Text('Format A (Standard)')),
+                DropdownMenuItem(value: 'B', child: Text('Format B (Short)')),
+                DropdownMenuItem(value: 'C', child: Text('Format C (Quick)')),
               ],
               onChanged: (v) { if (v != null) _setAnnounceFormat(v); },
             ),
           ),
           const Divider(height: 1, indent: 72, endIndent: 16),
-          SwitchListTile(
-            secondary: const Icon(Icons.store),
-            title: const Text('Include Shop Name',
-                style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: const Text('Announce the shop name at the end'),
-            value: _includeShopName,
-            onChanged: _setIncludeShopName,
-          ),
-          const Divider(height: 1, indent: 72, endIndent: 16),
           ListTile(
             leading: const Icon(Icons.volume_up),
-            title: const Text('Announcement Volume',
-                style: TextStyle(fontWeight: FontWeight.w500)),
+            title: const Text('Announcement Volume', style: TextStyle(fontWeight: FontWeight.w500)),
             subtitle: const Text(
-              'Uses system volume. Cannot be changed independently.',
-              style: TextStyle(color: Colors.orange, fontSize: 12),
+              'Uses phone media volume. Adjust via your device volume buttons.',
+              style: TextStyle(fontSize: 12),
             ),
-            trailing: const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
           ),
 
-          // ── NOTIFICATION ACCESS ───────────────────────────────────────────
-          _sectionHeader('NOTIFICATION ACCESS'),
+          // ════════════════════════════════════════════════════════════════════
+          // 2. SUBSCRIPTION SECTION
+          // ════════════════════════════════════════════════════════════════════
+          _sectionHeader('SUBSCRIPTION'),
+          ValueListenableBuilder<SubscriptionInfo>(
+            valueListenable: SubscriptionManager.instance.subscriptionInfoNotifier,
+            builder: (context, subInfo, _) {
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                elevation: 0,
+                color: const Color(0xFFFBF8FF),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(
+                    color: subInfo.state.hasPremiumEntitlement
+                        ? Colors.green.shade200
+                        : const Color(0xFFE9D5FF),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(Icons.workspace_premium_rounded,
+                                  size: 20, color: Color(0xFF7E22CE)),
+                              SizedBox(width: 8),
+                              Text(
+                                'MyUPI Premium',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1F2937),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: subInfo.state.hasPremiumEntitlement
+                                  ? Colors.green.shade50
+                                  : const Color(0xFFF3E8FF),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              subInfo.state.label.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: subInfo.state.hasPremiumEntitlement
+                                    ? Colors.green.shade700
+                                    : const Color(0xFF7E22CE),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        subInfo.state.hasPremiumEntitlement
+                            ? 'All 8 Indian languages, custom shop branding, and priority announcements active.'
+                            : 'Introductory Offer: ₹1 for first month, then ₹49/month. Cancel anytime via Play Store.',
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563), height: 1.35),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (ctx) => const PaywallScreen(sourceEntry: 'settings'),
+                                  ),
+                                );
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFF5B21B6),
+                                side: const BorderSide(color: Color(0xFF8B5CF6)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                              ),
+                              child: Text(
+                                subInfo.state.hasPremiumEntitlement ? 'Manage Subscription' : 'View Premium Plans',
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          TextButton.icon(
+                            onPressed: _isRestoring ? null : _handleRestorePurchases,
+                            icon: _isRestoring
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : const Icon(Icons.restore, size: 16),
+                            label: const Text('Restore', style: TextStyle(fontSize: 12)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+
+          // ════════════════════════════════════════════════════════════════════
+          // 3. APP SECTION
+          // ════════════════════════════════════════════════════════════════════
+          _sectionHeader('APP'),
           ListTile(
             leading: Icon(
               _notifAccess == true
@@ -270,75 +420,48 @@ class _SettingsScreenState extends State<SettingsScreen>
                   : Icons.error_outline,
               color: _notifAccess == true ? Colors.green : Colors.orange,
             ),
-            title: const Text('Notification Access',
-                style: TextStyle(fontWeight: FontWeight.w500)),
+            title: const Text('Notification Access', style: TextStyle(fontWeight: FontWeight.w500)),
             subtitle: Text(
               _notifAccess == null
                   ? 'Checking…'
                   : _notifAccess!
-                      ? 'Enabled — MyUPI can detect payments'
-                      : 'Disabled — payments cannot be detected',
+                      ? 'Enabled — MyUPI can hear payment notifications'
+                      : 'Disabled — payments cannot be announced',
               style: TextStyle(
-                  fontSize: 12,
-                  color: _notifAccess == true ? Colors.green : Colors.orange),
-            ),
-          ),
-          if (_notifAccess == false)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: _openAccessSettings,
-                  icon: const Icon(Icons.open_in_new, size: 16),
-                  label: const Text('Enable Notification Access'),
-                ),
+                fontSize: 12,
+                color: _notifAccess == true ? Colors.green : Colors.orange,
               ),
             ),
-
-          // ── ABOUT ─────────────────────────────────────────────────────────
-          _sectionHeader('ABOUT'),
-          const ListTile(
-            leading: Icon(Icons.battery_alert_outlined),
-            title: Text('Keep MyUPI running reliably',
-                style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: Text(
-              'Some phones restrict background apps to save battery. '
-              'For reliable payment announcements, allow MyUPI to run in the background without battery restrictions.',
-              style: TextStyle(fontSize: 12),
-            ),
+            trailing: _notifAccess == false
+                ? OutlinedButton(
+                    onPressed: _openAccessSettings,
+                    child: const Text('Enable', style: TextStyle(fontSize: 12)),
+                  )
+                : null,
           ),
-          const ListTile(
-            leading: Icon(Icons.info_outline),
-            title: Text('MyUPI Soundbox',
-                style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: Text('Version 1.0.0'),
-          ),
-          const ListTile(
-            leading: Icon(Icons.security_outlined),
-            title: Text('Privacy',
-                style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: Text(
-              'Payment history is stored only on this device. '
-              'No personal data is uploaded or shared.',
-              style: TextStyle(fontSize: 12),
-            ),
-          ),
+          const Divider(height: 1, indent: 72, endIndent: 16),
           ListTile(
-            leading: const Icon(Icons.developer_mode_outlined),
-            title: const Text('Developer Diagnostics',
-                style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: const Text(
-              'System health, parser version, flags, and architecture',
-              style: TextStyle(fontSize: 12),
-            ),
+            leading: const Icon(Icons.help_outline),
+            title: const Text('Help & Support', style: TextStyle(fontWeight: FontWeight.w500)),
+            subtitle: const Text('FAQs, setup guides, and troubleshooting', style: TextStyle(fontSize: 12)),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (ctx) => const DiagnosticsScreen(),
-                ),
+                MaterialPageRoute(builder: (ctx) => const HelpSupportScreen()),
+              );
+            },
+          ),
+          const Divider(height: 1, indent: 72, endIndent: 16),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('About MyUPI', style: TextStyle(fontWeight: FontWeight.w500)),
+            subtitle: const Text('Version 1.0.0, privacy policy, and terms', style: TextStyle(fontSize: 12)),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (ctx) => const AboutScreen()),
               );
             },
           ),
@@ -418,7 +541,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             ),
           ],
         );
-      }
+      },
     );
   }
 }

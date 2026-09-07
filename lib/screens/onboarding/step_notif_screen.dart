@@ -74,7 +74,7 @@ class _StepNotifScreenState extends State<StepNotifScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Step indicator ──────────────────────────────────────────────
-              _StepIndicator(current: 1, total: 3),
+              _StepIndicator(current: 2, total: 6),
               const SizedBox(height: 32),
 
               // ── Icon ────────────────────────────────────────────────────────
@@ -97,9 +97,9 @@ class _StepNotifScreenState extends State<StepNotifScreen>
 
               // ── Title ───────────────────────────────────────────────────────
               Text(
-                'Enable Notification Access',
+                'Allow MyUPI to hear payment notifications',
                 style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: cs.onSurface),
               ),
@@ -107,24 +107,40 @@ class _StepNotifScreenState extends State<StepNotifScreen>
 
               // ── Body ────────────────────────────────────────────────────────
               Text(
-                'MyUPI needs notification access to hear payment notifications '
-                'from your UPI apps such as PhonePe, Paytm, and Google Pay.',
+                'MyUPI uses payment notifications from supported UPI apps to announce incoming payments aloud.',
                 style: TextStyle(
                     fontSize: 15,
                     color: cs.onSurface.withAlpha(180),
-                    height: 1.6),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'MyUPI does not read the content of other app notifications or '
-                'messages.',
-                style: TextStyle(
-                    fontSize: 13,
-                    color: cs.onSurface.withAlpha(130),
                     height: 1.5),
               ),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0FDF4),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFBBF7D0)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.shield_outlined, size: 18, color: Color(0xFF16A34A)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'MyUPI does not need or access your UPI PIN, bank password, or card details. Everything stays private on your phone.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.green.shade900,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-              const SizedBox(height: 28),
+              const SizedBox(height: 24),
 
               // ── Status card ─────────────────────────────────────────────────
               _AccessStatusCard(

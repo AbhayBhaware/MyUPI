@@ -35,6 +35,7 @@ private const val KEY_LANGUAGE          = "language" // e.g. "en-IN"
 private const val KEY_HISTORY           = "payment_history" // JSON array
 private const val KEY_MERCHANT_ID      = "merchant_id"
 private const val KEY_ONBOARDING        = "onboarding_completed" // bool
+private const val KEY_SUBSCRIPTION_STATE = "subscription_state" // "INTRO_OFFER_AVAILABLE", etc.
 private const val MAX_HISTORY_SIZE      = 1000
 
 // ─── Data class for a payment history record ──────────────────────────────────
@@ -170,7 +171,22 @@ object SharedPreferencesManager {
         )
     }
 
-    fun getSubscriptionTier(): String = "FREE"
+    fun getSubscriptionState(): String =
+        prefs.getString(KEY_SUBSCRIPTION_STATE, "INTRO_OFFER_AVAILABLE") ?: "INTRO_OFFER_AVAILABLE"
+
+    fun setSubscriptionState(state: String) {
+        prefs.edit().putString(KEY_SUBSCRIPTION_STATE, state).apply()
+        Log.d(TAG, "Subscription state updated: $state")
+    }
+
+    fun getSubscriptionTier(): String {
+        val state = getSubscriptionState()
+        return if (state == "ACTIVE" || state == "GRACE_PERIOD" || state == "CANCELLED") {
+            "PREMIUM"
+        } else {
+            "FREE"
+        }
+    }
 
     // ── Payment history ───────────────────────────────────────────────────────
 

@@ -19,6 +19,7 @@ import 'package:flutter/services.dart';
 import '../app_channels.dart';
 import '../tts_service.dart';
 import '../upi_detector.dart';
+import 'paywall_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final void Function(int tabIndex)? onNavigateToTab;
@@ -292,6 +293,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     _buildLastPaymentCard(cs),
                     const SizedBox(height: 16),
 
+                    // ── Premium / Offer Banner ───────────────────────────────
+                    _buildPremiumIntroCard(cs),
+                    const SizedBox(height: 16),
+
                     // ── Quick Merchant Actions ───────────────────────────────
                     _buildMerchantActions(cs),
                     const SizedBox(height: 32),
@@ -302,6 +307,95 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ],
         ),
       ),
+    );
+  }
+
+  // ── Premium Banner ────────────────────────────────────────────────────────
+
+  Widget _buildPremiumIntroCard(ColorScheme cs) {
+    return ValueListenableBuilder<SubscriptionInfo>(
+      valueListenable: SubscriptionManager.instance.subscriptionInfoNotifier,
+      builder: (context, subInfo, _) {
+        final isPrem = subInfo.state.hasPremiumEntitlement;
+
+        return Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: isPrem ? Colors.green.shade200 : const Color(0xFFDDD6FE),
+            ),
+          ),
+          color: isPrem ? const Color(0xFFF0FDF4) : const Color(0xFFFBF8FF),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (ctx) => const PaywallScreen(sourceEntry: 'dashboard'),
+                ),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: isPrem ? Colors.green.shade100 : const Color(0xFFEDE9FE),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isPrem ? Icons.check_circle_outline : Icons.workspace_premium_rounded,
+                      color: isPrem ? Colors.green.shade700 : const Color(0xFF7C3AED),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              isPrem ? 'MyUPI Premium Active' : 'Special Offer: ₹1 First Month',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: isPrem ? Colors.green.shade900 : const Color(0xFF5B21B6),
+                              ),
+                            ),
+                            const Spacer(),
+                            Icon(
+                              Icons.chevron_right,
+                              size: 18,
+                              color: isPrem ? Colors.green.shade700 : const Color(0xFF7C3AED),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          isPrem
+                              ? 'All 8 languages and shop branding enabled.'
+                              : 'Then ₹49/month. Tap to explore premium soundbox benefits.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isPrem ? Colors.green.shade800 : const Color(0xFF6B7280),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

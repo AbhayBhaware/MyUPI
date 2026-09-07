@@ -73,6 +73,9 @@ class _AppRouterState extends State<_AppRouter> {
 
   Future<void> _checkOnboarding() async {
     try {
+      await SubscriptionManager.instance.initialize();
+      // Initialize Google Play Billing in background; failure never blocks startup
+      BillingService.instance.initialize().catchError((_) {});
       final done = await kMethodChannel
           .invokeMethod<bool>('isOnboardingCompleted') ?? false;
       if (mounted) setState(() => _onboardingDone = done);

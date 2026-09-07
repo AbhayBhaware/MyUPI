@@ -1,13 +1,15 @@
 // lib/screens/onboarding/onboarding_shell.dart
 //
-// Onboarding orchestrator — manages the 4-step (0–3) flow.
+// Onboarding orchestrator — manages the 6-step (0–5) merchant flow.
 // Uses a PageView with physics disabled so only programmatic
 // navigation is possible (no swipe-to-skip).
 //
 // Step 0: Welcome
 // Step 1: Notification Access
-// Step 2: Soundbox + Test Sound
-// Step 3: Ready / Complete
+// Step 2: Soundbox Setup
+// Step 3: Shop Profile
+// Step 4: Test Soundbox
+// Step 5: Ready -> Go to Dashboard
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +18,8 @@ import '../../app_channels.dart';
 import 'welcome_screen.dart';
 import 'step_notif_screen.dart';
 import 'step_sound_screen.dart';
+import 'step_shop_profile_screen.dart';
+import 'step_test_sound_screen.dart';
 import 'step_ready_screen.dart';
 
 class OnboardingShell extends StatefulWidget {
@@ -28,9 +32,8 @@ class OnboardingShell extends StatefulWidget {
 }
 
 class _OnboardingShellState extends State<OnboardingShell> {
-
   final _controller = PageController();
-  int   _page = 0;
+  int _page = 0;
 
   // State forwarded to the Ready screen.
   bool _notifAccess = false;
@@ -48,7 +51,7 @@ class _OnboardingShellState extends State<OnboardingShell> {
   }
 
   /// Re-read notification access and soundbox state so the Ready screen
-  /// reflects the real current values.
+  /// reflects real current values.
   Future<void> _refreshState() async {
     try {
       final access = await kMethodChannel
@@ -80,7 +83,6 @@ class _OnboardingShellState extends State<OnboardingShell> {
             curve: Curves.easeInOut,
           );
         }
-        // Page 0: do nothing — don't exit the app from onboarding.
       },
       child: PageView(
         controller: _controller,
@@ -92,10 +94,16 @@ class _OnboardingShellState extends State<OnboardingShell> {
           // Step 1 — Notification Access
           StepNotifScreen(onContinue: _goNext),
 
-          // Step 2 — Soundbox + Test Sound
+          // Step 2 — Soundbox Setup (toggle, language, speed, style)
           StepSoundScreen(onContinue: _goNext),
 
-          // Step 3 — Ready
+          // Step 3 — Shop Profile (store name, announce shop name)
+          StepShopProfileScreen(onContinue: _goNext),
+
+          // Step 4 — Test Soundbox (interactive audio sample)
+          StepTestSoundScreen(onContinue: _goNext),
+
+          // Step 5 — Ready (summary + Go to Dashboard)
           StepReadyScreen(
             onFinish: widget.onComplete,
             notifAccessGranted: _notifAccess,

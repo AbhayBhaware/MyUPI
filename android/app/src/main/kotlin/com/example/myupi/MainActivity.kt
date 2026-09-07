@@ -152,7 +152,7 @@ class MainActivity : FlutterActivity() {
                         result.success(available)
                     }
 
-                    // ── Architecture & Verification Readiness (M18) ────────────
+                    // ── Architecture & Verification Readiness (M18 & M19) ────
                     "getMerchantProfile" -> {
                         result.success(SharedPreferencesManager.getMerchantProfile())
                     }
@@ -161,6 +161,14 @@ class MainActivity : FlutterActivity() {
                     }
                     "getSubscriptionTier" -> {
                         result.success(SharedPreferencesManager.getSubscriptionTier())
+                    }
+                    "getSubscriptionState" -> {
+                        result.success(SharedPreferencesManager.getSubscriptionState())
+                    }
+                    "setSubscriptionState" -> {
+                        val state = call.argument<String>("state") ?: "INTRO_OFFER_AVAILABLE"
+                        SharedPreferencesManager.setSubscriptionState(state)
+                        result.success(null)
                     }
                     "getDiagnostics" -> {
                         val enabledPackages =
@@ -181,6 +189,7 @@ class MainActivity : FlutterActivity() {
                             "totalStoredPayments"       to SharedPreferencesManager.getHistory().size,
                             "merchantId"                to SharedPreferencesManager.getMerchantId(),
                             "subscriptionTier"          to SharedPreferencesManager.getSubscriptionTier(),
+                            "subscriptionState"         to SharedPreferencesManager.getSubscriptionState(),
                             "featureFlags"              to SharedPreferencesManager.getFeatureFlags(),
                         )
                         result.success(diagnostics)

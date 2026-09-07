@@ -11,8 +11,12 @@ export 'models/payment_event.dart';
 export 'models/merchant_profile.dart';
 export 'models/feature_flags.dart';
 export 'models/subscription_tier.dart';
+export 'models/subscription_state.dart';
 export 'repositories/payment_repository.dart';
 export 'services/payment_source.dart';
+export 'services/entitlement_manager.dart';
+export 'services/subscription_manager.dart';
+export 'services/billing_service.dart';
 
 // ─── Channel references ───────────────────────────────────────────────────────
 

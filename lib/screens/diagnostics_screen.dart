@@ -104,6 +104,10 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
                     const SizedBox(height: 16),
                     _buildFeatureFlagsCard(theme),
                     const SizedBox(height: 16),
+                    _buildPlayBillingDiagnosticsCard(theme),
+                    const SizedBox(height: 16),
+                    _buildSubscriptionSimulatorCard(theme),
+                    const SizedBox(height: 16),
                     _buildPrivacyAndIdentityCard(theme),
                     const SizedBox(height: 24),
                   ],
@@ -280,6 +284,197 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
           );
         }),
       ],
+    );
+  }
+
+  // ── Google Play Billing Diagnostics (Milestone 20) ────────────────────────
+  Widget _buildPlayBillingDiagnosticsCard(ThemeData theme) {
+    final billing = BillingService.instance;
+    final subInfo = SubscriptionManager.instance.currentInfo;
+    final isBillingAvail = billing.isAvailable;
+    final isProductFound = billing.productDetails != null;
+
+    return _buildCard(
+      title: 'Google Play Billing & Subscriptions',
+      icon: Icons.verified_outlined,
+      children: [
+        _buildRow(
+          'Billing Client Status',
+          isBillingAvail ? 'CONNECTED' : 'UNAVAILABLE',
+          badgeColor: isBillingAvail ? Colors.green.shade700 : Colors.red.shade700,
+          badgeBg: isBillingAvail ? Colors.green.shade50 : Colors.red.shade50,
+        ),
+        _buildRow(
+          'Target Product ID',
+          BillingConstants.subscriptionId,
+        ),
+        _buildRow(
+          'Product on Google Play',
+          isProductFound ? 'FOUND' : (billing.isLoadingProduct ? 'QUERYING...' : 'NOT FOUND'),
+          badgeColor: isProductFound ? Colors.green.shade700 : Colors.amber.shade800,
+          badgeBg: isProductFound ? Colors.green.shade50 : Colors.amber.shade50,
+        ),
+        _buildRow(
+          'Live Introductory Price',
+          billing.introPriceDisplay,
+        ),
+        _buildRow(
+          'Live Recurring Price',
+          billing.recurringPriceDisplay,
+        ),
+        _buildRow(
+          'Current Plan State',
+          subInfo.state.label,
+          badgeColor: subInfo.state.hasPremiumEntitlement ? Colors.purple.shade700 : Colors.blueGrey.shade700,
+          badgeBg: subInfo.state.hasPremiumEntitlement ? Colors.purple.shade50 : Colors.blueGrey.shade50,
+        ),
+        _buildRow(
+          'Premium Entitlement',
+          subInfo.state.hasPremiumEntitlement ? 'UNLOCKED' : 'STANDARD (FREE)',
+          badgeColor: subInfo.state.hasPremiumEntitlement ? Colors.green.shade700 : Colors.grey.shade700,
+          badgeBg: subInfo.state.hasPremiumEntitlement ? Colors.green.shade50 : Colors.grey.shade100,
+        ),
+        _buildRow(
+          'Purchase Acknowledged',
+          billing.lastPurchaseAcknowledged ? 'YES (Within 3 Days)' : 'N/A',
+        ),
+        _buildRow(
+          'Sanitized Token',
+          billing.lastPurchaseTokenSanitized ?? 'None',
+        ),
+        _buildRow(
+          'Last Refresh',
+          billing.lastRefreshTime != null
+              ? '${billing.lastRefreshTime!.hour.toString().padLeft(2, '0')}:${billing.lastRefreshTime!.minute.toString().padLeft(2, '0')}:${billing.lastRefreshTime!.second.toString().padLeft(2, '0')}'
+              : 'Not refreshed',
+        ),
+        if (billing.lastErrorMessage != null) ...[
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.red.shade200),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, size: 16, color: Colors.red.shade700),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    billing.lastErrorMessage!,
+                    style: TextStyle(fontSize: 11, color: Colors.red.shade900),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () async {
+              await billing.queryProducts();
+              if (mounted) setState(() {});
+            },
+            icon: const Icon(Icons.refresh, size: 16),
+            label: const Text('Refresh Play Billing Products', style: TextStyle(fontSize: 12)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Development-Only Subscription Simulator ────────────────────────────────
+
+  Widget _buildSubscriptionSimulatorCard(ThemeData theme) {
+    final subState = SubscriptionManager.instance.currentState;
+
+    return _buildCard(
+      title: 'Subscription Simulator',
+      icon: Icons.science_outlined,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFEF3C7),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFFDE68A)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Icon(Icons.warning_amber_rounded, color: Color(0xFFB45309), size: 18),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'DEVELOPMENT ONLY: This simulator toggles local UI entitlements for testing. It never processes payments or creates real purchases.',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF92400E),
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        _buildRow(
+          'Active Simulator State',
+          subState.label,
+          badgeColor: subState.hasPremiumEntitlement ? Colors.green.shade700 : Colors.indigo.shade700,
+          badgeBg: subState.hasPremiumEntitlement ? Colors.green.shade50 : Colors.indigo.shade50,
+        ),
+        const SizedBox(height: 10),
+        const Text(
+          'Select State to Test UI Entitlements:',
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF4B5563)),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            _simStateChip(SubscriptionState.introOfferAvailable, 'Intro Offer (Default)'),
+            _simStateChip(SubscriptionState.active, 'Active (Premium)'),
+            _simStateChip(SubscriptionState.gracePeriod, 'Grace Period'),
+            _simStateChip(SubscriptionState.cancelled, 'Cancelled'),
+            _simStateChip(SubscriptionState.expired, 'Expired'),
+            _simStateChip(SubscriptionState.notSubscribed, 'Not Subscribed'),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () async {
+              await SubscriptionManager.instance.resetToDefault();
+              await _loadDiagnostics();
+              if (mounted) setState(() {});
+            },
+            icon: const Icon(Icons.restart_alt, size: 16),
+            label: const Text('Reset to Default (Intro Offer Available)', style: TextStyle(fontSize: 12)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _simStateChip(SubscriptionState state, String label) {
+    final isSelected = SubscriptionManager.instance.currentState == state;
+    return ChoiceChip(
+      label: Text(label, style: TextStyle(fontSize: 11, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+      selected: isSelected,
+      selectedColor: const Color(0xFFEDE9FE),
+      onSelected: (_) async {
+        await SubscriptionManager.instance.setSimulatedState(state);
+        await _loadDiagnostics();
+        if (mounted) setState(() {});
+      },
     );
   }
 
