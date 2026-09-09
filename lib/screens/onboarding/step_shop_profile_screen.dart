@@ -8,6 +8,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../app_channels.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_radius.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_typography.dart';
+import '../../widgets/premium_buttons.dart';
+import '../../widgets/premium_card.dart';
 
 class StepShopProfileScreen extends StatefulWidget {
   final VoidCallback onContinue;
@@ -65,19 +71,20 @@ class _StepShopProfileScreenState extends State<StepShopProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: AppColors.surface,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.lg,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Step indicator ──────────────────────────────────────────────
-              _StepIndicator(current: 4, total: 6),
-              const SizedBox(height: 32),
+              const _StepIndicator(current: 4, total: 6),
+              const SizedBox(height: AppSpacing.xl),
 
               Expanded(
                 child: SingleChildScrollView(
@@ -89,94 +96,92 @@ class _StepShopProfileScreenState extends State<StepShopProfileScreen> {
                         width: 72,
                         height: 72,
                         decoration: BoxDecoration(
-                          color: cs.primary.withAlpha(25),
-                          borderRadius: BorderRadius.circular(18),
+                          color: AppColors.lightBlue,
+                          borderRadius: AppRadius.lgRadius,
+                          border: Border.all(color: AppColors.primaryBlue.withAlpha(50), width: 1.0),
                         ),
-                        child: Icon(
-                          Icons.storefront_outlined,
-                          size: 40,
-                          color: cs.primary,
+                        child: const Icon(
+                          Icons.storefront_rounded,
+                          size: 38,
+                          color: AppColors.primaryBlue,
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.lg),
 
                       // ── Title ───────────────────────────────────────────────
-                      Text(
+                      const Text(
                         'Your Shop Name',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: cs.onSurface,
-                        ),
+                        style: AppTypography.headlineMedium,
                       ),
-                      const SizedBox(height: 10),
-                      Text(
+                      const SizedBox(height: AppSpacing.xs),
+                      const Text(
                         'Add your shop or business name to personalize payment announcements.',
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: cs.onSurface.withAlpha(180),
-                          height: 1.5,
-                        ),
+                        style: AppTypography.bodyMedium,
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: AppSpacing.xl),
 
                       // ── Shop Name Input ─────────────────────────────────────
                       if (_loading)
-                        const Center(child: CircularProgressIndicator())
+                        const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue))
                       else ...[
-                        Text(
+                        const Text(
                           'Shop or Business Name',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: cs.onSurface,
-                          ),
+                          style: AppTypography.titleSmall,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppSpacing.xs),
                         TextField(
                           controller: _nameController,
                           maxLength: 40,
                           textCapitalization: TextCapitalization.words,
                           decoration: InputDecoration(
                             hintText: 'e.g. Abhay General Store',
-                            prefixIcon: const Icon(Icons.business_outlined),
+                            prefixIcon: const Icon(Icons.store_rounded, color: AppColors.primaryBlue),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: AppRadius.mdRadius,
+                              borderSide: const BorderSide(color: AppColors.borderMedium),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: AppRadius.mdRadius,
+                              borderSide: const BorderSide(color: AppColors.borderMedium),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: AppRadius.mdRadius,
+                              borderSide: const BorderSide(color: AppColors.primaryBlue, width: 1.5),
                             ),
                             filled: true,
-                            fillColor: cs.surfaceContainerHighest.withAlpha(50),
+                            fillColor: AppColors.surface,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.md),
 
                         // ── Include Shop Name in Announcement Switch ─────────
-                        Card(
-                          elevation: 0,
-                          color: cs.surfaceContainerHighest.withAlpha(60),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            side: BorderSide(color: cs.outlineVariant.withAlpha(80)),
-                          ),
+                        PremiumCard(
+                          padding: EdgeInsets.zero,
                           child: SwitchListTile(
+                            activeThumbColor: AppColors.primaryBlue,
                             title: const Text(
                               'Announce shop name',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
-                              ),
+                              style: AppTypography.titleSmall,
                             ),
                             subtitle: Text(
                               _includeShopName
                                   ? 'Example: "Received ₹100 at ${_nameController.text.trim().isEmpty ? 'Your Shop' : _nameController.text.trim()}"'
                                   : 'Example: "Received ₹100 on PhonePe"',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: cs.onSurface.withAlpha(160),
-                              ),
+                              style: AppTypography.caption,
                             ),
-                            secondary: Icon(
-                              Icons.record_voice_over_outlined,
-                              color: _includeShopName ? cs.primary : Colors.grey,
+                            secondary: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: _includeShopName ? AppColors.lightBlue : AppColors.background,
+                                borderRadius: AppRadius.smRadius,
+                              ),
+                              child: Icon(
+                                Icons.record_voice_over_rounded,
+                                color: _includeShopName ? AppColors.primaryBlue : AppColors.textTertiary,
+                                size: 20,
+                              ),
                             ),
                             value: _includeShopName,
                             onChanged: (val) {
@@ -184,52 +189,36 @@ class _StepShopProfileScreenState extends State<StepShopProfileScreen> {
                             },
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.base),
 
                         // Privacy note
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.lock_outline, size: 18, color: cs.onSurface.withAlpha(140)),
-                            const SizedBox(width: 8),
+                          children: const [
+                            Icon(Icons.lock_outline_rounded, size: 16, color: AppColors.textTertiary),
+                            SizedBox(width: AppSpacing.xs),
                             Expanded(
                               child: Text(
                                 'Saved only on your phone. Never uploaded to any server or cloud.',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: cs.onSurface.withAlpha(140),
-                                  height: 1.4,
-                                ),
+                                style: AppTypography.caption,
                               ),
                             ),
                           ],
                         ),
                       ],
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.xl),
                     ],
                   ),
                 ),
               ),
 
               // ── Continue Button ─────────────────────────────────────────────
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: FilledButton.icon(
-                  onPressed: _saveAndContinue,
-                  icon: const Icon(Icons.arrow_forward),
-                  label: const Text(
-                    'Continue',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
-                  style: FilledButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
+              PrimaryButton(
+                label: 'Continue',
+                icon: Icons.arrow_forward_rounded,
+                onPressed: _saveAndContinue,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.base),
             ],
           ),
         ),
@@ -245,28 +234,27 @@ class _StepIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
         for (int i = 1; i <= total; i++) ...[
           Container(
-            width: i == current ? 28 : 10,
-            height: 10,
+            width: i == current ? 24 : 8,
+            height: 8,
             decoration: BoxDecoration(
               color: i == current
-                  ? cs.primary
+                  ? AppColors.primaryBlue
                   : i < current
-                      ? cs.primary.withAlpha(120)
-                      : cs.onSurface.withAlpha(40),
-              borderRadius: BorderRadius.circular(5),
+                      ? AppColors.primaryBlue.withAlpha(120)
+                      : AppColors.borderMedium,
+              borderRadius: AppRadius.pillRadius,
             ),
           ),
-          if (i < total) const SizedBox(width: 6),
+          if (i < total) const SizedBox(width: 5),
         ],
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.md),
         Text(
           'Step $current of $total',
-          style: TextStyle(fontSize: 12, color: cs.onSurface.withAlpha(140)),
+          style: AppTypography.caption.copyWith(fontWeight: FontWeight.w600),
         ),
       ],
     );

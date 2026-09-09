@@ -7,6 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../app_channels.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_radius.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_typography.dart';
+import '../../widgets/premium_buttons.dart';
+import '../../widgets/premium_card.dart';
 
 class StepReadyScreen extends StatefulWidget {
   final VoidCallback onFinish;
@@ -32,9 +38,7 @@ class _StepReadyScreenState extends State<StepReadyScreen> {
     setState(() => _saving = true);
     try {
       await kMethodChannel.invokeMethod('setOnboardingCompleted');
-    } on PlatformException catch (_) {
-      // Even if the Kotlin call fails, proceed — worst case is onboarding shows again.
-    }
+    } on PlatformException catch (_) {}
     if (mounted) {
       setState(() => _saving = false);
       widget.onFinish();
@@ -43,123 +47,99 @@ class _StepReadyScreenState extends State<StepReadyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: AppColors.surface,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.lg,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Step indicator ──────────────────────────────────────────────
-              _StepIndicator(current: 6, total: 6),
-              const SizedBox(height: 32),
+              const _StepIndicator(current: 6, total: 6),
+              const SizedBox(height: AppSpacing.xl),
 
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.md),
 
                       // ── Celebration icon ────────────────────────────────────
                       Container(
                         width: 96,
                         height: 96,
                         decoration: BoxDecoration(
-                          color: Colors.green.withAlpha(30),
+                          color: AppColors.successBg,
                           shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.successBorder, width: 2.0),
                         ),
-                        child: const Icon(Icons.check_circle, size: 60, color: Colors.green),
+                        child: const Icon(
+                          Icons.check_circle_rounded,
+                          size: 56,
+                          color: AppColors.success,
+                        ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.lg),
 
                       // ── Headline ────────────────────────────────────────────
-                      Text(
+                      const Text(
                         'MyUPI is ready',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: cs.onSurface,
-                        ),
+                        style: AppTypography.headlineLarge,
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 10),
-                      Text(
+                      const SizedBox(height: AppSpacing.xs),
+                      const Text(
                         'When a supported UPI payment notification arrives, your phone will announce the payment instantly.',
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: cs.onSurface.withAlpha(180),
-                          height: 1.5,
-                        ),
+                        style: AppTypography.bodyMedium,
                         textAlign: TextAlign.center,
                       ),
 
-                      const SizedBox(height: 28),
+                      const SizedBox(height: AppSpacing.xl),
 
                       // ── Checklist ───────────────────────────────────────────
-                      _buildChecklist(cs),
+                      _buildChecklist(),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.lg),
 
                       // Merchant reassurance banner
                       Container(
-                        padding: const EdgeInsets.all(14),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
-                          color: cs.primaryContainer.withAlpha(50),
-                          borderRadius: BorderRadius.circular(12),
+                          color: AppColors.lightBlue,
+                          borderRadius: AppRadius.mdRadius,
+                          border: Border.all(color: AppColors.primaryBlue.withAlpha(50)),
                         ),
                         child: Row(
-                          children: [
-                            Icon(Icons.verified_user_outlined, color: cs.primary, size: 20),
-                            const SizedBox(width: 10),
+                          children: const [
+                            Icon(Icons.verified_user_rounded, color: AppColors.primaryBlue, size: 20),
+                            SizedBox(width: AppSpacing.sm),
                             Expanded(
                               child: Text(
                                 'Works offline. Zero soundbox machine rent. All notifications processed securely on this device.',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: cs.onSurface.withAlpha(180),
-                                  height: 1.4,
-                                ),
+                                style: AppTypography.caption,
                               ),
                             ),
                           ],
                         ),
                       ),
+                      const SizedBox(height: AppSpacing.xl),
                     ],
                   ),
                 ),
               ),
 
               // ── Go to Dashboard Button ──────────────────────────────────────
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: FilledButton.icon(
-                  onPressed: _saving ? null : _finishOnboarding,
-                  icon: _saving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.arrow_forward_rounded),
-                  label: Text(
-                    _saving ? 'Opening Dashboard…' : 'Go to Dashboard',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
-                  style: FilledButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
+              PrimaryButton(
+                label: _saving ? 'Opening Dashboard…' : 'Go to Dashboard',
+                isLoading: _saving,
+                icon: Icons.arrow_forward_rounded,
+                onPressed: _saving ? null : _finishOnboarding,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.base),
             ],
           ),
         ),
@@ -167,49 +147,41 @@ class _StepReadyScreenState extends State<StepReadyScreen> {
     );
   }
 
-  Widget _buildChecklist(ColorScheme cs) {
-    return Card(
-      elevation: 0,
-      color: cs.surfaceContainerHighest.withAlpha(50),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: cs.outlineVariant.withAlpha(80)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          children: [
-            _ChecklistItem(
-              icon: widget.notifAccessGranted
-                  ? Icons.check_circle
-                  : Icons.warning_amber_rounded,
-              color: widget.notifAccessGranted ? Colors.green : Colors.orange,
-              label: widget.notifAccessGranted
-                  ? 'Notification access enabled'
-                  : 'Notification access pending (enable in Dashboard)',
-            ),
-            const Divider(height: 18),
-            _ChecklistItem(
-              icon: widget.soundboxEnabled ? Icons.check_circle : Icons.volume_off,
-              color: widget.soundboxEnabled ? Colors.green : Colors.grey,
-              label: widget.soundboxEnabled
-                  ? 'Soundbox voice announcements ON'
-                  : 'Soundbox paused (can turn on anytime)',
-            ),
-            const Divider(height: 18),
-            const _ChecklistItem(
-              icon: Icons.check_circle,
-              color: Colors.green,
-              label: 'PhonePe, Google Pay, Paytm & BHIM ready',
-            ),
-            const Divider(height: 18),
-            const _ChecklistItem(
-              icon: Icons.check_circle,
-              color: Colors.green,
-              label: '8 Indian languages & shop name supported',
-            ),
-          ],
-        ),
+  Widget _buildChecklist() {
+    return PremiumCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        children: [
+          _ChecklistItem(
+            icon: widget.notifAccessGranted
+                ? Icons.check_circle_rounded
+                : Icons.warning_amber_rounded,
+            color: widget.notifAccessGranted ? AppColors.success : AppColors.warning,
+            label: widget.notifAccessGranted
+                ? 'Notification access enabled'
+                : 'Notification access pending (enable in Dashboard)',
+          ),
+          const Divider(height: 20, color: AppColors.borderLight),
+          _ChecklistItem(
+            icon: widget.soundboxEnabled ? Icons.check_circle_rounded : Icons.volume_off_rounded,
+            color: widget.soundboxEnabled ? AppColors.success : AppColors.textTertiary,
+            label: widget.soundboxEnabled
+                ? 'Soundbox voice announcements ON'
+                : 'Soundbox paused (can turn on anytime)',
+          ),
+          const Divider(height: 20, color: AppColors.borderLight),
+          const _ChecklistItem(
+            icon: Icons.check_circle_rounded,
+            color: AppColors.success,
+            label: 'PhonePe, Google Pay, Paytm & BHIM ready',
+          ),
+          const Divider(height: 20, color: AppColors.borderLight),
+          const _ChecklistItem(
+            icon: Icons.check_circle_rounded,
+            color: AppColors.success,
+            label: '8 Indian languages & shop name supported',
+          ),
+        ],
       ),
     );
   }
@@ -231,11 +203,11 @@ class _ChecklistItem extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, color: color, size: 20),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
           ),
         ),
       ],
@@ -250,28 +222,27 @@ class _StepIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
         for (int i = 1; i <= total; i++) ...[
           Container(
-            width: i == current ? 28 : 10,
-            height: 10,
+            width: i == current ? 24 : 8,
+            height: 8,
             decoration: BoxDecoration(
               color: i == current
-                  ? cs.primary
+                  ? AppColors.primaryBlue
                   : i < current
-                      ? cs.primary.withAlpha(120)
-                      : cs.onSurface.withAlpha(40),
-              borderRadius: BorderRadius.circular(5),
+                      ? AppColors.primaryBlue.withAlpha(120)
+                      : AppColors.borderMedium,
+              borderRadius: AppRadius.pillRadius,
             ),
           ),
-          if (i < total) const SizedBox(width: 6),
+          if (i < total) const SizedBox(width: 5),
         ],
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.md),
         Text(
           'Step $current of $total',
-          style: TextStyle(fontSize: 12, color: cs.onSurface.withAlpha(140)),
+          style: AppTypography.caption.copyWith(fontWeight: FontWeight.w600),
         ),
       ],
     );

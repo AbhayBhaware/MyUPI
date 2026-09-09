@@ -1,91 +1,88 @@
 // lib/screens/help_support_screen.dart
 //
-// Merchant Help & Support Screen — provides clear, non-technical guidance
-// for Indian merchants using MyUPI as a payment soundbox.
+// Merchant Help & Support Screen — Modern Fintech Redesign
+// Provides clear, non-technical guidance for Indian merchants using MyUPI.
 
 import 'package:flutter/material.dart';
+
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
+import '../widgets/premium_card.dart';
+import '../widgets/section_header.dart';
 
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Help & Support'),
-        centerTitle: true,
+        title: const Text('Help & Support', style: AppTypography.titleLarge),
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Divider(height: 1, color: AppColors.borderLight),
+        ),
       ),
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.base,
+          vertical: AppSpacing.md,
+        ),
         children: [
           // Header Card
-          Card(
-            elevation: 0,
-            color: cs.primaryContainer.withAlpha(60),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: cs.primary.withAlpha(40)),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: cs.primary.withAlpha(30),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(Icons.support_agent_rounded, color: cs.primary, size: 30),
+          PremiumCard(
+            color: AppColors.lightBlue,
+            borderColor: AppColors.primaryBlue.withAlpha(50),
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryBlue.withAlpha(20),
+                    borderRadius: AppRadius.mdRadius,
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Merchant Soundbox Guide',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: cs.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Answers to common questions about payment announcements and device setup.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: cs.onSurface.withAlpha(160),
-                            height: 1.3,
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: const Icon(
+                    Icons.support_agent_rounded,
+                    color: AppColors.primaryBlue,
+                    size: 28,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'Merchant Soundbox Guide',
+                        style: AppTypography.titleSmall,
+                      ),
+                      SizedBox(height: 3),
+                      Text(
+                        'Answers to common questions about payment announcements and device setup.',
+                        style: AppTypography.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.lg),
 
-          Text(
-            'FREQUENTLY ASKED QUESTIONS',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.1,
-              color: cs.primary,
-            ),
-          ),
-          const SizedBox(height: 12),
+          const SectionHeader(title: 'FREQUENTLY ASKED QUESTIONS'),
+          const SizedBox(height: AppSpacing.xs),
 
           // 1. How MyUPI works
-          _FaqTile(
-            icon: Icons.info_outline,
+          const _FaqTile(
+            icon: Icons.info_outline_rounded,
             question: '1. How does MyUPI work without machine rent?',
             answer:
                 'MyUPI turns your existing Android phone into a payment soundbox. '
@@ -95,7 +92,7 @@ class HelpSupportScreen extends StatelessWidget {
           ),
 
           // 2. Enabling notification access
-          _FaqTile(
+          const _FaqTile(
             icon: Icons.notifications_active_outlined,
             question: '2. How do I enable Notification Access?',
             answer:
@@ -108,7 +105,7 @@ class HelpSupportScreen extends StatelessWidget {
           ),
 
           // 3. Audio & volume testing
-          _FaqTile(
+          const _FaqTile(
             icon: Icons.volume_up_outlined,
             question: '3. How do I test the soundbox audio?',
             answer:
@@ -117,7 +114,7 @@ class HelpSupportScreen extends StatelessWidget {
           ),
 
           // 4. Supported UPI apps
-          _FaqTile(
+          const _FaqTile(
             icon: Icons.apps_outlined,
             question: '4. Which UPI apps are supported?',
             answer:
@@ -131,8 +128,8 @@ class HelpSupportScreen extends StatelessWidget {
           ),
 
           // 5. Why payment wasn't announced
-          _FaqTile(
-            icon: Icons.help_outline,
+          const _FaqTile(
+            icon: Icons.help_outline_rounded,
             question: '5. Why was a payment not announced?',
             answer:
                 'If a payment did not announce, check the following:\n\n'
@@ -144,7 +141,7 @@ class HelpSupportScreen extends StatelessWidget {
           ),
 
           // 6. Battery optimization & OEM restrictions
-          _FaqTile(
+          const _FaqTile(
             icon: Icons.battery_saver_outlined,
             question: '6. Battery saver & keeping MyUPI active in the background',
             answer:
@@ -155,7 +152,7 @@ class HelpSupportScreen extends StatelessWidget {
           ),
 
           // 7. Voice & language troubleshooting
-          _FaqTile(
+          const _FaqTile(
             icon: Icons.record_voice_over_outlined,
             question: '7. Voice engine troubleshooting (TTS)',
             answer:
@@ -167,7 +164,7 @@ class HelpSupportScreen extends StatelessWidget {
           ),
 
           // 8. Subscriptions & cancellation
-          _FaqTile(
+          const _FaqTile(
             icon: Icons.payment_outlined,
             question: '8. How to manage or cancel MyUPI Premium?',
             answer:
@@ -179,21 +176,17 @@ class HelpSupportScreen extends StatelessWidget {
                 'You will retain all Premium features until the end of your current billing period.',
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: AppSpacing.lg),
 
           // Privacy note
           Center(
             child: Text(
               'MyUPI runs 100% locally on your phone.\nYour payment data is private and never uploaded to any server.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                color: cs.onSurface.withAlpha(120),
-                height: 1.5,
-              ),
+              style: AppTypography.caption.copyWith(height: 1.5),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.lg),
         ],
       ),
     );
@@ -213,41 +206,58 @@ class _FaqTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 12),
-      color: cs.surfaceContainerHighest.withAlpha(40),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: cs.outlineVariant.withAlpha(60)),
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      decoration: BoxDecoration(
+        borderRadius: AppRadius.mdRadius,
+        border: Border.all(color: AppColors.borderLight, width: 1.0),
       ),
-      child: ExpansionTile(
-        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        leading: Icon(icon, color: cs.primary, size: 22),
-        title: Text(
-          question,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: cs.onSurface,
+      child: Material(
+        color: AppColors.surface,
+        borderRadius: AppRadius.mdRadius,
+        clipBehavior: Clip.antiAlias,
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: AppSpacing.base, vertical: 2),
+          childrenPadding: const EdgeInsets.fromLTRB(
+            AppSpacing.base,
+            0,
+            AppSpacing.base,
+            AppSpacing.base,
           ),
-        ),
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              answer,
-              style: TextStyle(
-                fontSize: 13,
-                color: cs.onSurface.withAlpha(190),
-                height: 1.55,
-              ),
+          leading: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.lightBlue,
+              borderRadius: AppRadius.smRadius,
+            ),
+            child: Icon(icon, color: AppColors.primaryBlue, size: 20),
+          ),
+          title: Text(
+            question,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
             ),
           ),
-        ],
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                answer,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                  height: 1.55,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
       ),
     );
   }

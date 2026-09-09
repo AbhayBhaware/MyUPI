@@ -1,17 +1,25 @@
 // lib/screens/settings_screen.dart
 //
-// Settings screen — organized strictly into 3 merchant categories:
-// 1. SOUNDBOX (toggle, shop name, language, speed, format)
+// Settings screen — Modern Fintech Redesign
+// Organized strictly into 3 merchant categories:
+// 1. SOUNDBOX (toggle, shop name, language, speed, format, volume)
 // 2. SUBSCRIPTION (MyUPI Premium status, upgrade plans, restore purchases)
 // 3. APP (notification access, Help & Support, About MyUPI)
 //
-// Developer Diagnostics is removed from direct view and placed behind
-// a 7-tap version gesture in AboutScreen.
+// Developer Diagnostics is kept behind a 7-tap version gesture in AboutScreen.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app_channels.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
+import '../widgets/premium_buttons.dart';
+import '../widgets/premium_card.dart';
+import '../widgets/section_header.dart';
+import '../widgets/status_badge.dart';
 import 'about_screen.dart';
 import 'help_support_screen.dart';
 import 'paywall_screen.dart';
@@ -25,18 +33,17 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen>
     with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
-
   @override
   bool get wantKeepAlive => true;
 
-  bool   _soundboxEnabled = true;
-  String _speechSpeed     = 'normal';
-  String _language        = 'en-IN';
-  String _merchantName    = 'MyUPI';
-  String _announceFormat  = 'A';
-  bool   _includeShopName = false;
-  bool?  _notifAccess;
-  bool   _isRestoring     = false;
+  bool _soundboxEnabled = true;
+  String _speechSpeed = 'normal';
+  String _language = 'en-IN';
+  String _merchantName = 'MyUPI';
+  String _announceFormat = 'A';
+  bool _includeShopName = false;
+  bool? _notifAccess;
+  bool _isRestoring = false;
 
   @override
   void initState() {
@@ -62,15 +69,15 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   Future<void> _loadSettings() async {
     try {
-      final on    = await kMethodChannel.invokeMethod<bool>('isSoundboxEnabled')  ?? true;
-      final speed = await kMethodChannel.invokeMethod<String>('getSpeechSpeed')   ?? 'normal';
-      final lang  = await kMethodChannel.invokeMethod<String>('getLanguage')      ?? 'en-IN';
-      final mName = await kMethodChannel.invokeMethod<String>('getMerchantName')  ?? 'MyUPI';
-      final aFmt  = await kMethodChannel.invokeMethod<String>('getAnnouncementFormat') ?? 'A';
-      final inc   = await kMethodChannel.invokeMethod<bool>('getIncludeShopName') ?? false;
+      final on = await kMethodChannel.invokeMethod<bool>('isSoundboxEnabled') ?? true;
+      final speed = await kMethodChannel.invokeMethod<String>('getSpeechSpeed') ?? 'normal';
+      final lang = await kMethodChannel.invokeMethod<String>('getLanguage') ?? 'en-IN';
+      final mName = await kMethodChannel.invokeMethod<String>('getMerchantName') ?? 'MyUPI';
+      final aFmt = await kMethodChannel.invokeMethod<String>('getAnnouncementFormat') ?? 'A';
+      final inc = await kMethodChannel.invokeMethod<bool>('getIncludeShopName') ?? false;
       if (!mounted) return;
-      setState(() { 
-        _soundboxEnabled = on; 
+      setState(() {
+        _soundboxEnabled = on;
         _speechSpeed = speed;
         _language = lang;
         _merchantName = mName;
@@ -90,19 +97,22 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   Future<void> _setSoundbox(bool v) async {
     setState(() => _soundboxEnabled = v);
-    try { await kMethodChannel.invokeMethod('setSoundboxEnabled', {'enabled': v}); }
-    on PlatformException catch (_) {}
+    try {
+      await kMethodChannel.invokeMethod('setSoundboxEnabled', {'enabled': v});
+    } on PlatformException catch (_) {}
   }
 
   Future<void> _setSpeed(String v) async {
     setState(() => _speechSpeed = v);
-    try { await kMethodChannel.invokeMethod('setSpeechSpeed', {'speed': v}); }
-    on PlatformException catch (_) {}
+    try {
+      await kMethodChannel.invokeMethod('setSpeechSpeed', {'speed': v});
+    } on PlatformException catch (_) {}
   }
 
   Future<void> _setLanguage(String langCode) async {
     try {
-      final available = await kMethodChannel.invokeMethod<bool>('checkLanguageAvailability', {'language': langCode});
+      final available = await kMethodChannel.invokeMethod<bool>(
+          'checkLanguageAvailability', {'language': langCode});
       if (available == true) {
         setState(() => _language = langCode);
         await kMethodChannel.invokeMethod('setLanguage', {'language': langCode});
@@ -111,7 +121,7 @@ class _SettingsScreenState extends State<SettingsScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Selected language is not available on this device voice engine.'),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppColors.warning,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -121,25 +131,29 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   Future<void> _setMerchantName(String name) async {
     setState(() => _merchantName = name);
-    try { await kMethodChannel.invokeMethod('setMerchantName', {'name': name}); }
-    on PlatformException catch (_) {}
+    try {
+      await kMethodChannel.invokeMethod('setMerchantName', {'name': name});
+    } on PlatformException catch (_) {}
   }
 
   Future<void> _setAnnounceFormat(String v) async {
     setState(() => _announceFormat = v);
-    try { await kMethodChannel.invokeMethod('setAnnouncementFormat', {'format': v}); }
-    on PlatformException catch (_) {}
+    try {
+      await kMethodChannel.invokeMethod('setAnnouncementFormat', {'format': v});
+    } on PlatformException catch (_) {}
   }
 
   Future<void> _setIncludeShopName(bool v) async {
     setState(() => _includeShopName = v);
-    try { await kMethodChannel.invokeMethod('setIncludeShopName', {'enabled': v}); }
-    on PlatformException catch (_) {}
+    try {
+      await kMethodChannel.invokeMethod('setIncludeShopName', {'enabled': v});
+    } on PlatformException catch (_) {}
   }
 
   Future<void> _openAccessSettings() async {
-    try { await kMethodChannel.invokeMethod('openNotificationAccessSettings'); }
-    on PlatformException catch (_) {}
+    try {
+      await kMethodChannel.invokeMethod('openNotificationAccessSettings');
+    } on PlatformException catch (_) {}
   }
 
   Future<void> _handleRestorePurchases() async {
@@ -151,7 +165,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result.message),
-          backgroundColor: result.success ? Colors.green : Colors.orange,
+          backgroundColor: result.success ? AppColors.success : AppColors.warning,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -160,7 +174,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Unable to reach Google Play Store. Please check connection.'),
-          backgroundColor: Colors.orange,
+          backgroundColor: AppColors.warning,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -174,144 +188,232 @@ class _SettingsScreenState extends State<SettingsScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Settings', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: cs.primary,
-        foregroundColor: cs.onPrimary,
+        title: const Text('Settings', style: AppTypography.titleLarge),
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Divider(height: 1, color: AppColors.borderLight),
+        ),
       ),
       body: ListView(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         children: [
-
           // ════════════════════════════════════════════════════════════════════
           // 1. SOUNDBOX SECTION
           // ════════════════════════════════════════════════════════════════════
-          _sectionHeader('SOUNDBOX'),
-          SwitchListTile(
-            title: const Text('Soundbox', style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: Text(
-              _soundboxEnabled
-                  ? 'Payment announcements are on'
-                  : 'Payment announcements are paused',
-              style: TextStyle(
-                fontSize: 12,
-                color: _soundboxEnabled ? Colors.green : Colors.grey,
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
+            child: SectionHeader(title: 'SOUNDBOX'),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
+            child: PremiumCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    activeThumbColor: AppColors.primaryBlue,
+                    title: const Text('Soundbox', style: AppTypography.titleSmall),
+                    subtitle: Text(
+                      _soundboxEnabled
+                          ? 'Payment announcements are on'
+                          : 'Payment announcements are paused',
+                      style: AppTypography.caption.copyWith(
+                        color: _soundboxEnabled ? AppColors.success : AppColors.textTertiary,
+                      ),
+                    ),
+                    secondary: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: _soundboxEnabled ? AppColors.lightBlue : AppColors.background,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: Icon(
+                        _soundboxEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                        color: _soundboxEnabled ? AppColors.primaryBlue : AppColors.textTertiary,
+                        size: 20,
+                      ),
+                    ),
+                    value: _soundboxEnabled,
+                    onChanged: _setSoundbox,
+                  ),
+                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+                  ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: const Icon(Icons.storefront_rounded, color: AppColors.primaryBlue, size: 20),
+                    ),
+                    title: const Text('Shop / Business Name', style: AppTypography.titleSmall),
+                    subtitle: Text(_merchantName, style: AppTypography.bodySmall),
+                    trailing: const Icon(Icons.edit_rounded, size: 18, color: AppColors.textSecondary),
+                    onTap: _showEditMerchantNameDialog,
+                  ),
+                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+                  SwitchListTile(
+                    activeThumbColor: AppColors.primaryBlue,
+                    secondary: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: const Icon(Icons.store_rounded, color: AppColors.primaryBlue, size: 20),
+                    ),
+                    title: const Text('Include Shop Name', style: AppTypography.titleSmall),
+                    subtitle: Text(
+                      _includeShopName
+                          ? 'Shop name included in announcement'
+                          : 'Standard announcement without shop name',
+                      style: AppTypography.caption,
+                    ),
+                    value: _includeShopName,
+                    onChanged: _setIncludeShopName,
+                  ),
+                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+                  ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: const Icon(Icons.language_rounded, color: AppColors.primaryBlue, size: 20),
+                    ),
+                    title: const Text('Announcement Language', style: AppTypography.titleSmall),
+                    subtitle: Text(_getLanguageLabel(_language), style: AppTypography.bodySmall),
+                    trailing: DropdownButton<String>(
+                      value: _language,
+                      underline: const SizedBox(),
+                      icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.textSecondary),
+                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+                      items: const [
+                        DropdownMenuItem(value: 'en-IN', child: Text('English (India)')),
+                        DropdownMenuItem(value: 'hi-IN', child: Text('Hindi')),
+                        DropdownMenuItem(value: 'mr-IN', child: Text('Marathi')),
+                        DropdownMenuItem(value: 'gu-IN', child: Text('Gujarati')),
+                        DropdownMenuItem(value: 'ta-IN', child: Text('Tamil')),
+                        DropdownMenuItem(value: 'te-IN', child: Text('Telugu')),
+                        DropdownMenuItem(value: 'bn-IN', child: Text('Bengali')),
+                        DropdownMenuItem(value: 'kn-IN', child: Text('Kannada')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) _setLanguage(v);
+                      },
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+                  ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: const Icon(Icons.speed_rounded, color: AppColors.primaryBlue, size: 20),
+                    ),
+                    title: const Text('Speech Speed', style: AppTypography.titleSmall),
+                    subtitle: const Text('How fast payments are announced', style: AppTypography.caption),
+                    trailing: DropdownButton<String>(
+                      value: _speechSpeed,
+                      underline: const SizedBox(),
+                      icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.textSecondary),
+                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+                      items: const [
+                        DropdownMenuItem(value: 'slow', child: Text('Slow')),
+                        DropdownMenuItem(value: 'normal', child: Text('Normal')),
+                        DropdownMenuItem(value: 'fast', child: Text('Fast')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) _setSpeed(v);
+                      },
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+                  ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: const Icon(Icons.record_voice_over_rounded, color: AppColors.primaryBlue, size: 20),
+                    ),
+                    title: const Text('Announcement Format', style: AppTypography.titleSmall),
+                    subtitle: Text(_getFormatLabel(_announceFormat), style: AppTypography.bodySmall),
+                    trailing: DropdownButton<String>(
+                      value: _announceFormat,
+                      underline: const SizedBox(),
+                      icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.textSecondary),
+                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+                      items: const [
+                        DropdownMenuItem(value: 'A', child: Text('Format A (Standard)')),
+                        DropdownMenuItem(value: 'B', child: Text('Format B (Short)')),
+                        DropdownMenuItem(value: 'C', child: Text('Format C (Quick)')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) _setAnnounceFormat(v);
+                      },
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+                  ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: const Icon(Icons.volume_up_rounded, color: AppColors.primaryBlue, size: 20),
+                    ),
+                    title: const Text('Announcement Volume', style: AppTypography.titleSmall),
+                    subtitle: const Text(
+                      'Uses phone media volume. Adjust via your device volume buttons.',
+                      style: AppTypography.caption,
+                    ),
+                  ),
+                ],
               ),
             ),
-            secondary: Icon(
-              _soundboxEnabled ? Icons.volume_up : Icons.volume_off,
-              color: _soundboxEnabled ? cs.primary : Colors.grey,
-            ),
-            value: _soundboxEnabled,
-            onChanged: _setSoundbox,
           ),
-          const Divider(height: 1, indent: 72, endIndent: 16),
-          ListTile(
-            leading: const Icon(Icons.storefront),
-            title: const Text('Shop / Business Name', style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: Text(_merchantName),
-            trailing: const Icon(Icons.edit, size: 20, color: Colors.grey),
-            onTap: _showEditMerchantNameDialog,
-          ),
-          const Divider(height: 1, indent: 72, endIndent: 16),
-          SwitchListTile(
-            secondary: const Icon(Icons.store),
-            title: const Text('Include Shop Name', style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: Text(
-              _includeShopName
-                  ? 'Shop name included in announcement'
-                  : 'Standard announcement without shop name',
-              style: const TextStyle(fontSize: 12),
-            ),
-            value: _includeShopName,
-            onChanged: _setIncludeShopName,
-          ),
-          const Divider(height: 1, indent: 72, endIndent: 16),
-          ListTile(
-            leading: const Icon(Icons.language),
-            title: const Text('Announcement Language', style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: Text(_getLanguageLabel(_language)),
-            trailing: DropdownButton<String>(
-              value: _language,
-              underline: const SizedBox(),
-              items: const [
-                DropdownMenuItem(value: 'en-IN', child: Text('English (India)')),
-                DropdownMenuItem(value: 'hi-IN', child: Text('Hindi')),
-                DropdownMenuItem(value: 'mr-IN', child: Text('Marathi')),
-                DropdownMenuItem(value: 'gu-IN', child: Text('Gujarati')),
-                DropdownMenuItem(value: 'ta-IN', child: Text('Tamil')),
-                DropdownMenuItem(value: 'te-IN', child: Text('Telugu')),
-                DropdownMenuItem(value: 'bn-IN', child: Text('Bengali')),
-                DropdownMenuItem(value: 'kn-IN', child: Text('Kannada')),
-              ],
-              onChanged: (v) { if (v != null) _setLanguage(v); },
-            ),
-          ),
-          const Divider(height: 1, indent: 72, endIndent: 16),
-          ListTile(
-            leading: const Icon(Icons.speed),
-            title: const Text('Speech Speed', style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: const Text('How fast payments are announced'),
-            trailing: DropdownButton<String>(
-              value: _speechSpeed,
-              underline: const SizedBox(),
-              items: const [
-                DropdownMenuItem(value: 'slow',   child: Text('Slow')),
-                DropdownMenuItem(value: 'normal', child: Text('Normal')),
-                DropdownMenuItem(value: 'fast',   child: Text('Fast')),
-              ],
-              onChanged: (v) { if (v != null) _setSpeed(v); },
-            ),
-          ),
-          const Divider(height: 1, indent: 72, endIndent: 16),
-          ListTile(
-            leading: const Icon(Icons.record_voice_over),
-            title: const Text('Announcement Format', style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: Text(_getFormatLabel(_announceFormat)),
-            trailing: DropdownButton<String>(
-              value: _announceFormat,
-              underline: const SizedBox(),
-              items: const [
-                DropdownMenuItem(value: 'A', child: Text('Format A (Standard)')),
-                DropdownMenuItem(value: 'B', child: Text('Format B (Short)')),
-                DropdownMenuItem(value: 'C', child: Text('Format C (Quick)')),
-              ],
-              onChanged: (v) { if (v != null) _setAnnounceFormat(v); },
-            ),
-          ),
-          const Divider(height: 1, indent: 72, endIndent: 16),
-          ListTile(
-            leading: const Icon(Icons.volume_up),
-            title: const Text('Announcement Volume', style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: const Text(
-              'Uses phone media volume. Adjust via your device volume buttons.',
-              style: TextStyle(fontSize: 12),
-            ),
-          ),
+
+          const SizedBox(height: AppSpacing.lg),
 
           // ════════════════════════════════════════════════════════════════════
           // 2. SUBSCRIPTION SECTION
           // ════════════════════════════════════════════════════════════════════
-          _sectionHeader('SUBSCRIPTION'),
-          ValueListenableBuilder<SubscriptionInfo>(
-            valueListenable: SubscriptionManager.instance.subscriptionInfoNotifier,
-            builder: (context, subInfo, _) {
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                elevation: 0,
-                color: const Color(0xFFFBF8FF),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  side: BorderSide(
-                    color: subInfo.state.hasPremiumEntitlement
-                        ? Colors.green.shade200
-                        : const Color(0xFFE9D5FF),
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
+            child: SectionHeader(title: 'SUBSCRIPTION'),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
+            child: ValueListenableBuilder<SubscriptionInfo>(
+              valueListenable: SubscriptionManager.instance.subscriptionInfoNotifier,
+              builder: (context, subInfo, _) {
+                final isEntitled = subInfo.state.hasPremiumEntitlement;
+                return PremiumCard(
+                  padding: const EdgeInsets.all(AppSpacing.base),
+                  color: isEntitled ? AppColors.surface : AppColors.lightBlue,
+                  borderColor: isEntitled ? AppColors.successBorder : AppColors.primaryBlue.withAlpha(50),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -320,52 +422,39 @@ class _SettingsScreenState extends State<SettingsScreen>
                         children: [
                           Row(
                             children: const [
-                              Icon(Icons.workspace_premium_rounded,
-                                  size: 20, color: Color(0xFF7E22CE)),
-                              SizedBox(width: 8),
+                              Icon(
+                                Icons.workspace_premium_rounded,
+                                size: 22,
+                                color: AppColors.primaryBlue,
+                              ),
+                              SizedBox(width: AppSpacing.sm),
                               Text(
                                 'MyUPI Premium',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF1F2937),
-                                ),
+                                style: AppTypography.titleSmall,
                               ),
                             ],
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: subInfo.state.hasPremiumEntitlement
-                                  ? Colors.green.shade50
-                                  : const Color(0xFFF3E8FF),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              subInfo.state.label.toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                color: subInfo.state.hasPremiumEntitlement
-                                    ? Colors.green.shade700
-                                    : const Color(0xFF7E22CE),
-                              ),
-                            ),
+                          StatusBadge(
+                            label: subInfo.state.label.toUpperCase(),
+                            type: isEntitled ? StatusBadgeType.active : StatusBadgeType.info,
+                            showDot: true,
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       Text(
-                        subInfo.state.hasPremiumEntitlement
+                        isEntitled
                             ? 'All 8 Indian languages, custom shop branding, and priority announcements active.'
                             : 'Introductory Offer: ₹1 for first month, then ₹49/month. Cancel anytime via Play Store.',
-                        style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563), height: 1.35),
+                        style: AppTypography.bodySmall,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.md),
                       Row(
                         children: [
                           Expanded(
-                            child: OutlinedButton(
+                            child: SecondaryButton(
+                              label: isEntitled ? 'Manage Subscription' : 'View Premium Plans',
+                              icon: Icons.star_rounded,
                               onPressed: () {
                                 Navigator.push(
                                   context,
@@ -374,137 +463,164 @@ class _SettingsScreenState extends State<SettingsScreen>
                                   ),
                                 );
                               },
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: const Color(0xFF5B21B6),
-                                side: const BorderSide(color: Color(0xFF8B5CF6)),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                padding: const EdgeInsets.symmetric(vertical: 8),
-                              ),
-                              child: Text(
-                                subInfo.state.hasPremiumEntitlement ? 'Manage Subscription' : 'View Premium Plans',
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                              ),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.sm),
                           TextButton.icon(
                             onPressed: _isRestoring ? null : _handleRestorePurchases,
                             icon: _isRestoring
                                 ? const SizedBox(
                                     width: 14,
                                     height: 14,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryBlue),
                                   )
-                                : const Icon(Icons.restore, size: 16),
-                            label: const Text('Restore', style: TextStyle(fontSize: 12)),
+                                : const Icon(Icons.restore_rounded, size: 16, color: AppColors.primaryBlue),
+                            label: const Text('Restore', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primaryBlue)),
                           ),
                         ],
                       ),
                     ],
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
+
+          const SizedBox(height: AppSpacing.lg),
 
           // ════════════════════════════════════════════════════════════════════
           // 3. APP SECTION
           // ════════════════════════════════════════════════════════════════════
-          _sectionHeader('APP'),
-          ListTile(
-            leading: Icon(
-              _notifAccess == true
-                  ? Icons.check_circle_outline
-                  : Icons.error_outline,
-              color: _notifAccess == true ? Colors.green : Colors.orange,
-            ),
-            title: const Text('Notification Access', style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: Text(
-              _notifAccess == null
-                  ? 'Checking…'
-                  : _notifAccess!
-                      ? 'Enabled — MyUPI can hear payment notifications'
-                      : 'Disabled — payments cannot be announced',
-              style: TextStyle(
-                fontSize: 12,
-                color: _notifAccess == true ? Colors.green : Colors.orange,
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
+            child: SectionHeader(title: 'APP'),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
+            child: PremiumCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: _notifAccess == true ? AppColors.successBg : AppColors.warningBg,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: Icon(
+                        _notifAccess == true ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+                        color: _notifAccess == true ? AppColors.success : AppColors.warning,
+                        size: 20,
+                      ),
+                    ),
+                    title: const Text('Notification Access', style: AppTypography.titleSmall),
+                    subtitle: Text(
+                      _notifAccess == null
+                          ? 'Checking…'
+                          : _notifAccess!
+                              ? 'Enabled — MyUPI can hear payment notifications'
+                              : 'Disabled — payments cannot be announced',
+                      style: AppTypography.caption.copyWith(
+                        color: _notifAccess == true ? AppColors.success : AppColors.warning,
+                      ),
+                    ),
+                    trailing: _notifAccess == false
+                        ? OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: AppColors.warning),
+                              foregroundColor: AppColors.warning,
+                              shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+                            ),
+                            onPressed: _openAccessSettings,
+                            child: const Text('Enable', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                          )
+                        : null,
+                  ),
+                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+                  ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: const Icon(Icons.help_outline_rounded, color: AppColors.primaryBlue, size: 20),
+                    ),
+                    title: const Text('Help & Support', style: AppTypography.titleSmall),
+                    subtitle: const Text('FAQs, setup guides, and troubleshooting', style: AppTypography.caption),
+                    trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (ctx) => const HelpSupportScreen()),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+                  ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: const Icon(Icons.info_outline_rounded, color: AppColors.primaryBlue, size: 20),
+                    ),
+                    title: const Text('About MyUPI', style: AppTypography.titleSmall),
+                    subtitle: const Text('Version 1.0.0, privacy policy, and terms', style: AppTypography.caption),
+                    trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (ctx) => const AboutScreen()),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
-            trailing: _notifAccess == false
-                ? OutlinedButton(
-                    onPressed: _openAccessSettings,
-                    child: const Text('Enable', style: TextStyle(fontSize: 12)),
-                  )
-                : null,
-          ),
-          const Divider(height: 1, indent: 72, endIndent: 16),
-          ListTile(
-            leading: const Icon(Icons.help_outline),
-            title: const Text('Help & Support', style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: const Text('FAQs, setup guides, and troubleshooting', style: TextStyle(fontSize: 12)),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (ctx) => const HelpSupportScreen()),
-              );
-            },
-          ),
-          const Divider(height: 1, indent: 72, endIndent: 16),
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: const Text('About MyUPI', style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: const Text('Version 1.0.0, privacy policy, and terms', style: TextStyle(fontSize: 12)),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (ctx) => const AboutScreen()),
-              );
-            },
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: AppSpacing.xxl),
         ],
       ),
     );
   }
 
-  Widget _sectionHeader(String label) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.1,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-      ),
-    );
-  }
-
   String _getFormatLabel(String f) {
-    switch(f) {
-      case 'B': return 'Format B: "500 rupees received"';
-      case 'C': return 'Format C: "Payment received, 500 rupees. Thank you."';
-      default:  return 'Format A: "Payment received, 500 rupees"';
+    switch (f) {
+      case 'B':
+        return 'Format B: "500 rupees received"';
+      case 'C':
+        return 'Format C: "Payment received, 500 rupees. Thank you."';
+      default:
+        return 'Format A: "Payment received, 500 rupees"';
     }
   }
 
   String _getLanguageLabel(String langCode) {
-    switch(langCode) {
-      case 'hi-IN': return 'Hindi';
-      case 'mr-IN': return 'Marathi';
-      case 'gu-IN': return 'Gujarati';
-      case 'ta-IN': return 'Tamil';
-      case 'te-IN': return 'Telugu';
-      case 'bn-IN': return 'Bengali';
-      case 'kn-IN': return 'Kannada';
-      default: return 'English (India)';
+    switch (langCode) {
+      case 'hi-IN':
+        return 'Hindi';
+      case 'mr-IN':
+        return 'Marathi';
+      case 'gu-IN':
+        return 'Gujarati';
+      case 'ta-IN':
+        return 'Tamil';
+      case 'te-IN':
+        return 'Telugu';
+      case 'bn-IN':
+        return 'Bengali';
+      case 'kn-IN':
+        return 'Kannada';
+      default:
+        return 'English (India)';
     }
   }
 
@@ -514,7 +630,8 @@ class _SettingsScreenState extends State<SettingsScreen>
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Edit Shop Name'),
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.lgRadius),
+          title: const Text('Edit Shop Name', style: AppTypography.titleMedium),
           content: TextField(
             controller: controller,
             decoration: const InputDecoration(
@@ -527,9 +644,13 @@ class _SettingsScreenState extends State<SettingsScreen>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('CANCEL'),
+              child: const Text('CANCEL', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
             ),
-            TextButton(
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primaryBlue,
+                shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+              ),
               onPressed: () {
                 final text = controller.text.trim();
                 if (text.isNotEmpty) {
@@ -537,7 +658,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                 }
                 Navigator.pop(ctx);
               },
-              child: const Text('SAVE'),
+              child: const Text('SAVE', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         );

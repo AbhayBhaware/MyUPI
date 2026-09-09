@@ -1,7 +1,7 @@
 // lib/screens/paywall_screen.dart
 //
-// MyUPI Smart Soundbox Premium Paywall Screen — Milestone 20
-// ---------------------------------------------------------
+// MyUPI Smart Soundbox Premium Paywall Screen — Modern Fintech Redesign
+// ---------------------------------------------------------------------
 // Presents the merchant with the commercial subscription proposition:
 //   • Introductory Offer: Dynamic Play price (Target: ₹1 for the first month)
 //   • Recurring Price:    Dynamic Play price (Target: ₹49/month)
@@ -14,9 +14,16 @@
 //   • Transparent terms, auto-renewal, and cancellation disclosure
 
 import 'package:flutter/material.dart';
+
+import '../models/subscription_state.dart';
 import '../services/billing_service.dart';
 import '../services/subscription_manager.dart';
-import '../models/subscription_state.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
+import '../widgets/premium_buttons.dart';
+import '../widgets/premium_card.dart';
 
 class PaywallScreen extends StatefulWidget {
   final String sourceEntry;
@@ -70,7 +77,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(billing.lastErrorMessage!),
-          backgroundColor: Colors.red.shade800,
+          backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -87,8 +94,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
       SnackBar(
         content: Text(result.message),
         backgroundColor: result.success && result.restoredCount > 0
-            ? Colors.green.shade800
-            : Colors.indigo.shade800,
+            ? AppColors.success
+            : AppColors.primaryBlue,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -96,8 +103,6 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
     final billing = BillingService.instance;
 
     return ValueListenableBuilder<SubscriptionInfo>(
@@ -106,38 +111,50 @@ class _PaywallScreenState extends State<PaywallScreen> {
         final isAlreadyPremium = subInfo.state.hasPremiumEntitlement;
 
         return Scaffold(
+          backgroundColor: AppColors.background,
           appBar: AppBar(
             title: const Text(
               'MyUPI Premium',
-              style: TextStyle(fontWeight: FontWeight.w700),
+              style: AppTypography.titleLarge,
             ),
-            backgroundColor: cs.surface,
+            backgroundColor: AppColors.surface,
             elevation: 0,
+            surfaceTintColor: Colors.transparent,
+            bottom: const PreferredSize(
+              preferredSize: Size.fromHeight(1.0),
+              child: Divider(height: 1, color: AppColors.borderLight),
+            ),
           ),
           body: SafeArea(
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.base,
+                vertical: AppSpacing.md,
+              ),
               children: [
                 // ── Hero Badge & Headline ─────────────────────────────────────────
                 Center(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.xs,
+                    ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF3E8FF),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFD8B4FE)),
+                      color: AppColors.lightBlue,
+                      borderRadius: AppRadius.pillRadius,
+                      border: Border.all(color: AppColors.primaryBlue.withAlpha(50)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: const [
-                        Icon(Icons.star_rounded, size: 18, color: Color(0xFF7E22CE)),
+                        Icon(Icons.star_rounded, size: 16, color: AppColors.primaryBlue),
                         SizedBox(width: 6),
                         Text(
                           'SMART SOUNDBOX UPGRADE',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF7E22CE),
+                            color: AppColors.primaryBlue,
                             letterSpacing: 0.8,
                           ),
                         ),
@@ -145,7 +162,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.md),
 
                 const Text(
                   'Turn your phone into a smart UPI Soundbox.',
@@ -153,74 +170,51 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
                     height: 1.25,
-                    color: Color(0xFF1F2937),
+                    color: AppColors.textPrimary,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.xs),
 
                 const Text(
                   'Get instant voice announcements for your UPI payments without renting an expensive hardware device.',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Color(0xFF4B5563),
+                    color: AppColors.textSecondary,
                     height: 1.4,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.lg),
 
                 // ── Active Subscription Status Banner (if already subscribed) ────
                 if (isAlreadyPremium) ...[
                   _buildAlreadySubscribedBanner(subInfo),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.md),
                 ],
 
                 // ── Commercial Pricing Card (Dynamic Play Store Price) ───────────
-                _buildPricingCard(cs, billing),
-                const SizedBox(height: 20),
+                _buildPricingCard(billing),
+                const SizedBox(height: AppSpacing.base),
 
                 // ── Value Proposition / Feature Checklist ─────────────────────────
                 _buildBenefitsCard(),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.base),
 
                 // ── Transparent System Boundaries Notice ──────────────────────────
                 _buildTransparentNoticeCard(),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.lg),
 
                 // ── Primary Action CTA (Live Google Play Purchase) ─────────────────
-                SizedBox(
-                  width: double.infinity,
-                  height: 54,
-                  child: FilledButton(
-                    onPressed: _isLoading ? null : _handleStartSubscription,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF5B21B6),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            isAlreadyPremium
-                                ? 'Manage Subscription'
-                                : 'Start Premium — ${billing.introPriceDisplay} First Month',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                  ),
+                PrimaryButton(
+                  label: isAlreadyPremium
+                      ? 'Manage Subscription'
+                      : 'Start Premium — ${billing.introPriceDisplay} First Month',
+                  isLoading: _isLoading,
+                  icon: isAlreadyPremium ? Icons.settings_rounded : Icons.bolt_rounded,
+                  onPressed: _isLoading ? null : _handleStartSubscription,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.sm),
 
                 // ── Secondary Action (Restore Purchases Flow) ─────────────────────
                 Center(
@@ -230,20 +224,20 @@ class _PaywallScreenState extends State<PaywallScreen> {
                         ? const SizedBox(
                             width: 14,
                             height: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryBlue),
                           )
-                        : const Icon(Icons.restore, size: 16, color: Color(0xFF6B7280)),
+                        : const Icon(Icons.restore_rounded, size: 16, color: AppColors.primaryBlue),
                     label: const Text(
                       'Restore Purchases',
                       style: TextStyle(
-                        color: Color(0xFF6B7280),
+                        color: AppColors.primaryBlue,
                         fontSize: 13,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.xs),
 
                 // ── Transparent Terms & Auto-Renewal Notice ───────────────────────
                 Text(
@@ -251,12 +245,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   'No hardware lock-in. Cancel anytime via Google Play subscriptions without penalty.',
                   style: const TextStyle(
                     fontSize: 11,
-                    color: Color(0xFF9CA3AF),
+                    color: AppColors.textTertiary,
                     height: 1.35,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.base),
               ],
             ),
           ),
@@ -267,31 +261,27 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
   // ── Pricing Card Builder ───────────────────────────────────────────────────
 
-  Widget _buildPricingCard(ColorScheme cs, BillingService billing) {
+  Widget _buildPricingCard(BillingService billing) {
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF5B21B6), Color(0xFF7C3AED)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
+        gradient: AppColors.heroGradient,
+        borderRadius: AppRadius.lgRadius,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF5B21B6).withAlpha(40),
-            blurRadius: 16,
+            color: AppColors.primaryBlue.withAlpha(45),
+            blurRadius: 18,
             offset: const Offset(0, 6),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.amber.shade300,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: AppRadius.pillRadius,
             ),
             child: const Text(
               'SPECIAL INTRODUCTORY OFFER',
@@ -303,7 +293,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.md),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -317,23 +307,23 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.xs),
               const Text(
                 'for your first month',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFFE9D5FF),
+                  color: Color(0xFFD6E4FF),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.xs),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(35),
-              borderRadius: BorderRadius.circular(8),
+              color: Colors.white.withAlpha(40),
+              borderRadius: AppRadius.smRadius,
             ),
             child: Text(
               'THEN ${billing.recurringPriceDisplay.toUpperCase()}',
@@ -345,12 +335,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           const Text(
             'Save ₹1,500+ every year compared to external soundbox rental machines.',
             style: TextStyle(
               fontSize: 12,
-              color: Color(0xFFF3E8FF),
+              color: Color(0xFFEAF3FF),
               height: 1.3,
             ),
             textAlign: TextAlign.center,
@@ -365,15 +355,15 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Widget _buildAlreadySubscribedBanner(SubscriptionInfo subInfo) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFECFDF5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFA7F3D0)),
+        color: AppColors.successBg,
+        borderRadius: AppRadius.mdRadius,
+        border: Border.all(color: AppColors.successBorder),
       ),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [
-          const Icon(Icons.check_circle_rounded, color: Color(0xFF059669), size: 24),
-          const SizedBox(width: 12),
+          const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 24),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,59 +394,47 @@ class _PaywallScreenState extends State<PaywallScreen> {
   // ── Benefits Card Builder ──────────────────────────────────────────────────
 
   Widget _buildBenefitsCard() {
-    return Card(
-      elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Everything Included in MyUPI Premium',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF111827),
-              ),
-            ),
-            const SizedBox(height: 14),
-            _benefitRow(
-              icon: Icons.volume_up_rounded,
-              title: 'Instant Voice Announcements',
-              desc: 'Speaks incoming payments from PhonePe, GPay, Paytm, BHIM, and bank UPI apps.',
-            ),
-            _benefitRow(
-              icon: Icons.translate_rounded,
-              title: 'All 8 Supported Indian Languages',
-              desc: 'Hindi, Marathi, Gujarati, Tamil, Telugu, Bengali, Kannada, and English.',
-            ),
-            _benefitRow(
-              icon: Icons.store_rounded,
-              title: 'Personalized Shop Name Voice',
-              desc: 'Includes your shop name in voice audio for customer confidence.',
-            ),
-            _benefitRow(
-              icon: Icons.record_voice_over_rounded,
-              title: 'Multiple Announcement Styles',
-              desc: 'Choose between brief, polite, and detailed audio styles.',
-            ),
-            _benefitRow(
-              icon: Icons.insights_rounded,
-              title: 'Daily & Weekly Collection Insights',
-              desc: 'Clear summaries of your shop transactions at a glance.',
-            ),
-            _benefitRow(
-              icon: Icons.phonelink_ring_rounded,
-              title: 'No Hardware Device Required',
-              desc: 'Zero monthly machine rent, zero SIM maintenance, and zero battery charging worries.',
-            ),
-          ],
-        ),
+    return PremiumCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Everything Included in MyUPI Premium',
+            style: AppTypography.titleSmall,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _benefitRow(
+            icon: Icons.volume_up_rounded,
+            title: 'Instant Voice Announcements',
+            desc: 'Speaks incoming payments from PhonePe, GPay, Paytm, BHIM, and bank UPI apps.',
+          ),
+          _benefitRow(
+            icon: Icons.translate_rounded,
+            title: 'All 8 Supported Indian Languages',
+            desc: 'Hindi, Marathi, Gujarati, Tamil, Telugu, Bengali, Kannada, and English.',
+          ),
+          _benefitRow(
+            icon: Icons.store_rounded,
+            title: 'Personalized Shop Name Voice',
+            desc: 'Includes your shop name in voice audio for customer confidence.',
+          ),
+          _benefitRow(
+            icon: Icons.record_voice_over_rounded,
+            title: 'Multiple Announcement Styles',
+            desc: 'Choose between brief, polite, and detailed audio styles.',
+          ),
+          _benefitRow(
+            icon: Icons.insights_rounded,
+            title: 'Daily & Weekly Collection Insights',
+            desc: 'Clear summaries of your shop transactions at a glance.',
+          ),
+          _benefitRow(
+            icon: Icons.phonelink_ring_rounded,
+            title: 'No Hardware Device Required',
+            desc: 'Zero monthly machine rent, zero SIM maintenance, and zero battery charging worries.',
+          ),
+        ],
       ),
     );
   }
@@ -474,12 +452,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: const Color(0xFFF5F3FF),
-              borderRadius: BorderRadius.circular(8),
+              color: AppColors.lightBlue,
+              borderRadius: AppRadius.smRadius,
             ),
-            child: Icon(icon, size: 18, color: const Color(0xFF5B21B6)),
+            child: Icon(icon, size: 18, color: AppColors.primaryBlue),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -489,7 +467,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1F2937),
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -497,7 +475,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   desc,
                   style: const TextStyle(
                     fontSize: 12,
-                    color: Color(0xFF6B7280),
+                    color: AppColors.textSecondary,
                     height: 1.3,
                   ),
                 ),
@@ -514,15 +492,15 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Widget _buildTransparentNoticeCard() {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        color: AppColors.surface,
+        borderRadius: AppRadius.mdRadius,
+        border: Border.all(color: AppColors.borderLight),
       ),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const [
-          Icon(Icons.shield_outlined, size: 18, color: Color(0xFF4B5563)),
+          Icon(Icons.shield_outlined, size: 18, color: AppColors.textSecondary),
           SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -530,7 +508,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               'It operates locally for privacy and speed, and does not claim direct bank settlement verification.',
               style: TextStyle(
                 fontSize: 11,
-                color: Color(0xFF6B7280),
+                color: AppColors.textSecondary,
                 height: 1.35,
               ),
             ),
@@ -546,24 +524,24 @@ class _PaywallScreenState extends State<PaywallScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.lgRadius),
         title: Row(
           children: const [
-            Icon(Icons.info_outline_rounded, color: Color(0xFF5B21B6)),
+            Icon(Icons.info_outline_rounded, color: AppColors.primaryBlue),
             SizedBox(width: 8),
-            Text('Billing Connecting'),
+            Text('Billing Connecting', style: AppTypography.titleMedium),
           ],
         ),
         content: Text(
           detail != null && detail.isNotEmpty
               ? '$detail\n\nPlease check your internet connection or Google Play account. Your soundbox continues to announce payments offline without interruption.'
               : 'Google Play Billing is connecting. Please check your internet connection or try again shortly.',
-          style: const TextStyle(fontSize: 14, height: 1.4),
+          style: const TextStyle(fontSize: 14, height: 1.4, color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('GOT IT'),
+            child: const Text('GOT IT', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue)),
           ),
         ],
       ),

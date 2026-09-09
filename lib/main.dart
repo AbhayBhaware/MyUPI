@@ -21,6 +21,10 @@ import 'screens/home_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/onboarding/onboarding_shell.dart';
+import 'theme/app_colors.dart';
+import 'theme/app_radius.dart';
+import 'theme/app_theme.dart';
+import 'theme/app_typography.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,13 +43,7 @@ class MyUpiApp extends StatelessWidget {
     return MaterialApp(
       title: 'MyUPI Soundbox',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF5B21B6),
-        ),
-        useMaterial3: true,
-        fontFamily: 'Roboto',
-      ),
+      theme: AppTheme.lightTheme,
       home: const _AppRouter(),
     );
   }
@@ -80,8 +78,7 @@ class _AppRouterState extends State<_AppRouter> {
           .invokeMethod<bool>('isOnboardingCompleted') ?? false;
       if (mounted) setState(() => _onboardingDone = done);
     } on PlatformException catch (_) {
-      // If the call fails (e.g. old install without the handler), treat
-      // as onboarding NOT done so the user still sees setup.
+      // If the call fails, treat as onboarding NOT done so user sees setup.
       if (mounted) setState(() => _onboardingDone = false);
     }
   }
@@ -96,19 +93,42 @@ class _AppRouterState extends State<_AppRouter> {
     // ── Loading splash ────────────────────────────────────────────────────────
     if (_onboardingDone == null) {
       return Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: AppColors.background,
         body: Center(
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.speaker,
-                size: 56,
-                color: Theme.of(context).colorScheme.primary),
-            const SizedBox(height: 16),
-            Text('MyUPI',
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 76,
+                height: 76,
+                decoration: const BoxDecoration(
+                  color: AppColors.primaryBlue,
+                  borderRadius: AppRadius.lgRadius,
+                ),
+                child: const Icon(
+                  Icons.speaker,
+                  size: 42,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'MyUPI',
                 style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary)),
-          ]),
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                  color: AppColors.primaryBlue,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Smart Payment Soundbox',
+                style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -152,26 +172,33 @@ class _ShellPageState extends State<_ShellPage> {
         index: _selectedIndex,
         children: _pages,
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (i) => setState(() => _selectedIndex = i),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.speaker_outlined),
-            selectedIcon: Icon(Icons.speaker),
-            label: 'Home',
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          border: Border(
+            top: BorderSide(color: AppColors.cardBorder, width: 1.0),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.history_outlined),
-            selectedIcon: Icon(Icons.history),
-            label: 'History',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
+        ),
+        child: NavigationBar(
+          selectedIndex: _selectedIndex,
+          onDestinationSelected: (i) => setState(() => _selectedIndex = i),
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.speaker_outlined),
+              selectedIcon: Icon(Icons.speaker),
+              label: 'Home',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.receipt_long_outlined),
+              selectedIcon: Icon(Icons.receipt_long),
+              label: 'History',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.settings_outlined),
+              selectedIcon: Icon(Icons.settings),
+              label: 'Settings',
+            ),
+          ],
+        ),
       ),
     );
   }

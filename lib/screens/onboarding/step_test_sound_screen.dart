@@ -8,7 +8,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../app_channels.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_radius.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_typography.dart';
 import '../../tts_service.dart';
+import '../../widgets/premium_buttons.dart';
 
 class StepTestSoundScreen extends StatefulWidget {
   final VoidCallback onContinue;
@@ -21,7 +26,7 @@ class StepTestSoundScreen extends StatefulWidget {
 class _StepTestSoundScreenState extends State<StepTestSoundScreen> {
   bool _testPlayed = false;
   bool _testFailed = false;
-  bool _isPlaying  = false;
+  bool _isPlaying = false;
 
   @override
   void initState() {
@@ -76,19 +81,20 @@ class _StepTestSoundScreenState extends State<StepTestSoundScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: AppColors.surface,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.lg,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Step indicator ──────────────────────────────────────────────
-              _StepIndicator(current: 5, total: 6),
-              const SizedBox(height: 32),
+              const _StepIndicator(current: 5, total: 6),
+              const SizedBox(height: AppSpacing.xl),
 
               Expanded(
                 child: SingleChildScrollView(
@@ -100,54 +106,46 @@ class _StepTestSoundScreenState extends State<StepTestSoundScreen> {
                         width: 72,
                         height: 72,
                         decoration: BoxDecoration(
-                          color: _testPlayed
-                              ? Colors.green.withAlpha(30)
-                              : cs.primary.withAlpha(25),
-                          borderRadius: BorderRadius.circular(18),
+                          color: _testPlayed ? AppColors.successBg : AppColors.lightBlue,
+                          borderRadius: AppRadius.lgRadius,
+                          border: Border.all(
+                            color: _testPlayed ? AppColors.successBorder : AppColors.primaryBlue.withAlpha(50),
+                            width: 1.0,
+                          ),
                         ),
                         child: Icon(
-                          _testPlayed
-                              ? Icons.check_circle_outline
-                              : Icons.volume_up_rounded,
-                          size: 40,
-                          color: _testPlayed ? Colors.green : cs.primary,
+                          _testPlayed ? Icons.check_circle_rounded : Icons.volume_up_rounded,
+                          size: 38,
+                          color: _testPlayed ? AppColors.success : AppColors.primaryBlue,
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.lg),
 
                       // ── Title ───────────────────────────────────────────────
-                      Text(
+                      const Text(
                         'Test Your Soundbox',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: cs.onSurface,
-                        ),
+                        style: AppTypography.headlineMedium,
                       ),
-                      const SizedBox(height: 10),
-                      Text(
+                      const SizedBox(height: AppSpacing.xs),
+                      const Text(
                         'Turn up your phone volume and tap the button below to test how payment alerts will sound in your shop.',
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: cs.onSurface.withAlpha(180),
-                          height: 1.5,
-                        ),
+                        style: AppTypography.bodyMedium,
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: AppSpacing.xl),
 
                       // ── Test Result Banner ──────────────────────────────────
                       if (_testPlayed)
                         Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(AppSpacing.base),
                           decoration: BoxDecoration(
-                            color: Colors.green.withAlpha(25),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.green.withAlpha(80)),
+                            color: AppColors.successBg,
+                            borderRadius: AppRadius.mdRadius,
+                            border: Border.all(color: AppColors.successBorder),
                           ),
-                          child: const Row(
-                            children: [
-                              Icon(Icons.check_circle, color: Colors.green, size: 24),
-                              SizedBox(width: 12),
+                          child: Row(
+                            children: const [
+                              Icon(Icons.check_circle_rounded, color: AppColors.success, size: 24),
+                              SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -155,7 +153,7 @@ class _StepTestSoundScreenState extends State<StepTestSoundScreen> {
                                     Text(
                                       'Soundbox is working!',
                                       style: TextStyle(
-                                        color: Colors.green,
+                                        color: AppColors.success,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 15,
                                       ),
@@ -163,7 +161,7 @@ class _StepTestSoundScreenState extends State<StepTestSoundScreen> {
                                     SizedBox(height: 2),
                                     Text(
                                       'Your phone is ready to announce incoming UPI payments loud and clear.',
-                                      style: TextStyle(fontSize: 13, color: Colors.black87),
+                                      style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
                                     ),
                                   ],
                                 ),
@@ -173,32 +171,32 @@ class _StepTestSoundScreenState extends State<StepTestSoundScreen> {
                         )
                       else if (_testFailed)
                         Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(AppSpacing.base),
                           decoration: BoxDecoration(
-                            color: Colors.orange.withAlpha(20),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.orange.withAlpha(80)),
+                            color: AppColors.warningBg,
+                            borderRadius: AppRadius.mdRadius,
+                            border: Border.all(color: AppColors.warningBorder),
                           ),
                           child: Row(
-                            children: [
-                              const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 24),
-                              const SizedBox(width: 12),
+                            children: const [
+                              Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 24),
+                              SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
+                                    Text(
                                       'Audio test could not be completed',
                                       style: TextStyle(
-                                        color: Colors.orange,
+                                        color: Color(0xFFB45309),
                                         fontWeight: FontWeight.bold,
                                         fontSize: 15,
                                       ),
                                     ),
-                                    const SizedBox(height: 2),
+                                    SizedBox(height: 2),
                                     Text(
                                       'Please ensure media volume is high and Google TTS engine is installed.',
-                                      style: TextStyle(fontSize: 13, color: Colors.orange.shade900),
+                                      style: TextStyle(fontSize: 13, color: Color(0xFF92400E)),
                                     ),
                                   ],
                                 ),
@@ -207,23 +205,24 @@ class _StepTestSoundScreenState extends State<StepTestSoundScreen> {
                           ),
                         ),
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: AppSpacing.lg),
 
                       // ── Big Test Button ─────────────────────────────────────
                       SizedBox(
                         width: double.infinity,
-                        height: 56,
+                        height: 52,
                         child: OutlinedButton.icon(
                           onPressed: _isPlaying ? null : _playTest,
                           icon: _isPlaying
                               ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryBlue),
                                 )
                               : Icon(
-                                  _testPlayed ? Icons.replay : Icons.play_arrow_rounded,
-                                  size: 26,
+                                  _testPlayed ? Icons.replay_rounded : Icons.play_arrow_rounded,
+                                  size: 24,
+                                  color: AppColors.primaryBlue,
                                 ),
                           label: Text(
                             _isPlaying
@@ -231,63 +230,40 @@ class _StepTestSoundScreenState extends State<StepTestSoundScreen> {
                                 : _testPlayed
                                     ? 'Test Again'
                                     : 'Test Soundbox',
-                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primaryBlue,
+                            ),
                           ),
                           style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: cs.primary, width: 1.5),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
+                            side: const BorderSide(color: AppColors.primaryBlue, width: 1.5),
+                            shape: const RoundedRectangleBorder(borderRadius: AppRadius.mdRadius),
+                            backgroundColor: AppColors.lightBlue.withAlpha(50),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.sm),
 
                       Center(
                         child: Text(
                           'Test audio: "This is a MyUPI soundbox test."',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontStyle: FontStyle.italic,
-                            color: cs.onSurface.withAlpha(140),
-                          ),
+                          style: AppTypography.caption,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Center(
-                        child: Text(
-                          'This test will not add any entry to your payment ledger.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: cs.onSurface.withAlpha(110),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.xl),
                     ],
                   ),
                 ),
               ),
 
               // ── Continue Button ─────────────────────────────────────────────
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: FilledButton.icon(
-                  onPressed: widget.onContinue,
-                  icon: const Icon(Icons.arrow_forward),
-                  label: const Text(
-                    'Continue',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
-                  style: FilledButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
+              PrimaryButton(
+                label: 'Continue',
+                icon: Icons.arrow_forward_rounded,
+                onPressed: widget.onContinue,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.base),
             ],
           ),
         ),
@@ -303,28 +279,27 @@ class _StepIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
         for (int i = 1; i <= total; i++) ...[
           Container(
-            width: i == current ? 28 : 10,
-            height: 10,
+            width: i == current ? 24 : 8,
+            height: 8,
             decoration: BoxDecoration(
               color: i == current
-                  ? cs.primary
+                  ? AppColors.primaryBlue
                   : i < current
-                      ? cs.primary.withAlpha(120)
-                      : cs.onSurface.withAlpha(40),
-              borderRadius: BorderRadius.circular(5),
+                      ? AppColors.primaryBlue.withAlpha(120)
+                      : AppColors.borderMedium,
+              borderRadius: AppRadius.pillRadius,
             ),
           ),
-          if (i < total) const SizedBox(width: 6),
+          if (i < total) const SizedBox(width: 5),
         ],
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.md),
         Text(
           'Step $current of $total',
-          style: TextStyle(fontSize: 12, color: cs.onSurface.withAlpha(140)),
+          style: AppTypography.caption.copyWith(fontWeight: FontWeight.w600),
         ),
       ],
     );

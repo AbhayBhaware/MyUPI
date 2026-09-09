@@ -1,10 +1,17 @@
 // lib/screens/about_screen.dart
 //
-// About MyUPI Screen — provides app version information, merchant terms,
-// privacy policy, and a hidden 7-tap developer unlock for DiagnosticsScreen.
+// About MyUPI Screen — Modern Fintech Redesign
+// Provides app version information, merchant terms, privacy policy,
+// and a hidden 7-tap developer unlock for DiagnosticsScreen.
 
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
+import '../widgets/premium_card.dart';
+import '../widgets/status_badge.dart';
 import 'diagnostics_screen.dart';
 
 class AboutScreen extends StatefulWidget {
@@ -31,7 +38,7 @@ class _AboutScreenState extends State<AboutScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Developer Diagnostics unlocked!'),
-          backgroundColor: Colors.teal,
+          backgroundColor: AppColors.primaryBlue,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -56,11 +63,12 @@ class _AboutScreenState extends State<AboutScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.shield_outlined, color: Colors.green),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.lgRadius),
+        title: Row(
+          children: const [
+            Icon(Icons.shield_outlined, color: AppColors.success),
             SizedBox(width: 10),
-            Text('Privacy Policy'),
+            Text('Privacy Policy', style: AppTypography.titleMedium),
           ],
         ),
         content: const SingleChildScrollView(
@@ -77,13 +85,13 @@ class _AboutScreenState extends State<AboutScreen> {
             'MyUPI never accesses or stores your credit/debit card numbers or bank credentials.\n\n'
             '5. Local Storage: Payment ledger entries and soundbox settings are stored exclusively in '
             'your device\'s local storage and can be cleared anytime by uninstalling the app or clearing app data.',
-            style: TextStyle(fontSize: 13, height: 1.5),
+            style: TextStyle(fontSize: 13, height: 1.5, color: AppColors.textSecondary),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close'),
+            child: const Text('Close', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue)),
           ),
         ],
       ),
@@ -94,11 +102,12 @@ class _AboutScreenState extends State<AboutScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.gavel_outlined, color: Colors.blue),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.lgRadius),
+        title: Row(
+          children: const [
+            Icon(Icons.gavel_outlined, color: AppColors.primaryBlue),
             SizedBox(width: 10),
-            Text('Terms of Service'),
+            Text('Terms of Service', style: AppTypography.titleMedium),
           ],
         ),
         content: const SingleChildScrollView(
@@ -115,13 +124,13 @@ class _AboutScreenState extends State<AboutScreen> {
             'sponsored by, or endorsed by NPCI, PhonePe, Google Pay, Paytm, or any bank.\n\n'
             '5. Subscription Terms: Introductory offers (e.g. ₹1 for 1st month) and recurring monthly plans '
             'are billed through Google Play in accordance with Google Play subscription policies.',
-            style: TextStyle(fontSize: 13, height: 1.5),
+            style: TextStyle(fontSize: 13, height: 1.5, color: AppColors.textSecondary),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close'),
+            child: const Text('Close', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue)),
           ),
         ],
       ),
@@ -130,142 +139,184 @@ class _AboutScreenState extends State<AboutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('About MyUPI'),
-        centerTitle: true,
+        title: const Text('About MyUPI', style: AppTypography.titleLarge),
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Divider(height: 1, color: AppColors.borderLight),
+        ),
       ),
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.base,
+          vertical: AppSpacing.lg,
+        ),
         children: [
           // App Logo & Info
           Center(
             child: Column(
               children: [
                 Container(
-                  width: 84,
-                  height: 84,
+                  width: 80,
+                  height: 80,
                   decoration: BoxDecoration(
-                    color: cs.primary,
-                    borderRadius: BorderRadius.circular(22),
+                    gradient: AppColors.heroGradient,
+                    borderRadius: AppRadius.lgRadius,
                     boxShadow: [
                       BoxShadow(
-                        color: cs.primary.withAlpha(80),
-                        blurRadius: 16,
+                        color: AppColors.primaryBlue.withAlpha(60),
+                        blurRadius: 18,
                         offset: const Offset(0, 6),
                       ),
                     ],
                   ),
-                  child: Icon(Icons.speaker, size: 48, color: cs.onPrimary),
+                  child: const Icon(Icons.speaker_rounded, size: 44, color: Colors.white),
                 ),
-                const SizedBox(height: 16),
-                Text(
+                const SizedBox(height: AppSpacing.md),
+                const Text(
                   'MyUPI Soundbox',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: cs.onSurface,
-                  ),
+                  style: AppTypography.headlineMedium,
                 ),
-                const SizedBox(height: 6),
-                Text(
+                const SizedBox(height: AppSpacing.xs),
+                const Text(
                   'Turn your phone into a smart UPI payment soundbox.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: cs.onSurface.withAlpha(160),
-                  ),
+                  style: AppTypography.bodyMedium,
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: AppSpacing.xl),
 
           // Version Tile (with 7-tap gesture)
-          Card(
-            elevation: 0,
-            color: cs.surfaceContainerHighest.withAlpha(40),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-              side: BorderSide(color: cs.outlineVariant.withAlpha(60)),
-            ),
+          PremiumCard(
+            padding: EdgeInsets.zero,
             child: Column(
               children: [
                 InkWell(
                   onTap: _onVersionTap,
-                  borderRadius: BorderRadius.circular(14),
-                  child: ListTile(
-                    leading: const Icon(Icons.info_outline),
-                    title: const Text('App Version'),
-                    subtitle: const Text('1.0.0 (Build 1) · Production Ready'),
-                    trailing: _developerUnlocked
-                        ? const Chip(
-                            label: Text('Dev Mode', style: TextStyle(fontSize: 11)),
-                            backgroundColor: Colors.tealAccent,
-                          )
-                        : null,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base, vertical: 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: const BoxDecoration(
+                            color: AppColors.lightBlue,
+                            borderRadius: AppRadius.smRadius,
+                          ),
+                          child: const Icon(Icons.info_outline_rounded, color: AppColors.primaryBlue, size: 20),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text('App Version', style: AppTypography.titleSmall),
+                              SizedBox(height: 2),
+                              Text('1.0.0 (Build 1) · Production Ready', style: AppTypography.bodySmall),
+                            ],
+                          ),
+                        ),
+                        if (_developerUnlocked)
+                          const StatusBadge(
+                            label: 'Dev Mode',
+                            type: StatusBadgeType.active,
+                            showDot: true,
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-                const Divider(height: 1),
+                const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
                 ListTile(
-                  leading: const Icon(Icons.verified_outlined, color: Colors.green),
-                  title: const Text('Architecture'),
-                  subtitle: const Text('100% On-Device · Zero Cloud Dependency'),
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      color: AppColors.successBg,
+                      borderRadius: AppRadius.smRadius,
+                    ),
+                    child: const Icon(Icons.verified_outlined, color: AppColors.success, size: 20),
+                  ),
+                  title: const Text('Architecture', style: AppTypography.titleSmall),
+                  subtitle: const Text('100% On-Device · Zero Cloud Dependency', style: AppTypography.caption),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.base),
 
           // Legal & Policies
-          Card(
-            elevation: 0,
-            color: cs.surfaceContainerHighest.withAlpha(40),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-              side: BorderSide(color: cs.outlineVariant.withAlpha(60)),
-            ),
+          PremiumCard(
+            padding: EdgeInsets.zero,
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.privacy_tip_outlined),
-                  title: const Text('Privacy Policy'),
-                  subtitle: const Text('Zero PII · No personal data collected'),
-                  trailing: const Icon(Icons.chevron_right),
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      color: AppColors.lightBlue,
+                      borderRadius: AppRadius.smRadius,
+                    ),
+                    child: const Icon(Icons.privacy_tip_outlined, color: AppColors.primaryBlue, size: 20),
+                  ),
+                  title: const Text('Privacy Policy', style: AppTypography.titleSmall),
+                  subtitle: const Text('Zero PII · No personal data collected', style: AppTypography.caption),
+                  trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary),
                   onTap: () => _showPrivacyPolicy(context),
                 ),
-                const Divider(height: 1),
+                const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
                 ListTile(
-                  leading: const Icon(Icons.description_outlined),
-                  title: const Text('Terms of Service'),
-                  subtitle: const Text('Merchant rights and usage terms'),
-                  trailing: const Icon(Icons.chevron_right),
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      color: AppColors.lightBlue,
+                      borderRadius: AppRadius.smRadius,
+                    ),
+                    child: const Icon(Icons.description_outlined, color: AppColors.primaryBlue, size: 20),
+                  ),
+                  title: const Text('Terms of Service', style: AppTypography.titleSmall),
+                  subtitle: const Text('Merchant rights and usage terms', style: AppTypography.caption),
+                  trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary),
                   onTap: () => _showTermsOfService(context),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.base),
 
           // If developer mode unlocked, provide direct navigation button
           if (_developerUnlocked) ...[
-            Card(
-              elevation: 0,
-              color: Colors.teal.withAlpha(20),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-                side: BorderSide(color: Colors.teal.withAlpha(80)),
-              ),
+            PremiumCard(
+              color: AppColors.lightBlue,
+              borderColor: AppColors.primaryBlue.withAlpha(50),
+              padding: EdgeInsets.zero,
               child: ListTile(
-                leading: const Icon(Icons.developer_mode, color: Colors.teal),
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryBlue.withAlpha(20),
+                    borderRadius: AppRadius.smRadius,
+                  ),
+                  child: const Icon(Icons.developer_mode_rounded, color: AppColors.primaryBlue, size: 20),
+                ),
                 title: const Text(
                   'Developer Diagnostics',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal),
+                  style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
                 ),
-                subtitle: const Text('Inspect engine state, billing tokens, parser tests'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.teal),
+                subtitle: const Text('Inspect engine state, billing tokens, parser tests', style: AppTypography.caption),
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.primaryBlue),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -274,21 +325,17 @@ class _AboutScreenState extends State<AboutScreen> {
                 },
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.base),
           ],
 
           Center(
             child: Text(
               'Made with pride for Indian small business owners.\nMyUPI © 2026',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                color: cs.onSurface.withAlpha(120),
-                height: 1.5,
-              ),
+              style: AppTypography.caption.copyWith(height: 1.5),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.lg),
         ],
       ),
     );

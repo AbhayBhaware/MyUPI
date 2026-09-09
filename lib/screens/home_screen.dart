@@ -1,15 +1,9 @@
 // lib/screens/home_screen.dart
 //
-// Merchant Dashboard — Milestone 17 Polish
-// ----------------------------------------
-// Shows:
-//   • MyUPI / Shop name
-//   • Soundbox status: ACTIVE / OFF / ACTION REQUIRED
-//   • Today's total collection & payment count
-//   • Most recent payment (amount, source app, time)
-//   • Notification Access status & fix action
-//   • Clear merchant action shortcuts (Test Soundbox, View History, Settings)
-//   • Zero developer terminology
+// Merchant Dashboard — Premium Fintech Redesign.
+// ----------------------------------------------------
+// Core Soundbox status hero card, Today's performance metrics,
+// Most recent payment card, quick merchant shortcuts, and live payment banner.
 
 import 'dart:async';
 
@@ -17,8 +11,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app_channels.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_shadows.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
 import '../tts_service.dart';
 import '../upi_detector.dart';
+import '../widgets/payment_card.dart';
+import '../widgets/premium_buttons.dart';
+import '../widgets/premium_card.dart';
+import '../widgets/section_header.dart';
+import '../widgets/stat_card.dart';
+import '../widgets/status_badge.dart';
 import 'paywall_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -31,7 +36,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
-
   // ── App state ──────────────────────────────────────────────────────────────
   bool? _notifAccess;        // null = checking, true = granted, false = denied
   bool  _soundboxEnabled = true;
@@ -39,7 +43,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   // ── History state ──────────────────────────────────────────────────────────
   List<PaymentRecord> _history = [];
-  bool _loadingHistory = true;
 
   // ── Live payment banner ────────────────────────────────────────────────────
   LivePaymentEvent? _livePayment;
@@ -135,10 +138,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         timestamp: DateTime.fromMillisecondsSinceEpoch((m['timestampMs'] as int?) ?? 0),
       )).where((r) => r.amount.isNotEmpty).toList();
       if (!mounted) return;
-      setState(() { _history = recs; _loadingHistory = false; });
-    } on PlatformException catch (_) {
-      if (mounted) setState(() => _loadingHistory = false);
-    }
+      setState(() => _history = recs);
+    } on PlatformException catch (_) {}
   }
 
   // ── EventChannel (live payment banner) ─────────────────────────────────────
@@ -164,7 +165,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _seenKeys.add(key);
     if (_seenKeys.length > 200) _seenKeys.clear();
 
-    // Detect to get amount (for live in-app banner display only — Kotlin already announced TTS and saved to history).
     final result = UpiNotificationDetector.detect(
       packageName: pkg, title: title, text: text,
     );
@@ -182,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         amount: amount, appName: appName, receivedAt: DateTime.now(),
       );
     });
-    _bannerTimer = Timer(const Duration(seconds: 6), () {
+    _bannerTimer = Timer(const Duration(seconds: 7), () {
       if (mounted) setState(() => _livePayment = null);
     });
   }
@@ -212,665 +212,428 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   PaymentRecord? get _lastPayment => _history.isNotEmpty ? _history.first : null;
 
+  String _getGreeting() {
+    final h = DateTime.now().hour;
+    if (h < 12) return 'Good morning,';
+    if (h < 17) return 'Good afternoon,';
+    return 'Good evening,';
+  }
+
   // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final notifOk  = _notifAccess == true;
     final checking = _notifAccess == null;
 
     return Scaffold(
-      backgroundColor: cs.surface,
-      body: RefreshIndicator(
-        onRefresh: _refresh,
-        child: CustomScrollView(
-          slivers: [
-            // ── App bar ──────────────────────────────────────────────────────
-            SliverAppBar(
-              expandedHeight: 90,
-              pinned: true,
-              backgroundColor: cs.primary,
-              foregroundColor: cs.onPrimary,
-              flexibleSpace: FlexibleSpaceBar(
-                title: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.speaker, size: 20, color: Colors.white),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        _merchantName,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                titlePadding: const EdgeInsets.only(left: 16, bottom: 14),
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  tooltip: 'Refresh',
-                  onPressed: _refresh,
-                ),
-              ],
-            ),
-
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 16),
-
-                    // ── Live payment banner ──────────────────────────────────
-                    if (_livePayment != null) ...[
-                      _LivePaymentBanner(
-                        payment: _livePayment!,
-                        onDismiss: () => setState(() => _livePayment = null),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // ── Soundbox status card ─────────────────────────────────
-                    _buildSoundboxStatusCard(cs, notifOk, checking),
-                    const SizedBox(height: 16),
-
-                    // ── Notification Access warning banner (if disabled) ─────
-                    if (!checking && !notifOk) ...[
-                      _buildAccessWarningCard(cs),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // ── Today's summary card ─────────────────────────────────
-                    _buildTodaySummaryCard(cs),
-                    const SizedBox(height: 16),
-
-                    // ── Last payment card ────────────────────────────────────
-                    _buildLastPaymentCard(cs),
-                    const SizedBox(height: 16),
-
-                    // ── Premium / Offer Banner ───────────────────────────────
-                    _buildPremiumIntroCard(cs),
-                    const SizedBox(height: 16),
-
-                    // ── Quick Merchant Actions ───────────────────────────────
-                    _buildMerchantActions(cs),
-                    const SizedBox(height: 32),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Premium Banner ────────────────────────────────────────────────────────
-
-  Widget _buildPremiumIntroCard(ColorScheme cs) {
-    return ValueListenableBuilder<SubscriptionInfo>(
-      valueListenable: SubscriptionManager.instance.subscriptionInfoNotifier,
-      builder: (context, subInfo, _) {
-        final isPrem = subInfo.state.hasPremiumEntitlement;
-
-        return Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(
-              color: isPrem ? Colors.green.shade200 : const Color(0xFFDDD6FE),
-            ),
-          ),
-          color: isPrem ? const Color(0xFFF0FDF4) : const Color(0xFFFBF8FF),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (ctx) => const PaywallScreen(sourceEntry: 'dashboard'),
-                ),
-              );
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: isPrem ? Colors.green.shade100 : const Color(0xFFEDE9FE),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isPrem ? Icons.check_circle_outline : Icons.workspace_premium_rounded,
-                      color: isPrem ? Colors.green.shade700 : const Color(0xFF7C3AED),
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              isPrem ? 'MyUPI Premium Active' : 'Special Offer: ₹1 First Month',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: isPrem ? Colors.green.shade900 : const Color(0xFF5B21B6),
-                              ),
-                            ),
-                            const Spacer(),
-                            Icon(
-                              Icons.chevron_right,
-                              size: 18,
-                              color: isPrem ? Colors.green.shade700 : const Color(0xFF7C3AED),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          isPrem
-                              ? 'All 8 languages and shop branding enabled.'
-                              : 'Then ₹49/month. Tap to explore premium soundbox benefits.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isPrem ? Colors.green.shade800 : const Color(0xFF6B7280),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // ── Soundbox status card ───────────────────────────────────────────────────
-
-  Widget _buildSoundboxStatusCard(ColorScheme cs, bool notifOk, bool checking) {
-    final bool isActive = _soundboxEnabled && notifOk;
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isActive
-                    ? Colors.green.withAlpha(30)
-                    : cs.surfaceContainerHighest,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                isActive ? Icons.volume_up : Icons.volume_off,
-                color: isActive ? Colors.green : Colors.grey,
-                size: 26,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: RefreshIndicator(
+          color: AppColors.primaryBlue,
+          onRefresh: _refresh,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              // ── Top Header ─────────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.base, AppSpacing.lg, AppSpacing.base, AppSpacing.sm),
+                  child: Row(
                     children: [
-                      const Text(
-                        'Soundbox Status',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                      ),
-                      const Spacer(),
-                      _buildStatusPill(isActive, notifOk, checking),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    checking
-                        ? 'Checking soundbox status…'
-                        : !notifOk
-                            ? 'Notification access is required'
-                            : _soundboxEnabled
-                                ? 'Announces incoming UPI payments'
-                                : 'Announcements are switched off',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: cs.onSurface.withAlpha(150),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 6),
-            Switch(
-              value: _soundboxEnabled,
-              onChanged: _toggleSoundbox,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusPill(bool isActive, bool notifOk, bool checking) {
-    if (checking) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: Colors.grey.withAlpha(30),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Text('CHECKING', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-      );
-    }
-
-    if (!notifOk) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: Colors.orange.withAlpha(35),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.orange.shade300),
-        ),
-        child: const Text(
-          'ACTION REQUIRED',
-          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.orange),
-        ),
-      );
-    }
-
-    if (isActive) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-        decoration: BoxDecoration(
-          color: Colors.green.withAlpha(30),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.green.shade400),
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.circle, color: Colors.green, size: 8),
-            SizedBox(width: 5),
-            Text(
-              'ACTIVE',
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.green),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-      decoration: BoxDecoration(
-        color: Colors.grey.withAlpha(30),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Text(
-        'OFF',
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey),
-      ),
-    );
-  }
-
-  // ── Notification Access warning card ───────────────────────────────────────
-
-  Widget _buildAccessWarningCard(ColorScheme cs) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.orange.withAlpha(20),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.orange.withAlpha(100)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 22),
-              SizedBox(width: 8),
-              Text(
-                'Notification Access Disabled',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.orange),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'MyUPI needs notification access to detect and announce payments from PhonePe, Paytm, and Google Pay.',
-            style: TextStyle(fontSize: 13, height: 1.4),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              style: FilledButton.styleFrom(backgroundColor: Colors.orange.shade800),
-              onPressed: _openAccessSettings,
-              icon: const Icon(Icons.settings, size: 16),
-              label: const Text('Fix Notification Access'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Today's summary card ───────────────────────────────────────────────────
-
-  Widget _buildTodaySummaryCard(ColorScheme cs) {
-    final today = _todayRecs;
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  "Today's Collection",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: cs.onSurface.withAlpha(160),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Spacer(),
-                InkWell(
-                  onTap: () => widget.onNavigateToTab?.call(1),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'View History',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.primary),
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.lightBlue,
+                          borderRadius: AppRadius.mdRadius,
+                          border: Border.all(color: AppColors.softBlueBorder, width: 1.0),
                         ),
-                        const SizedBox(width: 2),
-                        Icon(Icons.arrow_forward_ios, size: 11, color: cs.primary),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _loadingHistory
-                ? const Center(child: CircularProgressIndicator())
-                : Row(
-                    children: [
+                        child: const Icon(
+                          Icons.storefront_rounded,
+                          color: AppColors.primaryBlue,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              today.isEmpty ? '₹0' : _todayTotalFmt,
-                              style: TextStyle(
-                                fontSize: 34,
-                                fontWeight: FontWeight.bold,
-                                color: today.isEmpty ? Colors.grey : cs.primary,
-                              ),
+                              _getGreeting(),
+                              style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
                             ),
-                            const SizedBox(height: 2),
                             Text(
-                              'Total received today',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: cs.onSurface.withAlpha(130),
+                              _merchantName,
+                              style: AppTypography.titleLarge.copyWith(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                         decoration: BoxDecoration(
-                          color: cs.primaryContainer,
-                          borderRadius: BorderRadius.circular(14),
+                          color: AppColors.surface,
+                          borderRadius: AppRadius.smRadius,
+                          border: Border.all(color: AppColors.cardBorder, width: 1.0),
                         ),
-                        child: Column(
-                          children: [
-                            Text(
-                              '${today.length}',
-                              style: TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.bold,
-                                color: cs.onPrimaryContainer,
-                              ),
-                            ),
-                            Text(
-                              today.length == 1 ? 'Payment' : 'Payments',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: cs.onPrimaryContainer.withAlpha(180),
-                              ),
-                            ),
-                          ],
+                        child: IconButton(
+                          icon: const Icon(Icons.refresh_rounded, size: 20, color: AppColors.textPrimary),
+                          tooltip: 'Refresh',
+                          onPressed: _refresh,
+                          visualDensity: VisualDensity.compact,
                         ),
                       ),
                     ],
                   ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Last payment card ──────────────────────────────────────────────────────
-
-  Widget _buildLastPaymentCard(ColorScheme cs) {
-    final last = _lastPayment;
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Most Recent Payment',
-              style: TextStyle(
-                fontSize: 14,
-                color: cs.onSurface.withAlpha(160),
-                fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            const SizedBox(height: 14),
-            if (last == null)
-              Row(
-                children: [
-                  Icon(Icons.receipt_long_outlined, color: Colors.grey.shade400, size: 28),
-                  const SizedBox(width: 12),
-                  Text(
-                    'No payments received yet today',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                  ),
-                ],
-              )
-            else
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: Colors.green.withAlpha(30),
-                    child: const Icon(Icons.currency_rupee, color: Colors.green, size: 22),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          last.displayAmount,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          last.appName,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: cs.onSurface,
-                          ),
-                        ),
-                        Text(
-                          last.timeLabel,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: cs.onSurface.withAlpha(130),
-                          ),
-                        ),
+
+              // ── Main Content Area ──────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: AppSpacing.md),
+
+                      // ── Live Payment Banner (When in-app payment occurs) ─────
+                      if (_livePayment != null) ...[
+                        _buildLivePaymentOverlay(_livePayment!),
+                        const SizedBox(height: AppSpacing.base),
                       ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withAlpha(20),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.check_circle_outline, size: 14, color: Colors.green),
-                        SizedBox(width: 4),
-                        Text('Payment detected', style: TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.bold)),
+
+                      // ── Soundbox Status Hero Card ───────────────────────────
+                      _buildSoundboxHeroCard(notifOk, checking),
+                      const SizedBox(height: AppSpacing.base),
+
+                      // ── Notification Access Warning (if disabled) ───────────
+                      if (!checking && !notifOk) ...[
+                        _buildAccessWarningCard(),
+                        const SizedBox(height: AppSpacing.base),
                       ],
-                    ),
+
+                      // ── Today's Performance ─────────────────────────────────
+                      const SectionHeader(
+                        title: "Today's Collection",
+                        padding: EdgeInsets.only(bottom: AppSpacing.sm),
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: StatCard(
+                              title: "Today's Earnings",
+                              value: _todayRecs.isEmpty ? '₹0' : _todayTotalFmt,
+                              subtitle: 'Total received today',
+                              icon: Icons.currency_rupee_rounded,
+                              iconColor: AppColors.primaryBlue,
+                              iconBgColor: AppColors.lightBlue,
+                              onTap: () => widget.onNavigateToTab?.call(1),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: StatCard(
+                              title: 'Payments',
+                              value: '${_todayRecs.length}',
+                              subtitle: _todayRecs.length == 1 ? '1 transaction' : '${_todayRecs.length} transactions',
+                              icon: Icons.receipt_long_outlined,
+                              iconColor: AppColors.success,
+                              iconBgColor: AppColors.successBg,
+                              onTap: () => widget.onNavigateToTab?.call(1),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // ── Most Recent Payment ─────────────────────────────────
+                      SectionHeader(
+                        title: 'Most Recent Payment',
+                        actionLabel: 'View History',
+                        onAction: () => widget.onNavigateToTab?.call(1),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      ),
+                      _buildRecentPaymentSection(),
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // ── Test Soundbox CTA ───────────────────────────────────
+                      PrimaryButton(
+                        label: 'Test Soundbox',
+                        icon: Icons.volume_up_rounded,
+                        onPressed: _ttsStatus == TtsStatus.unavailable
+                            ? null
+                            : () async {
+                                try {
+                                  await kMethodChannel.invokeMethod('speakTest');
+                                } on PlatformException catch (_) {
+                                  TtsService.instance.speakTest();
+                                }
+                              },
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+
+                      // ── MyUPI Premium Banner Card ───────────────────────────
+                      _buildSubscriptionBannerCard(),
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // ── Quick Actions Grid ──────────────────────────────────
+                      const SectionHeader(
+                        title: 'Quick Actions',
+                        padding: EdgeInsets.only(bottom: AppSpacing.sm),
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: CustomOutlineButton(
+                              label: 'View History',
+                              icon: Icons.history_rounded,
+                              height: 48,
+                              onPressed: () => widget.onNavigateToTab?.call(1),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: CustomOutlineButton(
+                              label: 'Soundbox Settings',
+                              icon: Icons.tune_rounded,
+                              height: 48,
+                              onPressed: () => widget.onNavigateToTab?.call(2),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xxl),
+                    ],
                   ),
-                ],
+                ),
               ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Merchant Actions ───────────────────────────────────────────────────────
-
-  Widget _buildMerchantActions(ColorScheme cs) {
-    final unavail = _ttsStatus == TtsStatus.unavailable;
-
-    return Column(
-      children: [
-        // Test Soundbox Button
-        SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: FilledButton.icon(
-            onPressed: unavail
-                ? null
-                : () async {
-                    try {
-                      await kMethodChannel.invokeMethod('speakTest');
-                    } on PlatformException catch (_) {
-                      TtsService.instance.speakTest();
-                    }
-                  },
-            icon: const Icon(Icons.play_circle_outline),
-            label: const Text('Test Soundbox', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-            style: FilledButton.styleFrom(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
+            ],
           ),
         ),
-        const SizedBox(height: 12),
-
-        // Quick Navigation Buttons: View History & Settings
-        Row(
-          children: [
-            Expanded(
-              child: SizedBox(
-                height: 48,
-                child: OutlinedButton.icon(
-                  onPressed: () => widget.onNavigateToTab?.call(1),
-                  icon: const Icon(Icons.history, size: 18),
-                  label: const Text('View Payment History'),
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: SizedBox(
-                height: 48,
-                child: OutlinedButton.icon(
-                  onPressed: () => widget.onNavigateToTab?.call(2),
-                  icon: const Icon(Icons.settings_outlined, size: 18),
-                  label: const Text('Soundbox Settings'),
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+      ),
     );
   }
-}
 
-// ─── Live payment banner ──────────────────────────────────────────────────────
+  // ── Hero Soundbox Card ─────────────────────────────────────────────────────
 
-class _LivePaymentBanner extends StatelessWidget {
-  final LivePaymentEvent payment;
-  final VoidCallback onDismiss;
+  Widget _buildSoundboxHeroCard(bool notifOk, bool checking) {
+    final bool isActive = _soundboxEnabled && notifOk;
 
-  const _LivePaymentBanner({required this.payment, required this.onDismiss});
-
-  @override
-  Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+        color: AppColors.surface,
+        borderRadius: AppRadius.xlRadius,
+        border: Border.all(
+          color: isActive ? AppColors.softBlueBorder : AppColors.cardBorder,
+          width: 1.2,
         ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.green.withAlpha(80),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+        boxShadow: AppShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'MYUPI SOUNDBOX',
+                style: AppTypography.sectionTitle.copyWith(
+                  color: isActive ? AppColors.primaryBlue : AppColors.textSecondary,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const Spacer(),
+              if (checking)
+                const StatusBadge(label: 'CHECKING', type: StatusBadgeType.inactive)
+              else if (!notifOk)
+                const StatusBadge(label: 'ACTION REQUIRED', type: StatusBadgeType.warning, showDot: true)
+              else if (isActive)
+                const StatusBadge(label: 'ACTIVE', type: StatusBadgeType.active, showDot: true)
+              else
+                const StatusBadge(label: 'OFF', type: StatusBadgeType.inactive),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.base),
+          Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: isActive ? AppColors.primaryBlue : const Color(0xFFF3F4F6),
+                  borderRadius: AppRadius.lgRadius,
+                  boxShadow: isActive ? AppShadows.primaryGlow : null,
+                ),
+                child: Icon(
+                  isActive ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                  color: isActive ? Colors.white : AppColors.textMuted,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.base),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isActive ? 'Soundbox is Active' : 'Soundbox is Paused',
+                      style: AppTypography.titleLarge.copyWith(fontSize: 17),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      checking
+                          ? 'Verifying notification listener…'
+                          : !notifOk
+                              ? 'Notification access is required'
+                              : _soundboxEnabled
+                                  ? 'Ready to speak incoming UPI payments'
+                                  : 'Payment announcements are switched off',
+                      style: AppTypography.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: _soundboxEnabled,
+                onChanged: _toggleSoundbox,
+                activeThumbColor: AppColors.primaryBlue,
+                activeTrackColor: AppColors.lightBlue,
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  // ── Access Warning Card ────────────────────────────────────────────────────
+
+  Widget _buildAccessWarningCard() {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.base),
+      decoration: BoxDecoration(
+        color: AppColors.warningBg,
+        borderRadius: AppRadius.lgRadius,
+        border: Border.all(color: AppColors.warningBorder, width: 1.0),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 22),
+              const SizedBox(width: 10),
+              Text(
+                'Notification Access Required',
+                style: AppTypography.titleMedium.copyWith(
+                  color: const Color(0xFFB45309),
+                  fontSize: 15,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'MyUPI needs notification access to hear and speak incoming payment alerts from PhonePe, Google Pay, and Paytm.',
+            style: AppTypography.bodySmall.copyWith(color: const Color(0xFF92400E)),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.warning,
+                foregroundColor: Colors.white,
+                shape: const RoundedRectangleBorder(borderRadius: AppRadius.mdRadius),
+              ),
+              onPressed: _openAccessSettings,
+              icon: const Icon(Icons.settings, size: 16),
+              label: const Text('Enable Notification Access', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Recent Payment Section ─────────────────────────────────────────────────
+
+  Widget _buildRecentPaymentSection() {
+    final last = _lastPayment;
+
+    if (last == null) {
+      return PremiumCard(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: const BoxDecoration(
+                color: Color(0xFFF3F4F6),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.receipt_long_outlined, color: AppColors.textMuted, size: 22),
+            ),
+            const SizedBox(width: AppSpacing.base),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'No payments received yet today',
+                    style: AppTypography.titleMedium.copyWith(fontSize: 14),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Incoming UPI payments will appear here.',
+                    style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return PaymentCard(
+      record: last,
+      onTap: () => widget.onNavigateToTab?.call(1),
+    );
+  }
+
+  // ── Live Payment Overlay ───────────────────────────────────────────────────
+
+  Widget _buildLivePaymentOverlay(LivePaymentEvent payment) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.base),
+      decoration: BoxDecoration(
+        gradient: AppColors.livePaymentGradient,
+        borderRadius: AppRadius.lgRadius,
+        boxShadow: AppShadows.successGlow,
+      ),
       child: Row(
         children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.white.withAlpha(50),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.check_rounded, color: Colors.white, size: 28),
+          ),
+          const SizedBox(width: AppSpacing.base),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -880,33 +643,108 @@ class _LivePaymentBanner extends StatelessWidget {
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.2,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.1,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
                   payment.displayAmount,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 2),
                 Text(
-                  '${payment.appName}  •  Just now',
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                  '${payment.appName} • Just now',
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.close, color: Colors.white70),
-            onPressed: onDismiss,
+            icon: const Icon(Icons.close, color: Colors.white70, size: 20),
+            onPressed: () => setState(() => _livePayment = null),
           ),
         ],
       ),
+    );
+  }
+
+  // ── Subscription Banner Card ───────────────────────────────────────────────
+
+  Widget _buildSubscriptionBannerCard() {
+    return ValueListenableBuilder<SubscriptionInfo>(
+      valueListenable: SubscriptionManager.instance.subscriptionInfoNotifier,
+      builder: (context, subInfo, _) {
+        final isPrem = subInfo.state.hasPremiumEntitlement;
+
+        return PremiumCard(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (ctx) => const PaywallScreen(sourceEntry: 'dashboard'),
+              ),
+            );
+          },
+          padding: const EdgeInsets.all(AppSpacing.base),
+          borderColor: isPrem ? AppColors.successBorder : AppColors.softBlueBorder,
+          backgroundColor: isPrem ? AppColors.successBg : AppColors.lightBlue,
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: isPrem ? AppColors.success : AppColors.primaryBlue,
+                  borderRadius: AppRadius.mdRadius,
+                ),
+                child: Icon(
+                  isPrem ? Icons.verified_rounded : Icons.workspace_premium_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.base),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          isPrem ? 'MyUPI Premium Active' : 'Special Offer: ₹1 First Month',
+                          style: AppTypography.titleMedium.copyWith(
+                            color: isPrem ? AppColors.success : AppColors.deepBlue,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isPrem
+                          ? 'All 8 languages and shop branding enabled.'
+                          : 'Then ₹49/month. Tap to explore premium soundbox benefits.',
+                      style: AppTypography.caption.copyWith(
+                        color: isPrem ? const Color(0xFF15803D) : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: isPrem ? AppColors.success : AppColors.primaryBlue,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

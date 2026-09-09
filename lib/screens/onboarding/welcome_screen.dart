@@ -5,110 +5,109 @@
 
 import 'package:flutter/material.dart';
 
+import '../../theme/app_colors.dart';
+import '../../theme/app_radius.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_typography.dart';
+import '../../widgets/premium_buttons.dart';
+import '../../widgets/premium_card.dart';
+
 class WelcomeScreen extends StatelessWidget {
   final VoidCallback onGetStarted;
   const WelcomeScreen({super.key, required this.onGetStarted});
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: AppColors.surface,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xl,
+              vertical: AppSpacing.lg,
+            ),
             child: Column(
               children: [
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
 
                 // ── App icon / logo area ────────────────────────────────────────
                 Container(
                   width: 96,
                   height: 96,
                   decoration: BoxDecoration(
-                    color: cs.primary,
-                    borderRadius: BorderRadius.circular(24),
+                    gradient: AppColors.heroGradient,
+                    borderRadius: AppRadius.xlRadius,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primaryBlue.withAlpha(70),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
-                  child: Icon(Icons.speaker, size: 54, color: cs.onPrimary),
+                  child: const Icon(Icons.speaker_rounded, size: 52, color: Colors.white),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.lg),
 
                 // ── App name ───────────────────────────────────────────────────
-                Text(
+                const Text(
                   'MyUPI',
                   style: TextStyle(
-                    fontSize: 38,
-                    fontWeight: FontWeight.bold,
-                    color: cs.primary,
-                    letterSpacing: 1.5,
+                    fontSize: 40,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.primaryBlue,
+                    letterSpacing: 1.2,
                   ),
                 ),
-                const SizedBox(height: 10),
-                Text(
+                const SizedBox(height: AppSpacing.sm),
+                const Text(
                   'Turn your Android phone into a smart UPI Soundbox.',
                   style: TextStyle(
                     fontSize: 16,
-                    color: cs.onSurface.withAlpha(180),
+                    color: AppColors.textSecondary,
                     fontWeight: FontWeight.w500,
                     height: 1.35,
                   ),
                   textAlign: TextAlign.center,
                 ),
 
-                const SizedBox(height: 28),
+                const SizedBox(height: AppSpacing.xl),
 
                 // ── Description ────────────────────────────────────────────────
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: cs.primaryContainer.withAlpha(120),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
+                PremiumCard(
+                  color: AppColors.lightBlue,
+                  borderColor: AppColors.primaryBlue.withAlpha(50),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: const Text(
                     'Turn your Android phone into a smart payment announcement device.\n\n'
                     'Every time you receive a UPI payment, MyUPI speaks it aloud — '
                     'so you can focus on your customers without checking your phone.',
                     style: TextStyle(
-                      fontSize: 15,
-                      color: cs.onSurface.withAlpha(200),
+                      fontSize: 14,
+                      color: AppColors.textPrimary,
                       height: 1.6,
+                      fontWeight: FontWeight.w400,
                     ),
                     textAlign: TextAlign.center,
                   ),
                 ),
 
-                const SizedBox(height: 36),
+                const SizedBox(height: AppSpacing.xxl),
 
                 // ── Get Started ────────────────────────────────────────────────
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: FilledButton.icon(
-                    onPressed: onGetStarted,
-                    icon: const Icon(Icons.arrow_forward),
-                    label: const Text(
-                      'Get Started',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                    ),
-                    style: FilledButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
+                PrimaryButton(
+                  label: 'Get Started',
+                  icon: Icons.arrow_forward_rounded,
+                  onPressed: onGetStarted,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
 
-                Text(
+                const Text(
                   'Free · No sign-up required · Works offline',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: cs.onSurface.withAlpha(110),
-                  ),
+                  style: AppTypography.caption,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.base),
               ],
             ),
           ),

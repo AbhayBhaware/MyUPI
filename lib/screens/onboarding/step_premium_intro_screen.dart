@@ -5,11 +5,16 @@
 // Presented after the merchant has tested and verified the Soundbox setup.
 //
 // Strictly non-aggressive:
-//   • Merchant can tap "Continue to Dashboard" immediately without payment.
-//   • Merchant can tap "Explore Premium" to view the full paywall.
+//   • Merchant can tap "Continue with Free Soundbox" immediately without payment.
+//   • Merchant can tap "View Premium Offer" to view the full paywall.
 
 import 'package:flutter/material.dart';
 
+import '../../theme/app_colors.dart';
+import '../../theme/app_radius.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_typography.dart';
+import '../../widgets/premium_buttons.dart';
 import '../paywall_screen.dart';
 
 class StepPremiumIntroScreen extends StatelessWidget {
@@ -19,19 +24,20 @@ class StepPremiumIntroScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: AppColors.surface,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.lg,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Step indicator ──────────────────────────────────────────────
-              _buildStepIndicator(cs),
-              const SizedBox(height: 32),
+              _buildStepIndicator(),
+              const SizedBox(height: AppSpacing.xl),
 
               Expanded(
                 child: Column(
@@ -43,52 +49,44 @@ class StepPremiumIntroScreen extends StatelessWidget {
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF3E8FF),
+                        color: AppColors.lightBlue,
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFD8B4FE)),
+                        border: Border.all(color: AppColors.primaryBlue.withAlpha(60), width: 1.5),
                       ),
                       child: const Icon(
                         Icons.workspace_premium_rounded,
-                        size: 44,
-                        color: Color(0xFF7E22CE),
+                        size: 42,
+                        color: AppColors.primaryBlue,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.lg),
 
                     // ── Headline ──────────────────────────────────────────────
-                    Text(
+                    const Text(
                       'Try MyUPI for ₹1',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: cs.onSurface,
-                      ),
+                      style: AppTypography.headlineMedium,
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.xs),
 
-                    Text(
+                    const Text(
                       'Get your first month of MyUPI Smart Soundbox for just ₹1, then ₹49/month.',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: cs.onSurface.withAlpha(180),
-                        height: 1.4,
-                      ),
+                      style: AppTypography.bodyMedium,
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: AppSpacing.xl),
 
                     // ── Key Highlights ────────────────────────────────────────
                     _buildHighlightRow(
-                      icon: Icons.check_circle_outline,
+                      icon: Icons.check_circle_outline_rounded,
                       text: 'Instant audio on every customer UPI payment',
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.sm),
                     _buildHighlightRow(
-                      icon: Icons.translate,
+                      icon: Icons.translate_rounded,
                       text: 'Available in Hindi, Marathi, Gujarati, Tamil & more',
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.sm),
                     _buildHighlightRow(
                       icon: Icons.savings_outlined,
                       text: 'Save ₹1,500+ every year over hardware soundboxes',
@@ -97,49 +95,26 @@ class StepPremiumIntroScreen extends StatelessWidget {
                     const Spacer(flex: 2),
 
                     // ── View Offer Button ─────────────────────────────────────
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: FilledButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (ctx) => const PaywallScreen(sourceEntry: 'onboarding'),
-                            ),
-                          );
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF5B21B6),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    PrimaryButton(
+                      label: 'View Premium Offer',
+                      icon: Icons.star_rounded,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (ctx) => const PaywallScreen(sourceEntry: 'onboarding'),
                           ),
-                        ),
-                        child: const Text(
-                          'View Premium Offer',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
-                      ),
+                        );
+                      },
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.sm),
 
                     // ── Continue to Dashboard ─────────────────────────────────
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: OutlinedButton(
-                        onPressed: onFinish,
-                        style: OutlinedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'Continue with Free Soundbox',
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-                        ),
-                      ),
+                    CustomOutlineButton(
+                      label: 'Continue with Free Soundbox',
+                      onPressed: onFinish,
                     ),
+                    const SizedBox(height: AppSpacing.base),
                   ],
                 ),
               ),
@@ -150,7 +125,7 @@ class StepPremiumIntroScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStepIndicator(ColorScheme cs) {
+  Widget _buildStepIndicator() {
     return Row(
       children: List.generate(5, (i) {
         final active = i == 4;
@@ -159,8 +134,8 @@ class StepPremiumIntroScreen extends StatelessWidget {
             margin: EdgeInsets.only(right: i < 4 ? 6 : 0),
             height: 4,
             decoration: BoxDecoration(
-              color: active ? const Color(0xFF5B21B6) : const Color(0xFF5B21B6).withAlpha(60),
-              borderRadius: BorderRadius.circular(2),
+              color: active ? AppColors.primaryBlue : AppColors.primaryBlue.withAlpha(60),
+              borderRadius: AppRadius.pillRadius,
             ),
           ),
         );
@@ -170,23 +145,23 @@ class StepPremiumIntroScreen extends StatelessWidget {
 
   Widget _buildHighlightRow({required IconData icon, required String text}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade200),
+        color: AppColors.surface,
+        borderRadius: AppRadius.mdRadius,
+        border: Border.all(color: AppColors.borderLight),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: const Color(0xFF5B21B6)),
-          const SizedBox(width: 12),
+          Icon(icon, size: 20, color: AppColors.primaryBlue),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Text(
               text,
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF374151),
+                color: AppColors.textPrimary,
               ),
             ),
           ),

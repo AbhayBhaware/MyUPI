@@ -7,6 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../app_channels.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_radius.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_typography.dart';
+import '../../widgets/premium_buttons.dart';
+import '../../widgets/premium_card.dart';
 
 class StepSoundScreen extends StatefulWidget {
   final VoidCallback onContinue;
@@ -17,11 +23,11 @@ class StepSoundScreen extends StatefulWidget {
 }
 
 class _StepSoundScreenState extends State<StepSoundScreen> {
-  bool   _soundboxEnabled = true;
-  String _language        = 'en-IN';
-  String _speechSpeed     = 'normal';
-  String _announceFormat  = 'A';
-  bool   _loading         = true;
+  bool _soundboxEnabled = true;
+  String _language = 'en-IN';
+  String _speechSpeed = 'normal';
+  String _announceFormat = 'A';
+  bool _loading = true;
 
   static const _kLanguages = [
     ('en-IN', 'English (India)', 'English'),
@@ -81,7 +87,7 @@ class _StepSoundScreenState extends State<StepSoundScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Selected language is not available on this device voice engine.'),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppColors.warning,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -105,23 +111,24 @@ class _StepSoundScreenState extends State<StepSoundScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: AppColors.surface,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.lg,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Step indicator ──────────────────────────────────────────────
-              _StepIndicator(current: 3, total: 6),
-              const SizedBox(height: 32),
+              const _StepIndicator(current: 3, total: 6),
+              const SizedBox(height: AppSpacing.xl),
 
               Expanded(
                 child: _loading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue))
                     : SingleChildScrollView(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,86 +138,90 @@ class _StepSoundScreenState extends State<StepSoundScreen> {
                               width: 72,
                               height: 72,
                               decoration: BoxDecoration(
-                                color: cs.primary.withAlpha(25),
-                                borderRadius: BorderRadius.circular(18),
+                                color: AppColors.lightBlue,
+                                borderRadius: AppRadius.lgRadius,
+                                border: Border.all(color: AppColors.primaryBlue.withAlpha(50), width: 1.0),
                               ),
-                              child: Icon(
+                              child: const Icon(
                                 Icons.tune_rounded,
-                                size: 40,
-                                color: cs.primary,
+                                size: 38,
+                                color: AppColors.primaryBlue,
                               ),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: AppSpacing.lg),
 
                             // ── Title ─────────────────────────────────────────
-                            Text(
+                            const Text(
                               'Soundbox Setup',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: cs.onSurface,
-                              ),
+                              style: AppTypography.headlineMedium,
                             ),
-                            const SizedBox(height: 8),
-                            Text(
+                            const SizedBox(height: AppSpacing.xs),
+                            const Text(
                               'Choose your preferred voice language, speech speed, and announcement style.',
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: cs.onSurface.withAlpha(180),
-                                height: 1.5,
-                              ),
+                              style: AppTypography.bodyMedium,
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: AppSpacing.lg),
 
                             // ── 1. Soundbox ON/OFF ─────────────────────────────
-                            Card(
-                              elevation: 0,
-                              color: cs.surfaceContainerHighest.withAlpha(60),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                                side: BorderSide(color: cs.outlineVariant.withAlpha(80)),
-                              ),
+                            PremiumCard(
+                              padding: EdgeInsets.zero,
                               child: SwitchListTile(
+                                activeThumbColor: AppColors.primaryBlue,
                                 title: const Text(
                                   'Voice Soundbox',
-                                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                                  style: AppTypography.titleSmall,
                                 ),
                                 subtitle: Text(
                                   _soundboxEnabled
                                       ? 'Payment announcements are enabled'
                                       : 'Payment announcements are paused',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: _soundboxEnabled ? Colors.green : Colors.grey,
+                                  style: AppTypography.caption.copyWith(
+                                    color: _soundboxEnabled ? AppColors.success : AppColors.textTertiary,
                                   ),
                                 ),
-                                secondary: Icon(
-                                  _soundboxEnabled ? Icons.volume_up : Icons.volume_off,
-                                  color: _soundboxEnabled ? cs.primary : Colors.grey,
+                                secondary: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: _soundboxEnabled ? AppColors.lightBlue : AppColors.background,
+                                    borderRadius: AppRadius.smRadius,
+                                  ),
+                                  child: Icon(
+                                    _soundboxEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                                    color: _soundboxEnabled ? AppColors.primaryBlue : AppColors.textTertiary,
+                                    size: 20,
+                                  ),
                                 ),
                                 value: _soundboxEnabled,
                                 onChanged: _toggleSoundbox,
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.base),
 
                             // ── 2. Announcement Language ──────────────────────
-                            Text(
+                            const Text(
                               'Announcement Language',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: cs.onSurface,
-                              ),
+                              style: AppTypography.titleSmall,
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: AppSpacing.xs),
                             DropdownButtonFormField<String>(
                               initialValue: _language,
                               decoration: InputDecoration(
-                                prefixIcon: const Icon(Icons.language),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                prefixIcon: const Icon(Icons.language_rounded, color: AppColors.primaryBlue),
+                                border: OutlineInputBorder(
+                                  borderRadius: AppRadius.mdRadius,
+                                  borderSide: const BorderSide(color: AppColors.borderMedium),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: AppRadius.mdRadius,
+                                  borderSide: const BorderSide(color: AppColors.borderMedium),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: AppRadius.mdRadius,
+                                  borderSide: const BorderSide(color: AppColors.primaryBlue, width: 1.5),
+                                ),
                                 filled: true,
-                                fillColor: cs.surfaceContainerHighest.withAlpha(40),
+                                fillColor: AppColors.surface,
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                               ),
                               items: _kLanguages.map((item) {
@@ -224,18 +235,14 @@ class _StepSoundScreenState extends State<StepSoundScreen> {
                                 if (val != null) _setLanguage(val);
                               },
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.base),
 
                             // ── 3. Speech Speed ───────────────────────────────
-                            Text(
+                            const Text(
                               'Voice Speed',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: cs.onSurface,
-                              ),
+                              style: AppTypography.titleSmall,
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: AppSpacing.xs),
                             SegmentedButton<String>(
                               segments: const [
                                 ButtonSegment(value: 'slow', label: Text('Slow')),
@@ -243,22 +250,24 @@ class _StepSoundScreenState extends State<StepSoundScreen> {
                                 ButtonSegment(value: 'fast', label: Text('Fast')),
                               ],
                               selected: {_speechSpeed},
+                              style: ButtonStyle(
+                                visualDensity: VisualDensity.comfortable,
+                                shape: WidgetStateProperty.all(
+                                  const RoundedRectangleBorder(borderRadius: AppRadius.mdRadius),
+                                ),
+                              ),
                               onSelectionChanged: (set) {
                                 if (set.isNotEmpty) _setSpeed(set.first);
                               },
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.base),
 
                             // ── 4. Announcement Style ─────────────────────────
-                            Text(
+                            const Text(
                               'Announcement Format',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: cs.onSurface,
-                              ),
+                              style: AppTypography.titleSmall,
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: AppSpacing.xs),
                             Column(
                               children: [
                                 _FormatOption(
@@ -268,7 +277,7 @@ class _StepSoundScreenState extends State<StepSoundScreen> {
                                   selected: _announceFormat == 'A',
                                   onSelect: () => _setAnnounceFormat('A'),
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: AppSpacing.xs),
                                 _FormatOption(
                                   id: 'B',
                                   title: 'Short',
@@ -276,7 +285,7 @@ class _StepSoundScreenState extends State<StepSoundScreen> {
                                   selected: _announceFormat == 'B',
                                   onSelect: () => _setAnnounceFormat('B'),
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: AppSpacing.xs),
                                 _FormatOption(
                                   id: 'C',
                                   title: 'Quick',
@@ -286,31 +295,19 @@ class _StepSoundScreenState extends State<StepSoundScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: AppSpacing.xl),
                           ],
                         ),
                       ),
               ),
 
               // ── Continue Button ─────────────────────────────────────────────
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: FilledButton.icon(
-                  onPressed: widget.onContinue,
-                  icon: const Icon(Icons.arrow_forward),
-                  label: const Text(
-                    'Continue',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
-                  style: FilledButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
+              PrimaryButton(
+                label: 'Continue',
+                icon: Icons.arrow_forward_rounded,
+                onPressed: widget.onContinue,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.base),
             ],
           ),
         ),
@@ -336,44 +333,50 @@ class _FormatOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: onSelect,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: selected ? cs.primary : cs.outlineVariant.withAlpha(80),
-            width: selected ? 2 : 1,
+    return Material(
+      color: selected ? AppColors.lightBlue : AppColors.surface,
+      borderRadius: AppRadius.mdRadius,
+      child: InkWell(
+        onTap: onSelect,
+        borderRadius: AppRadius.mdRadius,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: AppRadius.mdRadius,
+            border: Border.all(
+              color: selected ? AppColors.primaryBlue : AppColors.borderLight,
+              width: selected ? 1.5 : 1,
+            ),
           ),
-          color: selected ? cs.primaryContainer.withAlpha(50) : Colors.transparent,
-        ),
-        child: Row(
-          children: [
-            Icon(
-              selected ? Icons.radio_button_checked : Icons.radio_button_off,
-              color: selected ? cs.primary : Colors.grey,
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                  ),
-                  Text(
-                    sample,
-                    style: TextStyle(fontSize: 12, color: cs.onSurface.withAlpha(140)),
-                  ),
-                ],
+          child: Row(
+            children: [
+              Icon(
+                selected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+                color: selected ? AppColors.primaryBlue : AppColors.textTertiary,
+                size: 20,
               ),
-            ),
-          ],
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: selected ? AppColors.primaryBlue : AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      sample,
+                      style: AppTypography.caption,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -387,28 +390,27 @@ class _StepIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
         for (int i = 1; i <= total; i++) ...[
           Container(
-            width: i == current ? 28 : 10,
-            height: 10,
+            width: i == current ? 24 : 8,
+            height: 8,
             decoration: BoxDecoration(
               color: i == current
-                  ? cs.primary
+                  ? AppColors.primaryBlue
                   : i < current
-                      ? cs.primary.withAlpha(120)
-                      : cs.onSurface.withAlpha(40),
-              borderRadius: BorderRadius.circular(5),
+                      ? AppColors.primaryBlue.withAlpha(120)
+                      : AppColors.borderMedium,
+              borderRadius: AppRadius.pillRadius,
             ),
           ),
-          if (i < total) const SizedBox(width: 6),
+          if (i < total) const SizedBox(width: 5),
         ],
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.md),
         Text(
           'Step $current of $total',
-          style: TextStyle(fontSize: 12, color: cs.onSurface.withAlpha(140)),
+          style: AppTypography.caption.copyWith(fontWeight: FontWeight.w600),
         ),
       ],
     );
