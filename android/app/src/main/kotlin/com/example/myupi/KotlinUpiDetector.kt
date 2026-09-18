@@ -70,48 +70,58 @@ private val GENERIC_AMOUNT_PRESENT = Regex("""₹\s*[\d,]+(?:\.\d{1,2})?""")
 
 // ─── PhonePe ──────────────────────────────────────────────────────────────────
 
-private val PHONEPE_INCOMING = Regex("""sent\s+₹\s*($AMOUNT_PAT)\s+to\s+you""", RegexOption.IGNORE_CASE)
+private val PHONEPE_PATTERNS = listOf(
+    Regex("""sent\s+₹\s*($AMOUNT_PAT)\s+to\s+you""", RegexOption.IGNORE_CASE),
+    Regex("""(?:payment\s+of\s+)?₹\s*($AMOUNT_PAT)\s+received""", RegexOption.IGNORE_CASE),
+    Regex("""received\s+₹\s*($AMOUNT_PAT)""", RegexOption.IGNORE_CASE),
+)
 
 private fun detectPhonePe(pkg: String, title: String, text: String): KotlinPaymentResult {
     val combined = "${title.lowercase()} ${text.lowercase()}"
-    for (neg in COMMON_NEGATIVES + listOf("sent to")) {
+    for (neg in COMMON_NEGATIVES) {
         if (combined.contains(neg)) {
             return KotlinPaymentResult("LOW", "PhonePe", null, "PhonePe: Negative signal \"$neg\"")
         }
     }
     
     val searchIn = "$title $text"
-    val m = PHONEPE_INCOMING.find(searchIn)
-    val amt = m?.groupValues?.getOrNull(1)?.takeIf { it.isNotEmpty() }
-    
-    if (amt != null) {
-        Log.d(TAG, "PhonePe payment matched. Amount: $amt")
-        return KotlinPaymentResult("HIGH", "PhonePe", amt, "PhonePe incoming payment notification")
+    for (pat in PHONEPE_PATTERNS) {
+        val m = pat.find(searchIn)
+        val amt = m?.groupValues?.getOrNull(1)?.takeIf { it.isNotEmpty() }
+        if (amt != null) {
+            val appLabel = if (pkg.contains("b2b")) "PhonePe for Business" else "PhonePe"
+            Log.d(TAG, "$appLabel payment matched. Amount: $amt")
+            return KotlinPaymentResult("HIGH", appLabel, amt, "$appLabel incoming payment notification")
+        }
     }
     
-    return detectGeneric(pkg, title, text, "PhonePe")
+    val fallbackLabel = if (pkg.contains("b2b")) "PhonePe for Business" else "PhonePe"
+    return detectGeneric(pkg, title, text, fallbackLabel)
 }
 
 // ─── Paytm ────────────────────────────────────────────────────────────────────
 
-private val PAYTM_INCOMING = Regex("""received\s+₹\s*($AMOUNT_PAT)\s+from""", RegexOption.IGNORE_CASE)
-private val PAYTM_NEGATIVES = COMMON_NEGATIVES + listOf("sent to")
+private val PAYTM_PATTERNS = listOf(
+    Regex("""received\s+₹\s*($AMOUNT_PAT)""", RegexOption.IGNORE_CASE),
+    Regex("""₹\s*($AMOUNT_PAT)\s+received""", RegexOption.IGNORE_CASE),
+)
 
 private fun detectPaytm(pkg: String, title: String, text: String): KotlinPaymentResult {
     val combined = "${title.lowercase()} ${text.lowercase()}"
-    for (neg in PAYTM_NEGATIVES) {
+    for (neg in COMMON_NEGATIVES) {
         if (combined.contains(neg)) {
             return KotlinPaymentResult("LOW", "Paytm", null, "Paytm: Negative signal \"$neg\"")
         }
     }
     
     val searchIn = "$title $text"
-    val m = PAYTM_INCOMING.find(searchIn)
-    val amt = m?.groupValues?.getOrNull(1)?.takeIf { it.isNotEmpty() }
-    
-    if (amt != null) {
-        Log.d(TAG, "Paytm payment matched. Amount: $amt")
-        return KotlinPaymentResult("HIGH", "Paytm", amt, "Paytm incoming payment notification")
+    for (pat in PAYTM_PATTERNS) {
+        val m = pat.find(searchIn)
+        val amt = m?.groupValues?.getOrNull(1)?.takeIf { it.isNotEmpty() }
+        if (amt != null) {
+            Log.d(TAG, "Paytm payment matched. Amount: $amt")
+            return KotlinPaymentResult("HIGH", "Paytm", amt, "Paytm incoming payment notification")
+        }
     }
     
     return detectGeneric(pkg, title, text, "Paytm")
@@ -119,7 +129,12 @@ private fun detectPaytm(pkg: String, title: String, text: String): KotlinPayment
 
 // ─── Google Pay ───────────────────────────────────────────────────────────────
 
-private val GPAY_INCOMING = Regex("""sent\s+₹\s*($AMOUNT_PAT)\s+to\s+you""", RegexOption.IGNORE_CASE)
+private val GPAY_PATTERNS = listOf(
+    Regex("""sent\s+₹\s*($AMOUNT_PAT)\s+to\s+you""", RegexOption.IGNORE_CASE),
+    Regex("""received\s+₹\s*($AMOUNT_PAT)""", RegexOption.IGNORE_CASE),
+    Regex("""₹\s*($AMOUNT_PAT)\s+received""", RegexOption.IGNORE_CASE),
+    Regex("""paid\s+you\s+₹\s*($AMOUNT_PAT)""", RegexOption.IGNORE_CASE),
+)
 private val GPAY_OUTGOING_YOU_SENT = Regex("""^\s*you\s+sent\b""", RegexOption.IGNORE_CASE)
 private val GPAY_NEGATIVES = COMMON_NEGATIVES + listOf("paid to")
 
@@ -136,12 +151,13 @@ private fun detectGooglePay(pkg: String, title: String, text: String): KotlinPay
     }
     
     val searchIn = "$title $text"
-    val m = GPAY_INCOMING.find(searchIn)
-    val amt = m?.groupValues?.getOrNull(1)?.takeIf { it.isNotEmpty() }
-    
-    if (amt != null) {
-        Log.d(TAG, "Google Pay payment matched. Amount: $amt")
-        return KotlinPaymentResult("HIGH", "Google Pay", amt, "Google Pay incoming payment notification")
+    for (pat in GPAY_PATTERNS) {
+        val m = pat.find(searchIn)
+        val amt = m?.groupValues?.getOrNull(1)?.takeIf { it.isNotEmpty() }
+        if (amt != null) {
+            Log.d(TAG, "Google Pay payment matched. Amount: $amt")
+            return KotlinPaymentResult("HIGH", "Google Pay", amt, "Google Pay incoming payment notification")
+        }
     }
     
     return detectGeneric(pkg, title, text, "Google Pay")
@@ -149,24 +165,27 @@ private fun detectGooglePay(pkg: String, title: String, text: String): KotlinPay
 
 // ─── Amazon Pay ───────────────────────────────────────────────────────────────
 
-private val AMAZON_INCOMING = Regex("""you\s+received\s+₹\s*($AMOUNT_PAT)\s+from""", RegexOption.IGNORE_CASE)
-private val AMAZON_NEGATIVES = COMMON_NEGATIVES + listOf("sent to")
+private val AMAZON_PATTERNS = listOf(
+    Regex("""(?:you\s+)?received\s+₹\s*($AMOUNT_PAT)""", RegexOption.IGNORE_CASE),
+    Regex("""₹\s*($AMOUNT_PAT)\s+received""", RegexOption.IGNORE_CASE),
+)
 
 private fun detectAmazonPay(pkg: String, title: String, text: String): KotlinPaymentResult {
     val combined = "${title.lowercase()} ${text.lowercase()}"
-    for (neg in AMAZON_NEGATIVES) {
+    for (neg in COMMON_NEGATIVES) {
         if (combined.contains(neg)) {
             return KotlinPaymentResult("LOW", "Amazon Pay", null, "Amazon Pay: Negative signal \"$neg\"")
         }
     }
     
     val searchIn = "$title $text"
-    val m = AMAZON_INCOMING.find(searchIn)
-    val amt = m?.groupValues?.getOrNull(1)?.takeIf { it.isNotEmpty() }
-    
-    if (amt != null) {
-        Log.d(TAG, "Amazon Pay payment matched. Amount: $amt")
-        return KotlinPaymentResult("HIGH", "Amazon Pay", amt, "Amazon Pay incoming payment notification")
+    for (pat in AMAZON_PATTERNS) {
+        val m = pat.find(searchIn)
+        val amt = m?.groupValues?.getOrNull(1)?.takeIf { it.isNotEmpty() }
+        if (amt != null) {
+            Log.d(TAG, "Amazon Pay payment matched. Amount: $amt")
+            return KotlinPaymentResult("HIGH", "Amazon Pay", amt, "Amazon Pay incoming payment notification")
+        }
     }
     
     return detectGeneric(pkg, title, text, "Amazon Pay")
@@ -174,24 +193,27 @@ private fun detectAmazonPay(pkg: String, title: String, text: String): KotlinPay
 
 // ─── BHIM ─────────────────────────────────────────────────────────────────────
 
-private val BHIM_INCOMING = Regex("""₹\s*($AMOUNT_PAT)\s+received\s+from""", RegexOption.IGNORE_CASE)
-private val BHIM_NEGATIVES = COMMON_NEGATIVES + listOf("sent to")
+private val BHIM_PATTERNS = listOf(
+    Regex("""₹\s*($AMOUNT_PAT)\s+received""", RegexOption.IGNORE_CASE),
+    Regex("""received\s+₹\s*($AMOUNT_PAT)""", RegexOption.IGNORE_CASE),
+)
 
 private fun detectBhim(pkg: String, title: String, text: String): KotlinPaymentResult {
     val combined = "${title.lowercase()} ${text.lowercase()}"
-    for (neg in BHIM_NEGATIVES) {
+    for (neg in COMMON_NEGATIVES) {
         if (combined.contains(neg)) {
             return KotlinPaymentResult("LOW", "BHIM", null, "BHIM: Negative signal \"$neg\"")
         }
     }
     
     val searchIn = "$title $text"
-    val m = BHIM_INCOMING.find(searchIn)
-    val amt = m?.groupValues?.getOrNull(1)?.takeIf { it.isNotEmpty() }
-    
-    if (amt != null) {
-        Log.d(TAG, "BHIM payment matched. Amount: $amt")
-        return KotlinPaymentResult("HIGH", "BHIM", amt, "BHIM incoming payment notification")
+    for (pat in BHIM_PATTERNS) {
+        val m = pat.find(searchIn)
+        val amt = m?.groupValues?.getOrNull(1)?.takeIf { it.isNotEmpty() }
+        if (amt != null) {
+            Log.d(TAG, "BHIM payment matched. Amount: $amt")
+            return KotlinPaymentResult("HIGH", "BHIM", amt, "BHIM incoming payment notification")
+        }
     }
     
     return detectGeneric(pkg, title, text, "BHIM")
@@ -203,6 +225,7 @@ private val GENERIC_POSITIVE_KEYWORDS = listOf(
     "received", "credited", "credit", "money received", 
     "payment received", "upi payment received", "amount received", "amount credited"
 )
+private val GENERIC_AMOUNT_EXTRACT = Regex("""₹\s*($AMOUNT_PAT)""")
 
 private fun detectGeneric(pkg: String, title: String, text: String, appName: String): KotlinPaymentResult {
     val combined = "${title.lowercase()} ${text.lowercase()}"
@@ -213,17 +236,20 @@ private fun detectGeneric(pkg: String, title: String, text: String, appName: Str
     }
     
     val searchIn = "$title $text"
-    if (!GENERIC_AMOUNT_PRESENT.containsMatchIn(searchIn)) {
-        return KotlinPaymentResult("LOW", appName, null, "No ₹-amount pattern found — not confirming as payment.")
-    }
+    val amtMatch = GENERIC_AMOUNT_EXTRACT.find(searchIn)
+    val amt = amtMatch?.groupValues?.getOrNull(1)?.takeIf { it.isNotEmpty() }
     
     val matched = mutableListOf<String>()
     for (pos in GENERIC_POSITIVE_KEYWORDS) {
         if (combined.contains(pos)) matched.add(pos)
     }
     
+    if (matched.isNotEmpty() && amt != null) {
+        return KotlinPaymentResult("HIGH", appName, amt, "Fallback payment matched keywords [${matched.joinToString(", ")}]")
+    }
+    
     if (matched.isNotEmpty()) {
-        return KotlinPaymentResult("MEDIUM", appName, null, "Payment keywords found: ${matched.joinToString(", ")}")
+        return KotlinPaymentResult("MEDIUM", appName, null, "Payment keywords found: ${matched.joinToString(", ")} (amount missing)")
     }
     
     return KotlinPaymentResult("LOW", appName, null, "From UPI app \"$appName\" but no confirmed payment pattern found.")

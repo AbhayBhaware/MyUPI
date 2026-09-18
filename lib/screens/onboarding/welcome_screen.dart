@@ -33,20 +33,35 @@ class WelcomeScreen extends StatelessWidget {
 
                 // ── App icon / logo area ────────────────────────────────────────
                 Container(
-                  width: 96,
-                  height: 96,
+                  width: 104,
+                  height: 104,
                   decoration: BoxDecoration(
-                    gradient: AppColors.heroGradient,
-                    borderRadius: AppRadius.xlRadius,
+                    color: AppColors.surface,
+                    borderRadius: AppRadius.xxlRadius,
+                    border: Border.all(color: AppColors.softBlueBorder, width: 1.5),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primaryBlue.withAlpha(70),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8),
+                        color: AppColors.primaryBlue.withAlpha(50),
+                        blurRadius: 28,
+                        offset: const Offset(0, 10),
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.speaker_rounded, size: 52, color: Colors.white),
+                  child: ClipRRect(
+                    borderRadius: AppRadius.xxlRadius,
+                    child: Padding(
+                      padding: const EdgeInsets.all(6.0),
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) => const Icon(
+                          Icons.speaker_rounded,
+                          size: 52,
+                          color: AppColors.primaryBlue,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
 

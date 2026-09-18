@@ -108,6 +108,15 @@ abstract class AppTypography {
   );
 
   /// Prominent Rupee currency amount display
+  static const TextStyle currencyHeroBold = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 36.0,
+    fontWeight: FontWeight.w900,
+    color: AppColors.textPrimary,
+    letterSpacing: -0.8,
+    height: 1.15,
+  );
+
   static const TextStyle currencyHero = TextStyle(
     fontFamily: fontFamily,
     fontSize: 34.0,

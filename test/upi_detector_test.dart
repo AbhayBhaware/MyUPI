@@ -928,6 +928,40 @@ void main() {
       expect(seenKeys.add(payment1Key), isTrue);
       expect(seenKeys.add(payment2Key), isTrue);
     });
+
+    test('Sliding window dedup allows same key after 45 seconds TTL', () {
+      final dedupCache = <String, int>{};
+      const ttlMs = 45000;
+      bool checkDuplicate(String key, int nowMs) {
+        dedupCache.removeWhere((k, ts) => nowMs - ts > ttlMs);
+        if (dedupCache.containsKey(key)) return true;
+        dedupCache[key] = nowMs;
+        return false;
+      }
+
+      const key = 'com.phonepe.app||1|contentHash123';
+      expect(checkDuplicate(key, 1000), isFalse); // First arrival: processed
+      expect(checkDuplicate(key, 5000), isTrue);  // Duplicate at +4s: suppressed
+      expect(checkDuplicate(key, 46001), isFalse); // Arrival after +45s: allowed
+    });
+
+    test('Successive payments with same notification ID but different amounts are not blocked', () {
+      final dedupCache = <String, int>{};
+      const ttlMs = 45000;
+      bool checkDuplicate(String key, int nowMs) {
+        dedupCache.removeWhere((k, ts) => nowMs - ts > ttlMs);
+        if (dedupCache.containsKey(key)) return true;
+        dedupCache[key] = nowMs;
+        return false;
+      }
+
+      // App reuses notification id=1 for all payments, but content hash differs
+      const payment1 = 'com.phonepe.app||1|sent_20_to_you';
+      const payment2 = 'com.phonepe.app||1|sent_50_to_you';
+
+      expect(checkDuplicate(payment1, 1000), isFalse);
+      expect(checkDuplicate(payment2, 2000), isFalse); // Not suppressed!
+    });
   });
 
   group('M17: Multilingual announcement template testing', () {

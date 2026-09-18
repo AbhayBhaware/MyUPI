@@ -248,6 +248,41 @@ object SharedPreferencesManager {
     }
 
     /**
+     * Updates an existing recent payment record to source "BOTH" and HIGH trust.
+     * Matches by normalized amount within the last 60 seconds.
+     * Returns true if a record was successfully merged.
+     */
+    @Synchronized
+    fun mergeRecentPayment(
+        amount: String,
+        newSource: String = "BOTH",
+        combinedAppName: String,
+        newTrustLevel: String = "HIGH",
+    ): Boolean {
+        val list = loadHistoryList().toMutableList()
+        val now = System.currentTimeMillis()
+        val cleanTarget = amount.replace(",", "").toDoubleOrNull() ?: return false
+
+        for (i in list.indices) {
+            val item = list[i]
+            val itemAmount = item.optString("amount", "").replace(",", "").toDoubleOrNull()
+            val itemTime = item.optLong("timestampMs", 0L)
+
+            // Match within 60 seconds and identical amount
+            if (itemAmount != null && itemAmount == cleanTarget && (now - itemTime) <= 60_000L) {
+                item.put("source", newSource)
+                item.put("trustLevel", newTrustLevel)
+                item.put("appName", combinedAppName)
+                val arr = JSONArray().apply { list.forEach { put(it) } }
+                prefs.edit().putString(KEY_HISTORY, arr.toString()).apply()
+                Log.d(TAG, "Payment history record merged: ₹$amount -> $newSource ($combinedAppName)")
+                return true
+            }
+        }
+        return false
+    }
+
+    /**
      * Delete all payment history records.
      * Settings (soundbox enabled, speech speed) are NOT affected.
      */
@@ -255,6 +290,65 @@ object SharedPreferencesManager {
     fun clearHistory() {
         prefs.edit().remove(KEY_HISTORY).apply()
         Log.d(TAG, "Payment history cleared.")
+    }
+
+    // ── Diagnostic Logging (Zero-PII) ─────────────────────────────────────────
+
+    private const val KEY_DIAGNOSTIC_LOGS = "diagnostic_logs"
+    private const val MAX_DIAGNOSTIC_LOGS = 25
+
+    /**
+     * Records recent detection events for diagnostics with Zero-PII guarantee.
+     * Only stores app label, status, trust level, amount, and reason.
+     */
+    @Synchronized
+    fun addDiagnosticLog(
+        appName: String,
+        status: String,
+        trustLevel: String,
+        amount: String?,
+        reason: String,
+    ) {
+        try {
+            val json = prefs.getString(KEY_DIAGNOSTIC_LOGS, "[]") ?: "[]"
+            val arr = JSONArray(json)
+            val list = (0 until arr.length()).map { arr.getJSONObject(it) }.toMutableList()
+            val item = JSONObject().apply {
+                put("timestampMs", System.currentTimeMillis())
+                put("appName", appName)
+                put("status", status)
+                put("trustLevel", trustLevel)
+                put("amount", amount ?: "")
+                put("reason", reason)
+            }
+            list.add(0, item)
+            val trimmed = if (list.size > MAX_DIAGNOSTIC_LOGS) list.take(MAX_DIAGNOSTIC_LOGS) else list
+            val outArr = JSONArray().apply { trimmed.forEach { put(it) } }
+            prefs.edit().putString(KEY_DIAGNOSTIC_LOGS, outArr.toString()).apply()
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to write diagnostic log: ${e.message}")
+        }
+    }
+
+    @Synchronized
+    fun getDiagnosticLogs(): List<Map<String, Any>> {
+        val json = prefs.getString(KEY_DIAGNOSTIC_LOGS, "[]") ?: "[]"
+        return try {
+            val arr = JSONArray(json)
+            (0 until arr.length()).map { i ->
+                val obj = arr.getJSONObject(i)
+                mapOf(
+                    "timestampMs" to obj.optLong("timestampMs"),
+                    "appName"     to obj.optString("appName"),
+                    "status"      to obj.optString("status"),
+                    "trustLevel"  to obj.optString("trustLevel"),
+                    "amount"      to obj.optString("amount"),
+                    "reason"      to obj.optString("reason"),
+                )
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
     // ── Internal helpers ──────────────────────────────────────────────────────

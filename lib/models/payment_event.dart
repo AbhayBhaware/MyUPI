@@ -30,6 +30,8 @@ enum VerificationStatus {
 
 enum PaymentSource {
   notification,
+  sms,
+  both,
   paymentProvider,
   unknown,
 }
@@ -59,6 +61,19 @@ class PaymentEvent {
   /// Whether this payment has been cryptographically confirmed by a bank/PA.
   /// For notification MVP, this is ALWAYS false.
   bool get isVerified => verificationStatus == VerificationStatus.verified;
+
+  /// User-friendly label for the detection channel (Master Brief Part 2)
+  String get channelLabel => switch (source) {
+    PaymentSource.notification => 'Notification',
+    PaymentSource.sms => 'SMS',
+    PaymentSource.both => 'Dual Confirmed',
+    PaymentSource.paymentProvider => 'Bank Verified',
+    PaymentSource.unknown => 'Unknown',
+  };
+
+  bool get isDualConfirmed => source == PaymentSource.both;
+  bool get isSmsOnly => source == PaymentSource.sms;
+  bool get isNotificationOnly => source == PaymentSource.notification;
 
   /// Human-readable time label (e.g. "Today, 10:30 AM" or "Yesterday, 4:15 PM").
   String get timeLabel {
@@ -106,6 +121,8 @@ class PaymentEvent {
     // Parse PaymentSource (defaults to notification for migration safety)
     final srcStr = ((map['source'] as String?) ?? 'NOTIFICATION').toUpperCase();
     final src = switch (srcStr) {
+      'SMS'              => PaymentSource.sms,
+      'BOTH'             => PaymentSource.both,
       'PAYMENT_PROVIDER' => PaymentSource.paymentProvider,
       'UNKNOWN'          => PaymentSource.unknown,
       _                  => PaymentSource.notification,
@@ -138,6 +155,8 @@ class PaymentEvent {
         VerificationStatus.notVerified => 'NOT_VERIFIED',
       },
       'source': switch (source) {
+        PaymentSource.sms => 'SMS',
+        PaymentSource.both => 'BOTH',
         PaymentSource.paymentProvider => 'PAYMENT_PROVIDER',
         PaymentSource.unknown => 'UNKNOWN',
         PaymentSource.notification => 'NOTIFICATION',

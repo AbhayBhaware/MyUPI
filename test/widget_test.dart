@@ -53,6 +53,19 @@ void main() {
   );
 
   testWidgets(
+    'Verify no stray PIXELS watermark or debug banner exists on HomeScreen',
+    (WidgetTester tester) async {
+      setMock(onboardingDone: true);
+
+      await tester.pumpWidget(const MyUpiApp());
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('PIXEL', findRichText: true), findsNothing);
+      expect(find.textContaining('pixel', findRichText: true), findsNothing);
+    },
+  );
+
+  testWidgets(
     'Onboarding NOT done → Welcome screen is shown',
     (WidgetTester tester) async {
       setMock(onboardingDone: false);

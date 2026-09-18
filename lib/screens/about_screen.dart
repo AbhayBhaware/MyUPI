@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
+import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/premium_card.dart';
@@ -162,20 +163,29 @@ class _AboutScreenState extends State<AboutScreen> {
             child: Column(
               children: [
                 Container(
-                  width: 80,
-                  height: 80,
+                  width: 88,
+                  height: 88,
                   decoration: BoxDecoration(
-                    gradient: AppColors.heroGradient,
-                    borderRadius: AppRadius.lgRadius,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryBlue.withAlpha(60),
-                        blurRadius: 18,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
+                    color: AppColors.surface,
+                    borderRadius: AppRadius.xlRadius,
+                    border: Border.all(color: AppColors.softBlueBorder, width: 1.5),
+                    boxShadow: AppShadows.card,
                   ),
-                  child: const Icon(Icons.speaker_rounded, size: 44, color: Colors.white),
+                  child: ClipRRect(
+                    borderRadius: AppRadius.xlRadius,
+                    child: Padding(
+                      padding: const EdgeInsets.all(6.0),
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) => const Icon(
+                          Icons.speaker_rounded,
+                          size: 44,
+                          color: AppColors.primaryBlue,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 const Text(

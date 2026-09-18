@@ -56,6 +56,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                 trustLevel: (m['trustLevel'] as String?) ?? 'HIGH',
                 timestamp: DateTime.fromMillisecondsSinceEpoch(
                     (m['timestampMs'] as int?) ?? 0),
+                source: (m['source'] as String?) ?? 'NOTIFICATION',
               ))
           .where((r) => r.amount.isNotEmpty)
           .toList();
@@ -198,11 +199,12 @@ class _HistoryScreenState extends State<HistoryScreen>
                   ? ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       children: const [
-                        SizedBox(height: 80),
+                        SizedBox(height: 60),
                         EmptyState(
                           icon: Icons.receipt_long_rounded,
+                          badgeText: 'SOUNDBOX ACTIVE',
                           title: 'No payment history yet',
-                          subtitle: 'Incoming UPI payments will appear here.',
+                          subtitle: 'Incoming UPI payments will appear here in real-time as they are announced.',
                         ),
                       ],
                     )
@@ -261,7 +263,7 @@ class _HistoryScreenState extends State<HistoryScreen>
   Widget _buildSummaryBar() {
     final today = _todayRecs;
     return PremiumCard(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 16),
       child: Row(
         children: [
           Expanded(
@@ -280,15 +282,28 @@ class _HistoryScreenState extends State<HistoryScreen>
                     ),
                     const SizedBox(width: AppSpacing.xs),
                     const Text(
-                      "Today's Total",
-                      style: AppTypography.caption,
+                      "Today's Total Collection",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  today.isEmpty ? '₹0' : _todayTotalFmt,
-                  style: AppTypography.currencyLarge.copyWith(color: AppColors.textPrimary),
+                const SizedBox(height: 6),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    today.isEmpty ? '₹0' : _todayTotalFmt,
+                    style: AppTypography.currencyLarge.copyWith(
+                      color: AppColors.textPrimary,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.6,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -301,7 +316,7 @@ class _HistoryScreenState extends State<HistoryScreen>
             decoration: BoxDecoration(
               color: AppColors.lightBlue,
               borderRadius: AppRadius.mdRadius,
-              border: Border.all(color: AppColors.borderLight, width: 1.0),
+              border: Border.all(color: AppColors.softBlueBorder, width: 1.0),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -310,7 +325,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                   'Payments Today',
                   style: TextStyle(
                     fontSize: 11,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textSecondary,
                   ),
                 ),
@@ -318,7 +333,8 @@ class _HistoryScreenState extends State<HistoryScreen>
                 Text(
                   '${today.length}',
                   style: AppTypography.statValue.copyWith(
-                    fontSize: 20,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
                     color: AppColors.primaryBlue,
                   ),
                 ),

@@ -1,8 +1,17 @@
 package com.example.myupi
 
+import android.Manifest
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
@@ -13,6 +22,7 @@ class MainActivity : FlutterActivity() {
     companion object {
         private const val METHOD_CHANNEL = "com.example.myupi/notification_access"
         private const val EVENT_CHANNEL  = "com.example.myupi/notification_stream"
+        private const val SMS_PERMISSION_REQUEST_CODE = 2001
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -39,10 +49,145 @@ class MainActivity : FlutterActivity() {
                         result.success(null)
                     }
 
+                    // ── SMS Permission (Master Brief Part 1b) ─────────────────
+                    "isSmsPermissionGranted" -> {
+                        val granted = ContextCompat.checkSelfPermission(
+                            this, Manifest.permission.RECEIVE_SMS
+                        ) == PackageManager.PERMISSION_GRANTED
+                        result.success(granted)
+                    }
+                    "requestSmsPermission" -> {
+                        ActivityCompat.requestPermissions(
+                            this,
+                            arrayOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_SMS),
+                            SMS_PERMISSION_REQUEST_CODE
+                        )
+                        result.success(null)
+                    }
+
+                    // ── Battery Optimization Exemption (Master Brief Part 1a) ─
+                    "isBatteryOptimizationIgnored" -> {
+                        val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
+                        val isIgnored = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            pm?.isIgnoringBatteryOptimizations(packageName) ?: false
+                        } else {
+                            true
+                        }
+                        result.success(isIgnored)
+                    }
+                    "requestIgnoreBatteryOptimization" -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                                data = Uri.parse("package:$packageName")
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            try {
+                                startActivity(intent)
+                                result.success(true)
+                            } catch (e: Exception) {
+                                // Fallback to battery saver settings
+                                val fallback = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                                startActivity(fallback)
+                                result.success(false)
+                            }
+                        } else {
+                            result.success(true)
+                        }
+                    }
+
+                    // ── Per-App Notification Settings (Master Brief Part 1d) ──
+                    "openAppNotificationSettings" -> {
+                        val targetPkg = call.argument<String>("package") ?: packageName
+                        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                putExtra(Settings.EXTRA_APP_PACKAGE, targetPkg)
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                        } else {
+                            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.parse("package:$targetPkg")
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                        }
+                        try {
+                            startActivity(intent)
+                            result.success(true)
+                        } catch (e: Exception) {
+                            result.error("INTENT_FAILED", e.message, null)
+                        }
+                    }
+
+                    // ── Installed UPI Apps List ───────────────────────────────
+                    "getInstalledUpiApps" -> {
+                        val upiPackages = listOf(
+                            "com.phonepe.app" to "PhonePe",
+                            "com.phonepe.app.b2b" to "PhonePe Business",
+                            "com.google.android.apps.nbu.paisa.user" to "Google Pay",
+                            "net.one97.paytm" to "Paytm",
+                            "in.org.npci.upiapp" to "BHIM",
+                            "in.amazon.mShop.android.shopping" to "Amazon Pay"
+                        )
+                        val installed = upiPackages.mapNotNull { (pkg, name) ->
+                            try {
+                                packageManager.getPackageInfo(pkg, 0)
+                                mapOf("package" to pkg, "name" to name)
+                            } catch (e: Exception) {
+                                null
+                            }
+                        }
+                        result.success(installed)
+                    }
+
+                    // ── OEM Autostart Guidance (Master Brief Part 1a & 1d) ────
+                    "getDeviceManufacturer" -> {
+                        result.success(Build.MANUFACTURER)
+                    }
+                    "openAutostartSettings" -> {
+                        val manufacturer = Build.MANUFACTURER.lowercase()
+                        val intent = Intent()
+                        var handled = false
+
+                        try {
+                            when {
+                                manufacturer.contains("xiaomi") || manufacturer.contains("redmi") || manufacturer.contains("poco") -> {
+                                    intent.component = ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity")
+                                }
+                                manufacturer.contains("oppo") || manufacturer.contains("realme") -> {
+                                    intent.component = ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity")
+                                }
+                                manufacturer.contains("vivo") || manufacturer.contains("iqoo") -> {
+                                    intent.component = ComponentName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity")
+                                }
+                                manufacturer.contains("oneplus") -> {
+                                    intent.component = ComponentName("com.oneplus.security", "com.oneplus.security.chainlaunch.view.ChainLaunchAppListActivity")
+                                }
+                                manufacturer.contains("samsung") -> {
+                                    intent.component = ComponentName("com.samsung.android.lool", "com.samsung.android.sm.ui.battery.BatteryActivity")
+                                }
+                            }
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            startActivity(intent)
+                            handled = true
+                        } catch (e: Exception) {
+                            // Fallback to standard app info settings
+                            val fallback = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.parse("package:$packageName")
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            startActivity(fallback)
+                            handled = true
+                        }
+                        result.success(handled)
+                    }
+
+                    // ── Rebind Notification Listener (Master Brief Part 1a) ──
+                    "rebindNotificationListener" -> {
+                        PaymentNotificationListener.rebindService(this)
+                        result.success(null)
+                    }
+
                     // ── TTS test ──────────────────────────────────────────────
                     "speakTest" -> {
-                        // Route Test Soundbox button through native TTS.
-                        // This is a dev/test action and does NOT save payment history.
                         PaymentNotificationListener.ttsHelper?.speakTest()
                         result.success(null)
                     }
@@ -65,7 +210,6 @@ class MainActivity : FlutterActivity() {
                         val speed = call.argument<String>("speed") ?: "normal"
                         try {
                             SharedPreferencesManager.setSpeechSpeed(speed)
-                            // Apply immediately to running TTS engine.
                             PaymentNotificationListener.ttsHelper?.updateSpeechRate()
                         } catch (e: IllegalArgumentException) {
                             result.error("INVALID_SPEED", e.message, null)
@@ -77,7 +221,6 @@ class MainActivity : FlutterActivity() {
                     // ── Payment history ───────────────────────────────────────
                     "getPaymentHistory" -> {
                         val records = SharedPreferencesManager.getHistory()
-                        // Convert to a list of maps for Flutter (JSON-compatible).
                         val list = records.map { rec ->
                             mapOf(
                                 "amount"             to rec.amount,
@@ -152,7 +295,7 @@ class MainActivity : FlutterActivity() {
                         result.success(available)
                     }
 
-                    // ── Architecture & Verification Readiness (M18 & M19) ────
+                    // ── Architecture & Diagnostics (Master Brief) ────────────
                     "getMerchantProfile" -> {
                         result.success(SharedPreferencesManager.getMerchantProfile())
                     }
@@ -175,10 +318,28 @@ class MainActivity : FlutterActivity() {
                             NotificationManagerCompat.getEnabledListenerPackages(this)
                         val accessGranted = enabledPackages.contains(packageName)
                         val trustedMap = KotlinUpiDetector.getTrustedPackages()
+                        
+                        val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
+                        val isBatteryIgnored = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            pm?.isIgnoringBatteryOptimizations(packageName) ?: false
+                        } else {
+                            true
+                        }
+
+                        val smsGranted = ContextCompat.checkSelfPermission(
+                            this, Manifest.permission.RECEIVE_SMS
+                        ) == PackageManager.PERMISSION_GRANTED
+
                         val diagnostics = mapOf(
                             "notificationAccessGranted" to accessGranted,
                             "serviceBound"              to (PaymentNotificationListener.eventSink != null),
+                            "smsPermissionGranted"      to smsGranted,
+                            "batteryOptimizationIgnored" to isBatteryIgnored,
+                            "deviceManufacturer"        to Build.MANUFACTURER,
+                            "deviceModel"               to Build.MODEL,
+                            "androidVersion"            to Build.VERSION.RELEASE,
                             "parserVersion"             to KotlinUpiDetector.UPI_PARSER_VERSION,
+                            "smsParserVersion"          to BankSmsDetector.SMS_PARSER_VERSION,
                             "supportedPackagesCount"    to trustedMap.size,
                             "supportedPackages"         to trustedMap.keys.toList(),
                             "soundboxEnabled"           to SharedPreferencesManager.isSoundboxEnabled(),
@@ -191,6 +352,7 @@ class MainActivity : FlutterActivity() {
                             "subscriptionTier"          to SharedPreferencesManager.getSubscriptionTier(),
                             "subscriptionState"         to SharedPreferencesManager.getSubscriptionState(),
                             "featureFlags"              to SharedPreferencesManager.getFeatureFlags(),
+                            "recentLogs"                to SharedPreferencesManager.getDiagnosticLogs(),
                         )
                         result.success(diagnostics)
                     }
@@ -199,18 +361,15 @@ class MainActivity : FlutterActivity() {
                 }
             }
 
-        // ── EventChannel (notification stream) ────────────────────────────────
+        // ── EventChannel (notification & SMS payment stream) ─────────────────
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, EVENT_CHANNEL)
             .setStreamHandler(object : EventChannel.StreamHandler {
 
                 override fun onListen(arguments: Any?, sink: EventChannel.EventSink) {
-                    // Hand the sink to the service so it can push events.
                     PaymentNotificationListener.eventSink = sink
                 }
 
                 override fun onCancel(arguments: Any?) {
-                    // Flutter stopped listening — clear the sink to avoid sending
-                    // events into a dead stream.
                     PaymentNotificationListener.eventSink = null
                 }
             })
@@ -218,8 +377,6 @@ class MainActivity : FlutterActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        // Clear the sink when the Activity is destroyed so the service
-        // does not try to send to a stale reference.
         PaymentNotificationListener.eventSink = null
     }
 }

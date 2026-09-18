@@ -13,6 +13,7 @@
 //   1: History  — Payment history list
 //   2: Settings — Soundbox/TTS settings
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -26,8 +27,9 @@ import 'theme/app_radius.dart';
 import 'theme/app_theme.dart';
 import 'theme/app_typography.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -99,16 +101,34 @@ class _AppRouterState extends State<_AppRouter> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 76,
-                height: 76,
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryBlue,
-                  borderRadius: AppRadius.lgRadius,
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: AppRadius.xlRadius,
+                  border: Border.all(color: AppColors.softBlueBorder, width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primaryBlue.withAlpha(40),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-                child: const Icon(
-                  Icons.speaker,
-                  size: 42,
-                  color: Colors.white,
+                child: ClipRRect(
+                  borderRadius: AppRadius.xlRadius,
+                  child: Padding(
+                    padding: const EdgeInsets.all(6.0),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.speaker,
+                        size: 42,
+                        color: AppColors.primaryBlue,
+                      ),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 18),

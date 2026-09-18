@@ -26,13 +26,13 @@ const kEventChannel  = EventChannel('com.example.myupi/notification_stream');
 // ─── Backward-compatible PaymentRecord ────────────────────────────────────────
 
 class PaymentRecord extends PaymentEvent {
-  const PaymentRecord({
+  PaymentRecord({
     required super.amount,
     required super.appName,
     required super.timestamp,
     dynamic trustLevel = TrustLevel.high,
     super.verificationStatus = VerificationStatus.notVerified,
-    super.source = PaymentSource.notification,
+    dynamic source = PaymentSource.notification,
     super.parserVersion = 1,
   }) : super(
           trustLevel: trustLevel is TrustLevel
@@ -40,6 +40,15 @@ class PaymentRecord extends PaymentEvent {
               : (trustLevel == 'MEDIUM'
                   ? TrustLevel.medium
                   : (trustLevel == 'LOW' ? TrustLevel.low : TrustLevel.high)),
+          source: source is PaymentSource
+              ? source
+              : (source == 'SMS'
+                  ? PaymentSource.sms
+                  : (source == 'BOTH'
+                      ? PaymentSource.both
+                      : (source == 'PAYMENT_PROVIDER'
+                          ? PaymentSource.paymentProvider
+                          : PaymentSource.notification))),
         );
 }
 

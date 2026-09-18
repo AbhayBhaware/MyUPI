@@ -109,6 +109,8 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
                     _buildSubscriptionSimulatorCard(theme),
                     const SizedBox(height: 16),
                     _buildPrivacyAndIdentityCard(theme),
+                    const SizedBox(height: 16),
+                    _buildRecentLogsCard(theme),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -164,13 +166,16 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
   Widget _buildSystemHealthCard(ThemeData theme) {
     final accessGranted = _diagnostics['notificationAccessGranted'] == true;
     final serviceBound = _diagnostics['serviceBound'] == true;
+    final smsGranted = _diagnostics['smsPermissionGranted'] == true;
+    final batteryIgnored = _diagnostics['batteryOptimizationIgnored'] == true;
+    final mfg = (_diagnostics['deviceManufacturer'] ?? 'Android').toString();
     final soundboxEnabled = _diagnostics['soundboxEnabled'] == true;
     final speechSpeed = (_diagnostics['speechSpeed'] ?? 'normal').toString();
     final language = (_diagnostics['language'] ?? 'en-IN').toString();
     final format = (_diagnostics['announcementFormat'] ?? 'A').toString();
 
     return _buildCard(
-      title: 'System Health & Engine',
+      title: 'System Health & Detection Channels',
       icon: Icons.monitor_heart_outlined,
       children: [
         _buildRow(
@@ -180,7 +185,20 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
           badgeBg: accessGranted ? Colors.green.shade50 : Colors.red.shade50,
         ),
         _buildRow(
-          'Listener Service Active',
+          'SMS Backup Channel',
+          smsGranted ? 'Active' : 'Disabled',
+          badgeColor: smsGranted ? Colors.green.shade700 : Colors.amber.shade800,
+          badgeBg: smsGranted ? Colors.green.shade50 : Colors.amber.shade50,
+        ),
+        _buildRow(
+          'Battery Optimization',
+          batteryIgnored ? 'Exempted' : 'Restricted (May sleep)',
+          badgeColor: batteryIgnored ? Colors.green.shade700 : Colors.orange.shade700,
+          badgeBg: batteryIgnored ? Colors.green.shade50 : Colors.orange.shade50,
+        ),
+        _buildRow('Device OEM', mfg),
+        _buildRow(
+          'Listener Service',
           serviceBound ? 'Connected' : 'Active (Background)',
           badgeColor: Colors.teal.shade700,
           badgeBg: Colors.teal.shade50,
@@ -202,6 +220,7 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
 
   Widget _buildArchitectureCard(ThemeData theme) {
     final parserVer = _diagnostics['parserVersion'] ?? 1;
+    final smsParserVer = _diagnostics['smsParserVersion'] ?? 1;
     final pkgCount = _diagnostics['supportedPackagesCount'] ?? 12;
     final packages = (_diagnostics['supportedPackages'] as List<dynamic>?)
             ?.map((e) => e.toString())
@@ -212,8 +231,10 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
       title: 'Parser & Pattern Engine',
       icon: Icons.alt_route_rounded,
       children: [
-        _buildRow('UPI Parser Version', 'v$parserVer (Strict Allowlist)'),
-        _buildRow('Default Source Tag', 'NOTIFICATION'),
+        _buildRow('Notification Parser', 'v$parserVer (Strict Allowlist)'),
+        _buildRow('Bank SMS Parser', 'v$smsParserVer (DLT Headers + UPI Credit)'),
+        _buildRow('Cross-Channel Merge', '45s Sliding Window (DUAL CONFIRMED)'),
+        _buildRow('Default Source Tag', 'NOTIFICATION / SMS / BOTH'),
         _buildRow('Default Verification', 'NOT_VERIFIED'),
         _buildRow('Trusted UPI Apps', '$pkgCount packages supported'),
         if (packages.isNotEmpty) ...[
@@ -506,6 +527,54 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
             ),
           ],
         ),
+      ],
+    );
+  }
+
+  // ── Native Detection Logs (Zero-PII) ───────────────────────────────────────
+
+  Widget _buildRecentLogsCard(ThemeData theme) {
+    final logsRaw = _diagnostics['recentLogs'];
+    final List<String> logs = logsRaw is List ? logsRaw.map((e) => e.toString()).toList() : [];
+
+    return _buildCard(
+      title: 'Recent Detection Events (Zero-PII)',
+      icon: Icons.terminal_rounded,
+      children: [
+        if (logs.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0),
+            child: Text(
+              'No detection events logged yet. Events will appear here in real-time as notifications arrive.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+            ),
+          )
+        else
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0F172A),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: logs.map((log) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2.0),
+                  child: Text(
+                    log,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 11,
+                      color: Color(0xFF38BDF8),
+                      height: 1.35,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
       ],
     );
   }

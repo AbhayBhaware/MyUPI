@@ -173,13 +173,13 @@ class _StepReadyScreenState extends State<StepReadyScreen> {
           const _ChecklistItem(
             icon: Icons.check_circle_rounded,
             color: AppColors.success,
-            label: 'PhonePe, Google Pay, Paytm & BHIM ready',
+            label: 'PhonePe, GPay, Paytm, BHIM & Bank SMS ready',
           ),
           const Divider(height: 20, color: AppColors.borderLight),
           const _ChecklistItem(
-            icon: Icons.check_circle_rounded,
+            icon: Icons.shield_rounded,
             color: AppColors.success,
-            label: '8 Indian languages & shop name supported',
+            label: 'Dual-channel detection & anti-fraud safeguards active',
           ),
         ],
       ),

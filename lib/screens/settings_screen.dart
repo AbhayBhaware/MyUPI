@@ -23,6 +23,7 @@ import '../widgets/status_badge.dart';
 import 'about_screen.dart';
 import 'help_support_screen.dart';
 import 'paywall_screen.dart';
+import 'reliability_checklist_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -205,7 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen>
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         children: [
           // ════════════════════════════════════════════════════════════════════
-          // 1. SOUNDBOX SECTION
+          // 1. SOUNDBOX & VOICE SECTION
           // ════════════════════════════════════════════════════════════════════
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
@@ -254,6 +255,218 @@ class _SettingsScreenState extends State<SettingsScreen>
                         color: AppColors.lightBlue,
                         borderRadius: AppRadius.smRadius,
                       ),
+                      child: const Icon(Icons.language_rounded, color: AppColors.primaryBlue, size: 20),
+                    ),
+                    title: const Text('Announcement Language', style: AppTypography.titleSmall),
+                    subtitle: Text(_getLanguageLabel(_language), style: AppTypography.caption),
+                    trailing: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: AppRadius.smRadius,
+                        border: Border.all(color: AppColors.cardBorder),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _language,
+                          icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.textSecondary),
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'en-IN', child: Text('English')),
+                            DropdownMenuItem(value: 'hi-IN', child: Text('Hindi (हिन्दी)')),
+                            DropdownMenuItem(value: 'mr-IN', child: Text('Marathi (मराठी)')),
+                            DropdownMenuItem(value: 'gu-IN', child: Text('Gujarati (ગુજરાતી)')),
+                            DropdownMenuItem(value: 'ta-IN', child: Text('Tamil (தமிழ்)')),
+                            DropdownMenuItem(value: 'te-IN', child: Text('Telugu (తెలుగు)')),
+                            DropdownMenuItem(value: 'bn-IN', child: Text('Bengali (বাংলা)')),
+                            DropdownMenuItem(value: 'kn-IN', child: Text('Kannada (ಕನ್ನಡ)')),
+                          ],
+                          onChanged: (v) {
+                            if (v != null) _setLanguage(v);
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+                  // Tidy, non-wrapping Announcement Format with preview bubble
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: const BoxDecoration(
+                                color: AppColors.lightBlue,
+                                borderRadius: AppRadius.smRadius,
+                              ),
+                              child: const Icon(Icons.record_voice_over_rounded, color: AppColors.primaryBlue, size: 20),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: const [
+                                  Text('Announcement Style', style: AppTypography.titleSmall),
+                                  SizedBox(height: 2),
+                                  Text('Format spoken on payment', style: AppTypography.caption),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              decoration: BoxDecoration(
+                                color: AppColors.background,
+                                borderRadius: AppRadius.smRadius,
+                                border: Border.all(color: AppColors.cardBorder),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _announceFormat,
+                                  icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.textSecondary),
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    color: AppColors.primaryBlue,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                  ),
+                                  items: const [
+                                    DropdownMenuItem(value: 'A', child: Text('Standard')),
+                                    DropdownMenuItem(value: 'B', child: Text('Short')),
+                                    DropdownMenuItem(value: 'C', child: Text('Polite')),
+                                  ],
+                                  onChanged: (v) {
+                                    if (v != null) _setAnnounceFormat(v);
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: AppColors.cardBorder.withAlpha(120)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.volume_up_outlined, size: 14, color: AppColors.primaryBlue),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _getFormatPreviewText(_announceFormat),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+                  ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: const Icon(Icons.speed_rounded, color: AppColors.primaryBlue, size: 20),
+                    ),
+                    title: const Text('Speech Speed', style: AppTypography.titleSmall),
+                    subtitle: const Text('Pacing of voice announcements', style: AppTypography.caption),
+                    trailing: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: AppRadius.smRadius,
+                        border: Border.all(color: AppColors.cardBorder),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _speechSpeed,
+                          icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.textSecondary),
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'slow', child: Text('Slow')),
+                            DropdownMenuItem(value: 'normal', child: Text('Normal')),
+                            DropdownMenuItem(value: 'fast', child: Text('Fast')),
+                          ],
+                          onChanged: (v) {
+                            if (v != null) _setSpeed(v);
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+                  ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: const Icon(Icons.volume_up_rounded, color: AppColors.primaryBlue, size: 20),
+                    ),
+                    title: const Text('Announcement Volume', style: AppTypography.titleSmall),
+                    subtitle: const Text(
+                      'Uses phone media volume. Adjust via your device volume buttons.',
+                      style: AppTypography.caption,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
+
+          // ════════════════════════════════════════════════════════════════════
+          // 2. SHOP / MERCHANT PROFILE SECTION
+          // ════════════════════════════════════════════════════════════════════
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
+            child: SectionHeader(title: 'MERCHANT PROFILE'),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
+            child: PremiumCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: AppRadius.smRadius,
+                      ),
                       child: const Icon(Icons.storefront_rounded, color: AppColors.primaryBlue, size: 20),
                     ),
                     title: const Text('Shop / Business Name', style: AppTypography.titleSmall),
@@ -282,112 +495,6 @@ class _SettingsScreenState extends State<SettingsScreen>
                     ),
                     value: _includeShopName,
                     onChanged: _setIncludeShopName,
-                  ),
-                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
-                  ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppColors.lightBlue,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: const Icon(Icons.language_rounded, color: AppColors.primaryBlue, size: 20),
-                    ),
-                    title: const Text('Announcement Language', style: AppTypography.titleSmall),
-                    subtitle: Text(_getLanguageLabel(_language), style: AppTypography.bodySmall),
-                    trailing: DropdownButton<String>(
-                      value: _language,
-                      underline: const SizedBox(),
-                      icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.textSecondary),
-                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
-                      items: const [
-                        DropdownMenuItem(value: 'en-IN', child: Text('English (India)')),
-                        DropdownMenuItem(value: 'hi-IN', child: Text('Hindi')),
-                        DropdownMenuItem(value: 'mr-IN', child: Text('Marathi')),
-                        DropdownMenuItem(value: 'gu-IN', child: Text('Gujarati')),
-                        DropdownMenuItem(value: 'ta-IN', child: Text('Tamil')),
-                        DropdownMenuItem(value: 'te-IN', child: Text('Telugu')),
-                        DropdownMenuItem(value: 'bn-IN', child: Text('Bengali')),
-                        DropdownMenuItem(value: 'kn-IN', child: Text('Kannada')),
-                      ],
-                      onChanged: (v) {
-                        if (v != null) _setLanguage(v);
-                      },
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
-                  ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppColors.lightBlue,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: const Icon(Icons.speed_rounded, color: AppColors.primaryBlue, size: 20),
-                    ),
-                    title: const Text('Speech Speed', style: AppTypography.titleSmall),
-                    subtitle: const Text('How fast payments are announced', style: AppTypography.caption),
-                    trailing: DropdownButton<String>(
-                      value: _speechSpeed,
-                      underline: const SizedBox(),
-                      icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.textSecondary),
-                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
-                      items: const [
-                        DropdownMenuItem(value: 'slow', child: Text('Slow')),
-                        DropdownMenuItem(value: 'normal', child: Text('Normal')),
-                        DropdownMenuItem(value: 'fast', child: Text('Fast')),
-                      ],
-                      onChanged: (v) {
-                        if (v != null) _setSpeed(v);
-                      },
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
-                  ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppColors.lightBlue,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: const Icon(Icons.record_voice_over_rounded, color: AppColors.primaryBlue, size: 20),
-                    ),
-                    title: const Text('Announcement Format', style: AppTypography.titleSmall),
-                    subtitle: Text(_getFormatLabel(_announceFormat), style: AppTypography.bodySmall),
-                    trailing: DropdownButton<String>(
-                      value: _announceFormat,
-                      underline: const SizedBox(),
-                      icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.textSecondary),
-                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
-                      items: const [
-                        DropdownMenuItem(value: 'A', child: Text('Format A (Standard)')),
-                        DropdownMenuItem(value: 'B', child: Text('Format B (Short)')),
-                        DropdownMenuItem(value: 'C', child: Text('Format C (Quick)')),
-                      ],
-                      onChanged: (v) {
-                        if (v != null) _setAnnounceFormat(v);
-                      },
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
-                  ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppColors.lightBlue,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: const Icon(Icons.volume_up_rounded, color: AppColors.primaryBlue, size: 20),
-                    ),
-                    title: const Text('Announcement Volume', style: AppTypography.titleSmall),
-                    subtitle: const Text(
-                      'Uses phone media volume. Adjust via your device volume buttons.',
-                      style: AppTypography.caption,
-                    ),
                   ),
                 ],
               ),
@@ -506,6 +613,27 @@ class _SettingsScreenState extends State<SettingsScreen>
                     leading: Container(
                       width: 40,
                       height: 40,
+                      decoration: const BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: const Icon(Icons.shield_rounded, color: AppColors.primaryBlue, size: 20),
+                    ),
+                    title: const Text('Reliability & Protection Setup', style: AppTypography.titleSmall),
+                    subtitle: const Text('Battery exemption, SMS backup & autostart checklist', style: AppTypography.caption),
+                    trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (ctx) => const ReliabilityChecklistScreen()),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+                  ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
                         color: _notifAccess == true ? AppColors.successBg : AppColors.warningBg,
                         borderRadius: AppRadius.smRadius,
@@ -592,14 +720,16 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  String _getFormatLabel(String f) {
+
+
+  String _getFormatPreviewText(String f) {
     switch (f) {
       case 'B':
-        return 'Format B: "500 rupees received"';
+        return 'Preview: "500 rupees received"';
       case 'C':
-        return 'Format C: "Payment received, 500 rupees. Thank you."';
+        return 'Preview: "Payment received, 500 rupees. Thank you."';
       default:
-        return 'Format A: "Payment received, 500 rupees"';
+        return 'Preview: "Payment received, 500 rupees"';
     }
   }
 
