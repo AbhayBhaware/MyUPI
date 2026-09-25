@@ -422,11 +422,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               ),
                               const SizedBox(width: 5),
                               Text(
-                                _soundboxEnabled ? 'ON' : 'OFF',
+                                _soundboxEnabled ? 'ACTIVE' : 'OFF',
                                 style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   color: _soundboxEnabled ? AppColors.success : AppColors.textMuted,
+                                  letterSpacing: 0.3,
                                 ),
                               ),
                             ],

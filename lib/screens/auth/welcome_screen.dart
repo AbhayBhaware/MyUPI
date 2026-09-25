@@ -206,13 +206,17 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             children: [
                               _GoogleLogoMark(),
                               const SizedBox(width: AppSpacing.md),
-                              const Text(
-                                'Continue with Google',
-                                style: TextStyle(
-                                  fontFamily: AppTypography.fontFamily,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
+                              Flexible(
+                                child: Text(
+                                  'Continue with Google',
+                                  style: const TextStyle(
+                                    fontFamily: AppTypography.fontFamily,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ),
                             ],
@@ -241,13 +245,17 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       children: const [
                         Icon(Icons.phone_iphone_rounded, size: 20, color: Colors.white),
                         SizedBox(width: AppSpacing.md),
-                        Text(
-                          'Continue with Phone',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                        Flexible(
+                          child: Text(
+                            'Continue with Phone',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ),
                       ],
@@ -274,13 +282,17 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       children: const [
                         Icon(Icons.email_outlined, size: 19, color: AppColors.textSecondary),
                         SizedBox(width: AppSpacing.sm),
-                        Text(
-                          'Continue with Email',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
+                        Flexible(
+                          child: Text(
+                            'Continue with Email',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ),
                       ],

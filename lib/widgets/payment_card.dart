@@ -212,7 +212,10 @@ class PaymentCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 6,
+                  runSpacing: 2,
                   children: [
                     // Dominant Amount
                     Text(
@@ -223,12 +226,8 @@ class PaymentCard extends StatelessWidget {
                         letterSpacing: -0.4,
                       ),
                     ),
-                    const SizedBox(width: 8),
                     _buildChannelBadge(),
-                    if (trustBadge != null) ...[
-                      const SizedBox(width: 6),
-                      trustBadge,
-                    ],
+                    ?trustBadge,
                   ],
                 ),
                 const SizedBox(height: 4),

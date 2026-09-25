@@ -643,20 +643,27 @@ class _SettingsScreenState extends State<SettingsScreen>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: const [
-                              Icon(
-                                Icons.workspace_premium_rounded,
-                                size: 22,
-                                color: AppColors.primaryBlue,
-                              ),
-                              SizedBox(width: AppSpacing.sm),
-                              Text(
-                                'MyUPI Premium',
-                                style: AppTypography.titleSmall,
-                              ),
-                            ],
+                          Expanded(
+                            child: Row(
+                              children: const [
+                                Icon(
+                                  Icons.workspace_premium_rounded,
+                                  size: 22,
+                                  color: AppColors.primaryBlue,
+                                ),
+                                SizedBox(width: AppSpacing.sm),
+                                Flexible(
+                                  child: Text(
+                                    'MyUPI Premium',
+                                    style: AppTypography.titleSmall,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
+                          const SizedBox(width: AppSpacing.xs),
                           StatusBadge(
                             label: subInfo.state.label.toUpperCase(),
                             type: isEntitled ? StatusBadgeType.active : StatusBadgeType.info,
@@ -672,25 +679,31 @@ class _SettingsScreenState extends State<SettingsScreen>
                         style: AppTypography.bodySmall,
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      Row(
+                      Wrap(
+                        spacing: AppSpacing.sm,
+                        runSpacing: AppSpacing.xs,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          Expanded(
-                            child: SecondaryButton(
-                              label: isEntitled ? 'Manage Subscription' : 'View Premium Plans',
-                              icon: Icons.star_rounded,
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (ctx) => const PaywallScreen(sourceEntry: 'settings'),
-                                  ),
-                                );
-                              },
-                            ),
+                          SecondaryButton(
+                            label: isEntitled ? 'Manage Subscription' : 'View Premium Plans',
+                            icon: Icons.star_rounded,
+                            height: 42,
+                            isFullWidth: false,
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (ctx) => const PaywallScreen(sourceEntry: 'settings'),
+                                ),
+                              );
+                            },
                           ),
-                          const SizedBox(width: AppSpacing.sm),
                           TextButton.icon(
                             onPressed: _isRestoring ? null : _handleRestorePurchases,
+                            style: TextButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            ),
                             icon: _isRestoring
                                 ? const SizedBox(
                                     width: 14,
@@ -698,7 +711,14 @@ class _SettingsScreenState extends State<SettingsScreen>
                                     child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryBlue),
                                   )
                                 : const Icon(Icons.restore_rounded, size: 16, color: AppColors.primaryBlue),
-                            label: const Text('Restore', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primaryBlue)),
+                            label: const Text(
+                              'Restore',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primaryBlue,
+                              ),
+                            ),
                           ),
                         ],
                       ),

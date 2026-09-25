@@ -73,9 +73,9 @@ void main() {
       await tester.pumpAndSettle();
 
       // Bottom nav destinations must be visible.
-      expect(find.text('Home'),     findsOneWidget);
-      expect(find.text('History'),  findsOneWidget);
-      expect(find.text('Settings'), findsOneWidget);
+      expect(find.widgetWithText(NavigationDestination, 'Home'),     findsOneWidget);
+      expect(find.widgetWithText(NavigationDestination, 'History'),  findsOneWidget);
+      expect(find.widgetWithText(NavigationDestination, 'Settings'), findsOneWidget);
     },
   );
 

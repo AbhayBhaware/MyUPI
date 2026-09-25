@@ -294,10 +294,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: AppSpacing.xs,
+            runSpacing: 2,
             children: [
               Text(
                 billing.introPriceDisplay,
@@ -307,7 +308,6 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(width: AppSpacing.xs),
               const Text(
                 'for your first month',
                 style: TextStyle(
@@ -529,7 +529,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
           children: const [
             Icon(Icons.info_outline_rounded, color: AppColors.primaryBlue),
             SizedBox(width: 8),
-            Text('Billing Connecting', style: AppTypography.titleMedium),
+            Expanded(
+              child: Text(
+                'Billing Connecting',
+                style: AppTypography.titleMedium,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         content: Text(

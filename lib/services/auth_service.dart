@@ -13,6 +13,7 @@ import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import 'firestore_service.dart';
 
@@ -34,9 +35,10 @@ class AuthService {
 
   User? get currentUser => _auth?.currentUser;
 
-  // ─── Google Sign-In ────────────────────────────────────────────────────────
+  // ─── Google Sign-In (Native Mobile Flow) ───────────────────────────────────
 
-  /// Signs in using GoogleAuthProvider. Returns User on success, null on dismiss.
+  /// Signs in using native GoogleSignIn account picker + Firebase credential.
+  /// Returns User on success, null on user dismiss/cancellation.
   Future<User?> signInWithGoogle() async {
     final auth = _auth;
     if (auth == null) {
@@ -47,12 +49,24 @@ class AuthService {
     }
 
     try {
-      final googleProvider = GoogleAuthProvider();
-      googleProvider.addScope('email');
-      googleProvider.setCustomParameters({'prompt': 'select_account'});
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+      if (googleUser == null) {
+        // User cancelled the native Google account picker sheet
+        return null;
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
 
       final UserCredential userCredential =
-          await auth.signInWithProvider(googleProvider);
+          await auth.signInWithCredential(credential);
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
       debugPrint('[AuthService] FirebaseAuthException on Google Sign-In: ${e.code} ${e.message}');
@@ -209,6 +223,9 @@ class AuthService {
 
   /// Clean sign-out: signs out of Firebase Auth, Google, and wipes local caches.
   Future<void> signOut() async {
+    try {
+      await GoogleSignIn().signOut();
+    } catch (_) {}
     try {
       await _auth?.signOut();
     } catch (_) {}
