@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- MyUPI Reliability Permissions (Master Brief Part 1a & 1b) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
@@ -8,8 +10,8 @@
     <application
         android:label="MyUPI"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round">
+        android:icon="@mipmap/launcher_icon"
+        android:roundIcon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"
             android:exported="true"

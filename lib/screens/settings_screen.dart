@@ -24,6 +24,8 @@ import 'about_screen.dart';
 import 'help_support_screen.dart';
 import 'paywall_screen.dart';
 import 'reliability_checklist_screen.dart';
+import '../services/auth_service.dart';
+import '../services/firestore_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -714,9 +716,113 @@ class _SettingsScreenState extends State<SettingsScreen>
             ),
           ),
 
+          // ════════════════════════════════════════════════════════════════════
+          // 4. ACCOUNT & SESSION
+          // ════════════════════════════════════════════════════════════════════
+          const SizedBox(height: AppSpacing.lg),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
+            child: SectionHeader(title: 'ACCOUNT'),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
+            child: PremiumCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: const Icon(Icons.person_outline_rounded, color: AppColors.primaryBlue, size: 20),
+                    ),
+                    title: Text(
+                      AuthService.instance.currentUser?.displayName ??
+                          FirestoreService.instance.cachedProfile?.ownerName ??
+                          'Merchant Profile',
+                      style: AppTypography.titleSmall,
+                    ),
+                    subtitle: Text(
+                      AuthService.instance.currentUser?.email ??
+                          AuthService.instance.currentUser?.phoneNumber ??
+                          FirestoreService.instance.cachedProfile?.phone ??
+                          'Signed in',
+                      style: AppTypography.caption,
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+                  ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: AppColors.errorBg,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: const Icon(Icons.logout_rounded, color: AppColors.error, size: 20),
+                    ),
+                    title: const Text(
+                      'Sign Out',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.error,
+                      ),
+                    ),
+                    subtitle: const Text(
+                      'Sign out and switch merchant accounts',
+                      style: AppTypography.caption,
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary),
+                    onTap: _showSignOutDialog,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           const SizedBox(height: AppSpacing.xxl),
         ],
       ),
+    );
+  }
+
+  void _showSignOutDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.lgRadius),
+          title: const Text('Sign Out', style: AppTypography.titleMedium),
+          content: const Text(
+            'Are you sure you want to sign out of your MyUPI merchant account?',
+            style: AppTypography.bodySmall,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('CANCEL', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.error,
+                shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+              ),
+              onPressed: () async {
+                Navigator.pop(ctx);
+                await AuthService.instance.signOut();
+              },
+              child: const Text('SIGN OUT', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
     );
   }
 

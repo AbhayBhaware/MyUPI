@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "336803590129",
+    "firebase_url": "https://myupi1-default-rtdb.firebaseio.com",
     "project_id": "myupi1",
     "storage_bucket": "myupi1.firebasestorage.app"
   },
@@ -12,7 +13,28 @@
           "package_name": "com.example.myupi"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "336803590129-lg87eerd7rlji1rm9qta5kojcn75l9e5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.myupi",
+            "certificate_hash": "013607e1dd2c81eb2a3b84f75470d500d441ee1e"
+          }
+        },
+        {
+          "client_id": "336803590129-p28aid8dms9e7742egb73940uvp8hksf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.myupi",
+            "certificate_hash": "4d51de9e2474bd3a9026b4e237db6794b2673248"
+          }
+        },
+        {
+          "client_id": "336803590129-ve6eo8cc21nt8jahe1ue25a5cmjr5e9p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDC7FiLONfONLh3G7Zsw7kqPhhXeBdXXkA"
@@ -20,7 +42,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "336803590129-ve6eo8cc21nt8jahe1ue25a5cmjr5e9p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
