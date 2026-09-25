@@ -7,10 +7,13 @@
 
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app_channels.dart';
+import '../models/user_profile.dart';
+import '../services/firestore_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_shadows.dart';
@@ -21,9 +24,9 @@ import '../upi_detector.dart';
 import '../widgets/payment_card.dart';
 import '../widgets/premium_buttons.dart';
 import '../widgets/premium_card.dart';
+import '../widgets/qr_code_card.dart';
 import '../widgets/section_header.dart';
 import '../widgets/stat_card.dart';
-import '../widgets/status_badge.dart';
 import 'paywall_screen.dart';
 import 'reliability_checklist_screen.dart';
 
@@ -41,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   bool? _notifAccess;        // null = checking, true = granted, false = denied
   bool  _soundboxEnabled = true;
   String _merchantName = 'MyUPI';
+  String _upiId = '';
 
   // ── History state ──────────────────────────────────────────────────────────
   List<PaymentRecord> _history = [];
@@ -52,9 +56,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   // ── EventChannel dedup ─────────────────────────────────────────────────────
   final Set<String> _seenKeys = {};
   StreamSubscription<dynamic>? _eventSub;
+  StreamSubscription<UserProfile?>? _profileSub;
 
-  // ── Flutter TTS (test fallback only) ───────────────────────────────────────
-  TtsStatus get _ttsStatus => TtsService.instance.status;
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
 
@@ -62,6 +65,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _profileSub = FirestoreService.instance.profileStream.listen((profile) {
+      if (profile != null && mounted) {
+        setState(() {
+          _upiId = profile.upiId;
+          if (profile.shopName.isNotEmpty) {
+            _merchantName = profile.shopName;
+          }
+        });
+      }
+    });
     TtsService.instance.onStatusChanged = () {
       if (mounted) setState(() {});
     };
@@ -76,6 +89,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void dispose() {
     _bannerTimer?.cancel();
     _eventSub?.cancel();
+    _profileSub?.cancel();
     TtsService.instance.onStatusChanged = null;
     TtsService.instance.dispose();
     WidgetsBinding.instance.removeObserver(this);
@@ -88,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _refresh() async {
-    await Future.wait([_checkAccess(), _loadSettings(), _loadHistory()]);
+    await Future.wait([_checkAccess(), _loadSettings(), _loadHistory(), _loadUpiId()]);
   }
 
   // ── Permission ─────────────────────────────────────────────────────────────
@@ -122,10 +136,106 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _toggleSoundbox(bool v) async {
+    HapticFeedback.lightImpact();
     setState(() => _soundboxEnabled = v);
     try {
       await kMethodChannel.invokeMethod('setSoundboxEnabled', {'enabled': v});
     } on PlatformException catch (_) {}
+  }
+
+  // ── UPI ID (Dart-side only — from FirestoreService cached profile) ────────
+
+  Future<void> _loadUpiId() async {
+    var profile = FirestoreService.instance.cachedProfile;
+    if (profile == null) {
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          profile = await FirestoreService.instance.getUserProfile(user.uid);
+        }
+      } catch (_) {}
+    }
+    if (profile != null && mounted) {
+      setState(() {
+        _upiId = profile!.upiId;
+        if (profile.shopName.isNotEmpty) {
+          _merchantName = profile.shopName;
+        }
+      });
+    }
+  }
+
+  void _showEditUpiIdDialog() {
+    HapticFeedback.selectionClick();
+    final controller = TextEditingController(text: _upiId);
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.lgRadius),
+          title: const Text('Edit UPI ID', style: AppTypography.titleMedium),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Enter your UPI payment address. This will be used to generate your QR code.',
+                style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  labelText: 'UPI ID',
+                  hintText: 'yourname@upi / 9876543210@ybl',
+                  prefixIcon: Icon(Icons.qr_code_rounded, color: AppColors.primaryBlue),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                autofocus: true,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('CANCEL', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primaryBlue,
+                shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+              ),
+              onPressed: () async {
+                final text = controller.text.trim().toLowerCase();
+                if (text.isNotEmpty && !text.contains('@')) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(
+                      content: Text('UPI ID must contain @ (e.g. name@upi)'),
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: AppColors.warning,
+                    ),
+                  );
+                  return;
+                }
+                Navigator.pop(ctx);
+                setState(() => _upiId = text);
+                // Persist to Firestore via cached profile update
+                var cached = FirestoreService.instance.cachedProfile;
+                final user = FirebaseAuth.instance.currentUser;
+                if (cached == null && user != null) {
+                  cached = await FirestoreService.instance.getUserProfile(user.uid);
+                }
+                if (cached != null) {
+                  final updated = cached.copyWith(upiId: text, updatedAt: DateTime.now());
+                  await FirestoreService.instance.saveUserProfile(updated);
+                }
+              },
+              child: const Text('SAVE', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // ── History ────────────────────────────────────────────────────────────────
@@ -288,6 +398,42 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           ],
                         ),
                       ),
+                      InkWell(
+                        onTap: () => _toggleSoundbox(!_soundboxEnabled),
+                        borderRadius: AppRadius.smRadius,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: _soundboxEnabled ? AppColors.successBg : AppColors.surface,
+                            borderRadius: AppRadius.smRadius,
+                            border: Border.all(
+                              color: _soundboxEnabled ? AppColors.successBorder : AppColors.cardBorder,
+                              width: 1.0,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _soundboxEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                                size: 16,
+                                color: _soundboxEnabled ? AppColors.success : AppColors.textMuted,
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                _soundboxEnabled ? 'ON' : 'OFF',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: _soundboxEnabled ? AppColors.success : AppColors.textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       Container(
                         decoration: BoxDecoration(
                           color: AppColors.surface,
@@ -295,9 +441,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           border: Border.all(color: AppColors.cardBorder, width: 1.0),
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.refresh_rounded, size: 20, color: AppColors.textPrimary),
-                          tooltip: 'Refresh',
-                          onPressed: _refresh,
+                          icon: const Icon(Icons.settings_outlined, size: 20, color: AppColors.textPrimary),
+                          tooltip: 'Settings',
+                          onPressed: () => widget.onNavigateToTab?.call(2),
                           visualDensity: VisualDensity.compact,
                         ),
                       ),
@@ -321,15 +467,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         const SizedBox(height: AppSpacing.base),
                       ],
 
-                      // ── Soundbox Status Hero Card ───────────────────────────
-                      _buildSoundboxHeroCard(notifOk, checking),
-                      const SizedBox(height: AppSpacing.base),
-
                       // ── Notification Access Warning (if disabled) ───────────
                       if (!checking && !notifOk) ...[
                         _buildAccessWarningCard(),
                         const SizedBox(height: AppSpacing.base),
                       ],
+
+                      // ── Big Payment QR Code Card (Top of Dashboard) ────────
+                      QrCodeCard(
+                        upiId: _upiId,
+                        merchantName: _merchantName,
+                        soundboxActive: _soundboxEnabled && notifOk,
+                        onEdit: _showEditUpiIdDialog,
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
 
                       // ── Today's Performance ─────────────────────────────────
                       const SectionHeader(
@@ -375,22 +526,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       _buildRecentPaymentSection(),
                       const SizedBox(height: AppSpacing.lg),
 
-                      // ── Test Soundbox CTA ───────────────────────────────────
-                      PrimaryButton(
-                        label: 'Test Soundbox',
-                        icon: Icons.volume_up_rounded,
-                        onPressed: _ttsStatus == TtsStatus.unavailable
-                            ? null
-                            : () async {
-                                try {
-                                  await kMethodChannel.invokeMethod('speakTest');
-                                } on PlatformException catch (_) {
-                                  TtsService.instance.speakTest();
-                                }
-                              },
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-
                       // ── MyUPI Premium Banner Card ───────────────────────────
                       _buildSubscriptionBannerCard(),
                       const SizedBox(height: AppSpacing.lg),
@@ -404,19 +539,35 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         children: [
                           Expanded(
                             child: CustomOutlineButton(
-                              label: 'View History',
-                              icon: Icons.history_rounded,
+                              label: 'History',
+                              icon: Icons.receipt_long_rounded,
                               height: 48,
                               onPressed: () => widget.onNavigateToTab?.call(1),
                             ),
                           ),
-                          const SizedBox(width: AppSpacing.md),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: CustomOutlineButton(
-                              label: 'Soundbox Settings',
+                              label: 'Settings',
                               icon: Icons.tune_rounded,
                               height: 48,
                               onPressed: () => widget.onNavigateToTab?.call(2),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: CustomOutlineButton(
+                              label: 'Premium',
+                              icon: Icons.workspace_premium_rounded,
+                              height: 48,
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const PaywallScreen(sourceEntry: 'dashboard'),
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ],
@@ -489,154 +640,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  // ── Hero Soundbox Card ─────────────────────────────────────────────────────
-
-  Widget _buildSoundboxHeroCard(bool notifOk, bool checking) {
-    final bool isActive = _soundboxEnabled && notifOk;
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: isActive ? const Color(0xFFFAFDFB) : AppColors.surface,
-        borderRadius: AppRadius.xlRadius,
-        border: Border.all(
-          color: isActive ? AppColors.successBorder : AppColors.cardBorder,
-          width: 1.2,
-        ),
-        boxShadow: isActive ? AppShadows.card : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: isActive ? AppColors.successBg : AppColors.lightBlue,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isActive ? Icons.sensors_rounded : Icons.speaker_rounded,
-                      size: 14,
-                      color: isActive ? AppColors.success : AppColors.primaryBlue,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'MYUPI SOUNDBOX',
-                      style: AppTypography.sectionTitle.copyWith(
-                        color: isActive ? AppColors.success : AppColors.primaryBlue,
-                        fontSize: 11,
-                        letterSpacing: 1.1,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              if (checking)
-                const StatusBadge(label: 'CHECKING', type: StatusBadgeType.inactive)
-              else if (!notifOk)
-                const StatusBadge(label: 'ACTION REQUIRED', type: StatusBadgeType.warning, showDot: true)
-              else if (isActive)
-                const StatusBadge(label: 'ACTIVE', type: StatusBadgeType.active, showDot: true)
-              else
-                const StatusBadge(label: 'OFF', type: StatusBadgeType.inactive),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.base),
-          Row(
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: isActive ? AppColors.success : const Color(0xFFF3F4F6),
-                  borderRadius: AppRadius.lgRadius,
-                  boxShadow: isActive ? AppShadows.successGlow : null,
-                ),
-                child: Icon(
-                  isActive ? Icons.volume_up_rounded : Icons.volume_off_rounded,
-                  color: isActive ? Colors.white : AppColors.textMuted,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.base),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isActive ? 'Soundbox is Live' : 'Soundbox is Paused',
-                      style: AppTypography.titleLarge.copyWith(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      checking
-                          ? 'Verifying notification listener…'
-                          : !notifOk
-                              ? 'Notification access is required to announce payments'
-                              : _soundboxEnabled
-                                  ? 'Ready to announce incoming UPI payments'
-                                  : 'Payment announcements are switched off',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: isActive ? const Color(0xFF15803D) : AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Switch(
-                value: _soundboxEnabled,
-                onChanged: _toggleSoundbox,
-                activeThumbColor: AppColors.success,
-                activeTrackColor: AppColors.successBg,
-              ),
-            ],
-          ),
-          if (isActive) ...[
-            const SizedBox(height: AppSpacing.md),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.successBg.withAlpha(120),
-                borderRadius: AppRadius.smRadius,
-                border: Border.all(color: AppColors.successBorder.withAlpha(120), width: 0.8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.shield_rounded, size: 14, color: AppColors.success),
-                  const SizedBox(width: 6),
-                  const Expanded(
-                    child: Text(
-                      'Dual Detection: Notifications Active • SMS Backup Active',
-                      style: TextStyle(fontSize: 11, color: Color(0xFF166534), fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const ReliabilityChecklistScreen()),
-                    ),
-                    child: const Text(
-                      'Setup',
-                      style: TextStyle(fontSize: 11, color: AppColors.primaryBlue, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
   // ── Access Warning Card ────────────────────────────────────────────────────
 
   Widget _buildAccessWarningCard() {
@@ -654,11 +657,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             children: [
               const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 22),
               const SizedBox(width: 10),
-              Text(
-                'Notification Access Required',
-                style: AppTypography.titleMedium.copyWith(
-                  color: const Color(0xFFB45309),
-                  fontSize: 15,
+              Expanded(
+                child: Text(
+                  'Notification Access Required',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: const Color(0xFFB45309),
+                    fontSize: 15,
+                  ),
                 ),
               ),
             ],
@@ -717,11 +722,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 children: [
                   Row(
                     children: [
-                      Text(
-                        'Ready & Waiting for Payments',
-                        style: AppTypography.titleSmall.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
+                      Flexible(
+                        child: Text(
+                          'Ready & Waiting for Payments',
+                          style: AppTypography.titleSmall.copyWith(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -860,12 +869,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          isPrem ? 'MyUPI Premium Active' : 'Special Offer: ₹1 First Month',
-                          style: AppTypography.titleMedium.copyWith(
-                            color: isPrem ? AppColors.success : AppColors.deepBlue,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
+                        Expanded(
+                          child: Text(
+                            isPrem ? 'MyUPI Premium Active' : 'Special Offer: ₹1 First Month',
+                            style: AppTypography.titleMedium.copyWith(
+                              color: isPrem ? AppColors.success : AppColors.deepBlue,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],

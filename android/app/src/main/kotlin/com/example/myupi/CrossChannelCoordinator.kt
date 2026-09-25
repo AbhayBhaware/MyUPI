@@ -5,28 +5,29 @@ package com.example.myupi
 // MyUPI Cross-Channel Deduplication & Merge Engine (Master Brief Part 1c)
 // ----------------------------------------------------------------------
 // Coordinates detection events across both Notification Listener and SMS channels.
-// Employs a 45-second sliding window to match candidate payments by amount.
+// Employs a 60-second sliding window to match candidate payments by normalized numeric amount.
 //
 // Behavior:
 //   - If Notification lands first: announced via TTS, logged as NOTIFICATION (HIGH trust).
-//     If matching SMS lands within 45s: merged into single ledger entry with source="BOTH",
+//     If matching SMS lands within 60s: merged into single ledger entry with source="BOTH",
 //     trustLevel="HIGH", TTS is NOT repeated.
-//   - If SMS lands first (e.g. notification delayed/dropped): announced via TTS, logged
-//     as SMS (MEDIUM trust). If matching Notification lands within 45s: merged into
-//     single ledger entry with source="BOTH", trustLevel="HIGH", TTS is NOT repeated.
-//   - If only one channel detects: logged and announced under that channel.
+//   - If SMS lands first: announced via TTS, logged as SMS (MEDIUM trust).
+//     If matching Notification lands within 60s: merged into single ledger entry with
+//     source="BOTH", trustLevel="HIGH", TTS is NOT repeated.
+//   - If same channel repeats within 60s: flagged as DuplicateIgnored (dropped, no insert, no TTS).
 
 import android.util.Log
 
 sealed class CrossChannelDisposition {
     object Fresh : CrossChannelDisposition()
     data class Merged(val originalSource: String, val originalLabel: String) : CrossChannelDisposition()
+    data class DuplicateIgnored(val reason: String) : CrossChannelDisposition()
 }
 
 object CrossChannelCoordinator {
 
     private const val TAG = "MyUPI_COORDINATOR"
-    private const val CROSS_CHANNEL_WINDOW_MS = 45_000L // 45-second sliding window
+    private const val CROSS_CHANNEL_WINDOW_MS = 60_000L // 60-second sliding window
 
     private data class TrackedEvent(
         val amount: String,
@@ -39,21 +40,9 @@ object CrossChannelCoordinator {
     private val trackedEvents = mutableListOf<TrackedEvent>()
 
     /**
-     * Normalizes amount string (e.g. "500.00" -> "500") for exact cross-channel matching.
-     */
-    private fun normalizeAmount(amount: String): String {
-        val clean = amount.replace(",", "").trim()
-        val d = clean.toDoubleOrNull() ?: return clean
-        return if (d == d.toLong().toDouble()) {
-            d.toLong().toString()
-        } else {
-            clean
-        }
-    }
-
-    /**
      * Coordinate an incoming payment detected via Notification.
-     * Returns [CrossChannelDisposition.Merged] if an SMS was already detected for this amount within 45s,
+     * Returns [CrossChannelDisposition.Merged] if an SMS was already detected for this amount within 60s,
+     * [CrossChannelDisposition.DuplicateIgnored] if a notification was already detected for this amount within 60s,
      * or [CrossChannelDisposition.Fresh] if this is the first channel to detect it.
      */
     @Synchronized
@@ -61,11 +50,18 @@ object CrossChannelCoordinator {
         val now = System.currentTimeMillis()
         pruneExpired(now)
 
-        val normAmount = normalizeAmount(amount)
+        // 1. Check for same-channel duplicate (Google Pay repost / update) within the 60s window
+        val existingNotif = trackedEvents.firstOrNull {
+            it.channel == "NOTIFICATION" && SharedPreferencesManager.areAmountsEqual(it.amount, amount)
+        }
+        if (existingNotif != null) {
+            Log.d(TAG, "Duplicate notification suppressed in coordinator for ₹$amount ($appName)")
+            return CrossChannelDisposition.DuplicateIgnored("Duplicate notification within 60s")
+        }
 
-        // Look for an unmerged SMS event with matching amount within the window
+        // 2. Look for an unmerged SMS event with matching amount within the window
         val existingSms = trackedEvents.firstOrNull {
-            !it.isMerged && it.channel == "SMS" && normalizeAmount(it.amount) == normAmount
+            !it.isMerged && it.channel == "SMS" && SharedPreferencesManager.areAmountsEqual(it.amount, amount)
         }
 
         if (existingSms != null) {
@@ -77,7 +73,7 @@ object CrossChannelCoordinator {
             )
         }
 
-        // Register new notification event
+        // 3. Register new notification event
         trackedEvents.add(
             TrackedEvent(
                 amount = amount,
@@ -91,7 +87,8 @@ object CrossChannelCoordinator {
 
     /**
      * Coordinate an incoming payment detected via Bank SMS.
-     * Returns [CrossChannelDisposition.Merged] if a Notification was already detected for this amount within 45s,
+     * Returns [CrossChannelDisposition.Merged] if a Notification was already detected for this amount within 60s,
+     * [CrossChannelDisposition.DuplicateIgnored] if an SMS was already detected for this amount within 60s,
      * or [CrossChannelDisposition.Fresh] if this is the first channel to detect it.
      */
     @Synchronized
@@ -99,11 +96,18 @@ object CrossChannelCoordinator {
         val now = System.currentTimeMillis()
         pruneExpired(now)
 
-        val normAmount = normalizeAmount(amount)
+        // 1. Check for same-channel duplicate SMS within the 60s window
+        val existingSms = trackedEvents.firstOrNull {
+            it.channel == "SMS" && SharedPreferencesManager.areAmountsEqual(it.amount, amount)
+        }
+        if (existingSms != null) {
+            Log.d(TAG, "Duplicate SMS suppressed in coordinator for ₹$amount ($bankName)")
+            return CrossChannelDisposition.DuplicateIgnored("Duplicate SMS within 60s")
+        }
 
-        // Look for an unmerged Notification event with matching amount within the window
+        // 2. Look for an unmerged Notification event with matching amount within the window
         val existingNotif = trackedEvents.firstOrNull {
-            !it.isMerged && it.channel == "NOTIFICATION" && normalizeAmount(it.amount) == normAmount
+            !it.isMerged && it.channel == "NOTIFICATION" && SharedPreferencesManager.areAmountsEqual(it.amount, amount)
         }
 
         if (existingNotif != null) {
@@ -115,7 +119,7 @@ object CrossChannelCoordinator {
             )
         }
 
-        // Register new SMS event
+        // 3. Register new SMS event
         trackedEvents.add(
             TrackedEvent(
                 amount = amount,

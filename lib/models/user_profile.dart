@@ -39,6 +39,7 @@ class UserProfile {
   final String phone;
   final String email;
   final String authMethod; // 'phone' | 'google' | 'email'
+  final String upiId; // Merchant's UPI VPA (e.g. 'user@upi') — used for QR code generation
   final bool setupComplete;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -52,6 +53,7 @@ class UserProfile {
     required this.phone,
     required this.email,
     required this.authMethod,
+    this.upiId = '',
     this.setupComplete = false,
     this.createdAt,
     this.updatedAt,
@@ -73,6 +75,7 @@ class UserProfile {
       phone: (map['phone'] as String?) ?? '',
       email: (map['email'] as String?) ?? '',
       authMethod: (map['authMethod'] as String?) ?? 'phone',
+      upiId: (map['upiId'] as String?) ?? '',
       setupComplete: (map[kFieldSetupComplete] as bool?) ?? false,
       createdAt: parseDate(map['createdAt']),
       updatedAt: parseDate(map['updatedAt']),
@@ -89,6 +92,7 @@ class UserProfile {
       'phone': phone,
       'email': email,
       'authMethod': authMethod,
+      if (upiId.isNotEmpty) 'upiId': upiId,
       kFieldSetupComplete: setupComplete,
       'updatedAt': (updatedAt ?? DateTime.now()).toIso8601String(),
       if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
@@ -104,6 +108,7 @@ class UserProfile {
     String? phone,
     String? email,
     String? authMethod,
+    String? upiId,
     bool? setupComplete,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -117,6 +122,7 @@ class UserProfile {
       phone: phone ?? this.phone,
       email: email ?? this.email,
       authMethod: authMethod ?? this.authMethod,
+      upiId: upiId ?? this.upiId,
       setupComplete: setupComplete ?? this.setupComplete,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -130,6 +136,7 @@ class UserProfile {
           runtimeType == other.runtimeType &&
           uid == other.uid &&
           setupComplete == other.setupComplete &&
+          upiId == other.upiId &&
           shopName == other.shopName &&
           ownerName == other.ownerName;
 

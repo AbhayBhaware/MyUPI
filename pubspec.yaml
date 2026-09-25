@@ -40,6 +40,7 @@ dependencies:
   firebase_core: ^4.15.0
   firebase_auth: ^6.7.0
   http: ^1.6.0
+  qr_flutter: ^4.1.0
 
 
 
@@ -77,10 +78,10 @@ flutter_launcher_icons:
 
 flutter_native_splash:
   color: "#FFFFFF"
-  image: assets/icon/logo_full_transparent.png
+  image: assets/icon/icon_foreground.png
   android_12:
     color: "#FFFFFF"
-    image: assets/icon/logo_full_transparent.png
+    image: assets/icon/icon_foreground.png
   android: true
   ios: true
 

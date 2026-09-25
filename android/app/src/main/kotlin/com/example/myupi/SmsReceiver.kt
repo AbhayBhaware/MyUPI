@@ -18,6 +18,28 @@ class SmsReceiver : BroadcastReceiver() {
 
     companion object {
         private const val TAG = "MyUPI_SMS_RECEIVER"
+
+        // Process-level SMS deduplication cache (60s sliding window)
+        private val smsDedupCache = mutableMapOf<String, Long>()
+        private const val DEDUP_WINDOW_MS = 60_000L
+
+        private fun isDuplicateSms(key: String, nowMs: Long): Boolean {
+            synchronized(smsDedupCache) {
+                val iterator = smsDedupCache.entries.iterator()
+                while (iterator.hasNext()) {
+                    val entry = iterator.next()
+                    if (nowMs - entry.value > DEDUP_WINDOW_MS) {
+                        iterator.remove()
+                    }
+                }
+                val lastSeen = smsDedupCache[key]
+                if (lastSeen != null && (nowMs - lastSeen) <= DEDUP_WINDOW_MS) {
+                    return true
+                }
+                smsDedupCache[key] = nowMs
+                return false
+            }
+        }
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -53,54 +75,65 @@ class SmsReceiver : BroadcastReceiver() {
             Log.e(TAG, "Failed to init SharedPreferencesManager in SmsReceiver: ${e.message}")
         }
 
-        // 2. Cross-Channel Coordination (45-second deduplication & merge)
-        val disposition = CrossChannelCoordinator.onSmsDetected(result.amount, result.bankName)
+        val nowMs = System.currentTimeMillis()
+        val normAmount = SharedPreferencesManager.normalizeAmount(result.amount)?.toString() ?: result.amount
 
-        when (disposition) {
-            is CrossChannelDisposition.Merged -> {
-                // A notification already landed for this payment within the 45s window!
-                Log.d(TAG, "Cross-channel match: SMS ₹${result.amount} merged with ${disposition.originalLabel} notification.")
-                
-                val combinedLabel = "${disposition.originalLabel} + ${result.bankName}"
-                SharedPreferencesManager.mergeRecentPayment(
+        // 2. Pre-filter: drop duplicate SMS broadcasts within 60s
+        val smsDedupKey = "$sender|$normAmount"
+        if (isDuplicateSms(smsDedupKey, nowMs)) {
+            Log.d(TAG, "Duplicate SMS payment suppressed for $smsDedupKey within 60s window")
+            return
+        }
+
+        // 3. Single Gatekeeper Ledger Write & Cross-Channel Merge
+        // Single authoritative path to write to history. Checks the persistent ledger:
+        // - If same source (SMS) within 60s: discards duplicate (DuplicateIgnored)
+        // - If opposite source (NOTIFICATION) within 60s: merges into Dual Confirmed (Merged)
+        // - If fresh payment: inserts into ledger (Fresh)
+        val recordResult = SharedPreferencesManager.recordPaymentOrMerge(
+            amount = result.amount,
+            appName = result.bankName,
+            trustLevel = result.trustLevel,
+            source = "SMS",
+            verificationStatus = "NOT_VERIFIED",
+            parserVersion = result.parserVersion,
+        )
+
+        when (recordResult) {
+            is RecordResult.DuplicateIgnored -> {
+                Log.d(TAG, "Duplicate SMS payment discarded by ledger gatekeeper: ₹${result.amount} from ${result.bankName} (${recordResult.reason})")
+                SharedPreferencesManager.addDiagnosticLog(
+                    appName = "${result.bankName} (SMS)",
+                    status = "DUPLICATE_SUPPRESSED",
+                    trustLevel = result.trustLevel,
                     amount = result.amount,
-                    newSource = "BOTH",
-                    combinedAppName = combinedLabel,
-                    newTrustLevel = "HIGH",
+                    reason = recordResult.reason,
                 )
+                // Do NOT speak TTS, do NOT insert
+            }
 
+            is RecordResult.Merged -> {
+                Log.d(TAG, "Cross-channel match: SMS ₹${result.amount} merged with ${recordResult.originalLabel} notification.")
                 SharedPreferencesManager.addDiagnosticLog(
                     appName = "${result.bankName} (SMS)",
                     status = "MERGED_WITH_NOTIF",
                     trustLevel = "HIGH",
                     amount = result.amount,
-                    reason = "Merged with ${disposition.originalLabel} notification within 45s window",
+                    reason = "Merged with ${recordResult.originalLabel} notification within 60s window",
                 )
 
                 // Notify Flutter UI of the merged update
                 PaymentNotificationListener.sendCustomEventToFlutter(
                     packageName = sender,
                     title = "Dual Confirmed Payment",
-                    text = "₹${result.amount} received via ${disposition.originalLabel} + SMS",
-                    notificationKey = "SMS|$sender|${System.currentTimeMillis()}",
+                    text = "₹${result.amount} received via ${recordResult.originalLabel} + SMS",
+                    notificationKey = "SMS|$sender|$nowMs",
                 )
                 // Do NOT speak TTS again — the notification already spoke it!
             }
 
-            is CrossChannelDisposition.Fresh -> {
-                // No prior notification received — this is a fresh payment detected via SMS!
+            is RecordResult.Fresh -> {
                 Log.d(TAG, "Fresh payment detected via SMS: ₹${result.amount} from ${result.bankName} (Trust: ${result.trustLevel})")
-
-                // Save to history (source: SMS, verification: NOT_VERIFIED, trust: MEDIUM/LOW)
-                SharedPreferencesManager.addPayment(
-                    amount = result.amount,
-                    appName = result.bankName,
-                    trustLevel = result.trustLevel,
-                    verificationStatus = "NOT_VERIFIED",
-                    source = "SMS",
-                    parserVersion = result.parserVersion,
-                )
-
                 SharedPreferencesManager.addDiagnosticLog(
                     appName = "${result.bankName} (SMS)",
                     status = "MATCHED",
@@ -114,10 +147,10 @@ class SmsReceiver : BroadcastReceiver() {
                     packageName = sender,
                     title = result.bankName,
                     text = "Received ₹${result.amount} via Bank SMS",
-                    notificationKey = "SMS|$sender|${System.currentTimeMillis()}",
+                    notificationKey = "SMS|$sender|$nowMs",
                 )
 
-                // 3. TTS Announcement — only if Soundbox is ON and payment is MEDIUM trust (not LOW/flagged)
+                // 4. TTS Announcement — only if Soundbox is ON and payment is MEDIUM trust
                 if (result.trustLevel == "MEDIUM") {
                     val soundboxEnabled = try {
                         SharedPreferencesManager.isSoundboxEnabled()
@@ -127,7 +160,6 @@ class SmsReceiver : BroadcastReceiver() {
 
                     if (soundboxEnabled) {
                         Log.d(TAG, "TTS: Speaking SMS payment of ₹${result.amount}")
-                        // Speak via NotificationListener's TTS helper if running, or on-demand
                         val helper = PaymentNotificationListener.ttsHelper ?: NativeTtsHelper(context.applicationContext)
                         helper.speakPayment(result.amount)
                     } else {

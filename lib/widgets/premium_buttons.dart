@@ -165,7 +165,7 @@ class CustomOutlineButton extends StatelessWidget {
           foregroundColor: color,
           side: BorderSide(color: border, width: 1.2),
           shape: const RoundedRectangleBorder(borderRadius: AppRadius.mdRadius),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
         ),
         child: Row(
           mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
@@ -173,9 +173,16 @@ class CustomOutlineButton extends StatelessWidget {
           children: [
             if (icon != null) ...[
               Icon(icon, size: 18, color: color),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
             ],
-            Text(label, style: AppTypography.button.copyWith(color: color, fontSize: 14)),
+            Flexible(
+              child: Text(
+                label,
+                style: AppTypography.button.copyWith(color: color, fontSize: 13),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
       ),

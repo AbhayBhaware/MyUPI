@@ -8,14 +8,17 @@
 //
 // Developer Diagnostics is kept behind a 7-tap version gesture in AboutScreen.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app_channels.dart';
+import '../services/firestore_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import '../tts_service.dart';
 import '../widgets/premium_buttons.dart';
 import '../widgets/premium_card.dart';
 import '../widgets/section_header.dart';
@@ -25,7 +28,6 @@ import 'help_support_screen.dart';
 import 'paywall_screen.dart';
 import 'reliability_checklist_screen.dart';
 import '../services/auth_service.dart';
-import '../services/firestore_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -445,6 +447,97 @@ class _SettingsScreenState extends State<SettingsScreen>
             ),
           ),
 
+          const SizedBox(height: AppSpacing.md),
+
+          // ── Test Soundbox (moved from Home Screen) ───────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
+            child: PremiumCard(
+              padding: const EdgeInsets.all(AppSpacing.base),
+              color: AppColors.lightBlue,
+              borderColor: AppColors.softBlueBorder,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryBlue.withAlpha(20),
+                          borderRadius: AppRadius.smRadius,
+                        ),
+                        child: const Icon(Icons.volume_up_rounded, color: AppColors.primaryBlue, size: 22),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Test Soundbox', style: AppTypography.titleSmall),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Hear a sample payment announcement',
+                              style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppColors.cardBorder.withAlpha(120)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.volume_up_outlined, size: 14, color: AppColors.primaryBlue),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _getFormatPreviewText(_announceFormat),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.primaryBlue,
+                        shape: const RoundedRectangleBorder(borderRadius: AppRadius.mdRadius),
+                      ),
+                      onPressed: () async {
+                        try {
+                          await kMethodChannel.invokeMethod('speakTest');
+                        } on PlatformException catch (_) {
+                          TtsService.instance.speakTest();
+                        }
+                      },
+                      icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                      label: const Text('Play Test Announcement', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           const SizedBox(height: AppSpacing.lg),
 
           // ════════════════════════════════════════════════════════════════════
@@ -497,6 +590,27 @@ class _SettingsScreenState extends State<SettingsScreen>
                     ),
                     value: _includeShopName,
                     onChanged: _setIncludeShopName,
+                  ),
+                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+                  ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: const Icon(Icons.qr_code_2_rounded, color: AppColors.primaryBlue, size: 20),
+                    ),
+                    title: const Text('UPI ID', style: AppTypography.titleSmall),
+                    subtitle: Text(
+                      _getUpiIdDisplay(),
+                      style: AppTypography.caption.copyWith(
+                        color: _getUpiIdDisplay() == 'Not set' ? AppColors.textMuted : AppColors.textSecondary,
+                      ),
+                    ),
+                    trailing: const Icon(Icons.edit_rounded, size: 18, color: AppColors.textSecondary),
+                    onTap: _showEditUpiIdDialog,
                   ),
                 ],
               ),
@@ -893,6 +1007,88 @@ class _SettingsScreenState extends State<SettingsScreen>
                   _setMerchantName(text);
                 }
                 Navigator.pop(ctx);
+              },
+              child: const Text('SAVE', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _getUpiIdDisplay() {
+    final profile = FirestoreService.instance.cachedProfile;
+    final upiId = profile?.upiId ?? '';
+    return upiId.isEmpty ? 'Not set' : upiId;
+  }
+
+  void _showEditUpiIdDialog() {
+    HapticFeedback.selectionClick();
+    final profile = FirestoreService.instance.cachedProfile;
+    final currentUpi = profile?.upiId ?? '';
+    final controller = TextEditingController(text: currentUpi);
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.lgRadius),
+          title: const Text('Edit UPI ID', style: AppTypography.titleMedium),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Your payment address for QR code generation.',
+                style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  labelText: 'UPI ID',
+                  hintText: 'yourname@upi / 9876543210@ybl',
+                  prefixIcon: Icon(Icons.qr_code_rounded, color: AppColors.primaryBlue),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                autofocus: true,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('CANCEL', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primaryBlue,
+                shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+              ),
+              onPressed: () async {
+                final text = controller.text.trim().toLowerCase();
+                if (text.isNotEmpty && !text.contains('@')) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(
+                      content: Text('UPI ID must contain @ (e.g. name@upi)'),
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: AppColors.warning,
+                    ),
+                  );
+                  return;
+                }
+                Navigator.pop(ctx);
+                var targetProfile = profile;
+                if (targetProfile == null) {
+                  final user = FirebaseAuth.instance.currentUser;
+                  if (user != null) {
+                    targetProfile = await FirestoreService.instance.getUserProfile(user.uid);
+                  }
+                }
+                if (targetProfile != null) {
+                  final updated = targetProfile.copyWith(upiId: text, updatedAt: DateTime.now());
+                  await FirestoreService.instance.saveUserProfile(updated);
+                  if (mounted) setState(() {});
+                }
               },
               child: const Text('SAVE', style: TextStyle(fontWeight: FontWeight.bold)),
             ),

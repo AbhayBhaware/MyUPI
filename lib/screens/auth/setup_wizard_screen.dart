@@ -44,6 +44,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   final _categoryOtherController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
+  final _upiIdController = TextEditingController();
 
   String? _selectedCategory;
   bool _isLoading = false;
@@ -81,6 +82,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     _categoryOtherController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _upiIdController.dispose();
     super.dispose();
   }
 
@@ -112,6 +114,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     final categoryOther = category == 'Other' ? _categoryOtherController.text.trim() : null;
     final phone = _phoneController.text.trim();
     final email = _emailController.text.trim();
+    final upiId = _upiIdController.text.trim().toLowerCase();
 
     String authMethod = 'phone';
     if (widget.user.providerData.any((p) => p.providerId == 'google.com')) {
@@ -151,6 +154,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       phone: phone,
       email: email,
       authMethod: authMethod,
+      upiId: upiId,
       setupComplete: true, // kFieldSetupComplete
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -484,6 +488,34 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                       },
                     ),
                   ],
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // ── 6. UPI ID (Optional) ─────────────────────────────────
+                  const Text('UPI ID (Optional)', style: AppTypography.titleSmall),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Your payment address for QR code generation (e.g. shop@upi)',
+                    style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  TextFormField(
+                    controller: _upiIdController,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.done,
+                    style: const TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 15),
+                    decoration: const InputDecoration(
+                      hintText: 'yourname@upi / 9876543210@ybl',
+                      prefixIcon: Icon(Icons.qr_code_rounded, color: AppColors.primaryBlue),
+                    ),
+                    validator: (val) {
+                      if (val != null && val.trim().isNotEmpty) {
+                        if (!val.trim().contains('@')) {
+                          return 'UPI ID must contain @ (e.g. name@upi).';
+                        }
+                      }
+                      return null;
+                    },
+                  ),
 
                   const SizedBox(height: AppSpacing.xxl),
 

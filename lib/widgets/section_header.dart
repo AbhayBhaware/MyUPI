@@ -31,11 +31,15 @@ class SectionHeader extends StatelessWidget {
       padding: padding,
       child: Row(
         children: [
-          Text(
-            title,
-            style: AppTypography.sectionTitle,
+          Expanded(
+            child: Text(
+              title,
+              style: AppTypography.sectionTitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-          const Spacer(),
+          const SizedBox(width: 8),
           if (badgeText != null)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

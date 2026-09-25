@@ -76,31 +76,28 @@ class PaymentNotificationListener : NotificationListenerService() {
                 }
             }
         }
-    }
 
-    // ── Service-level sliding window deduplication ───────────────────────────
-    // Key: "$packageName|$notifTag|$notifId|$contentHash" -> timestampMs
-    // Sliding window of 45 seconds (45,000 ms) prevents duplicate announcements
-    // from OS re-delivery or app status refreshes while allowing successive payments.
-    private val dedupCache = mutableMapOf<String, Long>()
-    private val DEDUP_WINDOW_MS = 45_000L
+        // ── Process-level sliding window deduplication ───────────────────────────
+        // Survives NotificationListenerService restarts/rebinds across OEM battery events.
+        private val dedupCache = mutableMapOf<String, Long>()
+        private const val DEDUP_WINDOW_MS = 60_000L // 60-second sliding window
 
-    private fun isDuplicateNotification(dedupKey: String, nowMs: Long): Boolean {
-        synchronized(dedupCache) {
-            // Evict expired entries older than 45 seconds
-            val iterator = dedupCache.entries.iterator()
-            while (iterator.hasNext()) {
-                val entry = iterator.next()
-                if (nowMs - entry.value > DEDUP_WINDOW_MS) {
-                    iterator.remove()
+        fun isDuplicateNotification(dedupKey: String, nowMs: Long): Boolean {
+            synchronized(dedupCache) {
+                val iterator = dedupCache.entries.iterator()
+                while (iterator.hasNext()) {
+                    val entry = iterator.next()
+                    if (nowMs - entry.value > DEDUP_WINDOW_MS) {
+                        iterator.remove()
+                    }
                 }
+                val lastSeen = dedupCache[dedupKey]
+                if (lastSeen != null && (nowMs - lastSeen) <= DEDUP_WINDOW_MS) {
+                    return true
+                }
+                dedupCache[dedupKey] = nowMs
+                return false
             }
-            val lastSeen = dedupCache[dedupKey]
-            if (lastSeen != null && (nowMs - lastSeen) <= DEDUP_WINDOW_MS) {
-                return true
-            }
-            dedupCache[dedupKey] = nowMs
-            return false
         }
     }
 
@@ -191,29 +188,17 @@ class PaymentNotificationListener : NotificationListenerService() {
         // Notification identity key — same format used by Flutter.
         val notifTag = sbn.tag ?: ""
         val notifId  = sbn.id
-        val notificationKey = "$packageName|$notifTag|$notifId"
-
-        // Deduplication key incorporates content hash so successive payments
-        // with the same notification ID are not suppressed.
-        val contentHash = (title + text).hashCode()
-        val dedupKey = "$packageName|$notifTag|$notifId|$contentHash"
+        val notificationKey = sbn.key ?: "$packageName|$notifTag|$notifId"
         val nowMs = System.currentTimeMillis()
 
         Log.d(TAG, "POSTED | Package: $packageName | Key: $notificationKey")
 
-        // ── 1. Service-level deduplication (45s sliding window) ──────────────
-        val isDuplicate = isDuplicateNotification(dedupKey, nowMs)
-
-        if (isDuplicate) {
-            Log.d(TAG, "Duplicate notification ignored within 45s window — key: $dedupKey")
-            SharedPreferencesManager.addDiagnosticLog(
-                appName = packageName,
-                status = "DUPLICATE_SUPPRESSED",
-                trustLevel = "NONE",
-                amount = null,
-                reason = "Identical notification repeated within 45s sliding window",
-            )
-            // Forward to Flutter (UI update only).
+        // ── 1. Fast in-place notification update deduplication ───────────────
+        // Keyed on the OS notification key (never on volatile text content hash).
+        // If Google Pay updates "just now" -> "1 min ago" for the same notification key,
+        // drop it immediately before even running regex parsing.
+        if (isDuplicateNotification("NOTIF_KEY|$notificationKey", nowMs)) {
+            Log.d(TAG, "Duplicate notification key ignored within 60s window — key: $notificationKey")
             sendToFlutter(packageName, title, text, notificationKey)
             return
         }
@@ -266,34 +251,65 @@ class PaymentNotificationListener : NotificationListenerService() {
             return
         }
 
-        // ── 3. Cross-Channel Coordination (45s deduplication & merge) ─────────
-        val disposition = CrossChannelCoordinator.onNotificationDetected(result.amount ?: "", result.appName)
+        val amount = result.amount ?: ""
+        val normAmount = SharedPreferencesManager.normalizeAmount(amount)?.toString() ?: amount
 
-        when (disposition) {
-            is CrossChannelDisposition.Merged -> {
-                // An SMS already detected this payment within the 45s window!
-                Log.d(TAG, "Cross-channel merge: Notification for ₹${result.amount} merged with ${disposition.originalLabel} SMS.")
+        // Pre-filter: drop duplicate reposts of the same amount from the same package within 60s
+        val paymentKey = "PAYMENT|$packageName|$normAmount"
+        if (isDuplicateNotification(paymentKey, nowMs)) {
+            Log.d(TAG, "Duplicate payment notification suppressed for $paymentKey within 60s window")
+            SharedPreferencesManager.addDiagnosticLog(
+                appName = result.appName,
+                status = "DUPLICATE_SUPPRESSED",
+                trustLevel = result.trustLevel,
+                amount = result.amount,
+                reason = "Payment notification repeated within 60s window",
+            )
+            sendToFlutter(packageName, title, text, notificationKey)
+            return
+        }
 
-                val combinedLabel = "${result.appName} + ${disposition.originalLabel}"
-                SharedPreferencesManager.mergeRecentPayment(
-                    amount = result.amount ?: "",
-                    newSource = "BOTH",
-                    combinedAppName = combinedLabel,
-                    newTrustLevel = "HIGH",
+        // ── 3. Single Gatekeeper Ledger Write & Cross-Channel Merge ──────────
+        // Single authoritative path to write to history. Checks the persistent ledger:
+        // - If same source within 60s: discards duplicate (DuplicateIgnored)
+        // - If opposite source (SMS) within 60s: merges into Dual Confirmed (Merged)
+        // - If fresh payment: inserts into ledger (Fresh)
+        val recordResult = SharedPreferencesManager.recordPaymentOrMerge(
+            amount = amount,
+            appName = result.appName,
+            trustLevel = result.trustLevel,
+            source = "NOTIFICATION",
+            verificationStatus = "NOT_VERIFIED",
+            parserVersion = result.parserVersion,
+        )
+
+        when (recordResult) {
+            is RecordResult.DuplicateIgnored -> {
+                Log.d(TAG, "Duplicate notification discarded by ledger gatekeeper: ₹$amount from ${result.appName} (${recordResult.reason})")
+                SharedPreferencesManager.addDiagnosticLog(
+                    appName = result.appName,
+                    status = "DUPLICATE_SUPPRESSED",
+                    trustLevel = result.trustLevel,
+                    amount = result.amount,
+                    reason = recordResult.reason,
                 )
+                // Do NOT speak TTS, do NOT insert row
+            }
 
+            is RecordResult.Merged -> {
+                Log.d(TAG, "Cross-channel merge: Notification for ₹$amount merged with ${recordResult.originalLabel} SMS into Dual Confirmed.")
                 SharedPreferencesManager.addDiagnosticLog(
                     appName = result.appName,
                     status = "MERGED_WITH_SMS",
                     trustLevel = "HIGH",
                     amount = result.amount,
-                    reason = "Merged with ${disposition.originalLabel} SMS within 45s window",
+                    reason = "Merged with ${recordResult.originalLabel} SMS within 60s window",
                 )
-                // Do NOT speak TTS again — the SMS channel already announced it!
+                // Do NOT speak TTS again — the earlier SMS already spoke it!
             }
 
-            is CrossChannelDisposition.Fresh -> {
-                // Fresh notification payment!
+            is RecordResult.Fresh -> {
+                Log.d(TAG, "Fresh payment recorded from Notification: ₹$amount from ${result.appName}")
                 SharedPreferencesManager.addDiagnosticLog(
                     appName = result.appName,
                     status = "MATCHED",
@@ -302,31 +318,8 @@ class PaymentNotificationListener : NotificationListenerService() {
                     reason = result.reason,
                 )
 
-                Log.d(TAG,
-                    "Detection | App: ${result.appName} | " +
-                    "TrustLevel: ${result.trustLevel} | Amount: ${result.amount} | " +
-                    "Reason: ${result.reason}"
-                )
-
-                // Save to payment history
-                if (!result.amount.isNullOrEmpty()) {
-                    try {
-                        SharedPreferencesManager.addPayment(
-                            amount  = result.amount,
-                            appName = result.appName,
-                            trustLevel = result.trustLevel,
-                            verificationStatus = "NOT_VERIFIED",
-                            source = "NOTIFICATION",
-                            parserVersion = result.parserVersion,
-                        )
-                        Log.d(TAG, "Payment history: saved ₹${result.amount} from ${result.appName} (Trust: ${result.trustLevel}, Verification: NOT_VERIFIED, Source: NOTIFICATION)")
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Payment history: save failed — ${e.message}. TTS will still proceed.")
-                    }
-                }
-
                 // ── 4. Native TTS — only if Soundbox is ON AND payment is HIGH TRUST ─
-                if (result.trustLevel == "HIGH" && !result.amount.isNullOrEmpty()) {
+                if (result.trustLevel == "HIGH" && amount.isNotEmpty()) {
                     val soundboxEnabled = try {
                         SharedPreferencesManager.isSoundboxEnabled()
                     } catch (e: Exception) {
@@ -335,8 +328,8 @@ class PaymentNotificationListener : NotificationListenerService() {
                     }
 
                     if (soundboxEnabled) {
-                        Log.d(TAG, "TTS: Soundbox ON — speaking amount: ${result.amount}")
-                        ttsHelper?.speakPayment(result.amount)
+                        Log.d(TAG, "TTS: Soundbox ON — speaking amount: $amount")
+                        ttsHelper?.speakPayment(amount)
                             ?: Log.w(TAG, "TTS: ttsHelper is null — cannot speak (service may be restarting).")
                     } else {
                         Log.d(TAG, "TTS: Soundbox OFF — payment detected but NOT speaking.")

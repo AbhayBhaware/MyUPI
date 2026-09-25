@@ -9,6 +9,7 @@
 // 2: Settings — Soundbox speech, merchant name & account settings
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../theme/app_colors.dart';
 import 'home_screen.dart';
@@ -51,7 +52,10 @@ class _ShellPageState extends State<ShellPage> {
         ),
         child: NavigationBar(
           selectedIndex: _selectedIndex,
-          onDestinationSelected: (i) => setState(() => _selectedIndex = i),
+          onDestinationSelected: (i) {
+            HapticFeedback.selectionClick();
+            setState(() => _selectedIndex = i);
+          },
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.speaker_outlined),

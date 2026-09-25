@@ -50,11 +50,48 @@ data class PaymentRecord(
     val parserVersion: Int = 1,
 )
 
+// ─── Record Result for Single Gatekeeper Ledger Writes ────────────────────────
+
+sealed class RecordResult {
+    data class Fresh(val record: PaymentRecord) : RecordResult()
+    data class Merged(
+        val updatedRecord: PaymentRecord,
+        val originalSource: String,
+        val originalLabel: String,
+    ) : RecordResult()
+    data class DuplicateIgnored(val reason: String) : RecordResult()
+}
+
 // ─── Manager singleton ────────────────────────────────────────────────────────
 
 object SharedPreferencesManager {
 
     private lateinit var prefs: SharedPreferences
+
+    /**
+     * Normalizes amount string (e.g. "₹199", "199.00", "1,000") to numeric Double.
+     * Returns null if unparseable.
+     */
+    fun normalizeAmount(amountStr: String?): Double? {
+        if (amountStr.isNullOrBlank()) return null
+        val clean = amountStr
+            .replace("₹", "")
+            .replace("Rs.", "", ignoreCase = true)
+            .replace("Rs", "", ignoreCase = true)
+            .replace("INR", "", ignoreCase = true)
+            .replace(",", "")
+            .trim()
+        return clean.toDoubleOrNull()
+    }
+
+    /**
+     * Numeric equality comparison for payment amounts (handles "199.00" == "199").
+     */
+    fun areAmountsEqual(a: String?, b: String?): Boolean {
+        val numA = normalizeAmount(a) ?: return false
+        val numB = normalizeAmount(b) ?: return false
+        return Math.abs(numA - numB) < 0.001
+    }
 
     /** Must be called once before any other method (e.g. in onCreate of service or app). */
     fun init(context: Context) {
@@ -191,9 +228,151 @@ object SharedPreferencesManager {
     // ── Payment history ───────────────────────────────────────────────────────
 
     /**
-     * Add a new payment record to history.
-     * If MAX_HISTORY_SIZE is exceeded, the oldest records are trimmed.
-     * Duplicate protection is handled by the caller (seenKeys in the service).
+     * Single shared gatekeeper for inserting or merging ANY payment ledger entry.
+     * Enforces a 60-second sliding window deduplication & cross-channel merge check:
+     *
+     * for each entry in ledger where entry.timestamp is within last 60s:
+     *     if entry.amount == newAmount (compare as normalized numeric, not string):
+     *         if entry.source != newSource:
+     *             -> upgrade existing entry to "Dual Confirmed", do NOT insert new row
+     *         else:
+     *             -> discard newEvent entirely, do NOT insert, do NOT re-announce
+     *         stop here
+     * -> otherwise, insert as new entry and announce
+     */
+    @Synchronized
+    fun recordPaymentOrMerge(
+        amount: String,
+        appName: String,
+        trustLevel: String,
+        source: String,
+        verificationStatus: String = "NOT_VERIFIED",
+        parserVersion: Int = 1,
+    ): RecordResult {
+        val newNumeric = normalizeAmount(amount)
+        if (newNumeric == null || newNumeric <= 0.0) {
+            Log.w(TAG, "Cannot record payment: invalid amount '$amount'")
+            return RecordResult.DuplicateIgnored("Invalid amount")
+        }
+
+        val list = loadHistoryList().toMutableList()
+        val now = System.currentTimeMillis()
+        val WINDOW_MS = 60_000L
+        val newSourceUpper = source.uppercase()
+
+        // 1. Scan ledger for any matching entry within the last 60 seconds
+        var existingItem: JSONObject? = null
+
+        for (i in list.indices) {
+            val item = list[i]
+            val itemTime = item.optLong("timestampMs", 0L)
+            val timeDiff = now - itemTime
+
+            // Check sliding 60-second window (allows slight clock skew up to 5s in future)
+            if (timeDiff in -5_000L..WINDOW_MS) {
+                val itemAmount = item.optString("amount", "")
+                if (areAmountsEqual(itemAmount, amount)) {
+                    existingItem = item
+                    break
+                }
+            }
+        }
+
+        // 2. If a match is found in the sliding 60s window
+        if (existingItem != null) {
+            val existingSource = existingItem.optString("source", "NOTIFICATION").uppercase()
+            val existingAppName = existingItem.optString("appName", "")
+
+            // Case A: Different channel detected -> upgrade existing entry to "Dual Confirmed" ("BOTH")
+            if (existingSource != newSourceUpper && existingSource != "BOTH") {
+                val combinedAppName = when {
+                    existingAppName.contains(appName, ignoreCase = true) -> existingAppName
+                    appName.contains(existingAppName, ignoreCase = true) -> appName
+                    newSourceUpper == "NOTIFICATION" -> "$appName + $existingAppName"
+                    else -> "$existingAppName + $appName"
+                }
+
+                existingItem.put("source", "BOTH")
+                existingItem.put("trustLevel", "HIGH")
+                existingItem.put("appName", combinedAppName)
+
+                // Clean up any subsequent duplicates for this amount within the window
+                val iterator = list.iterator()
+                var skippedFirst = false
+                while (iterator.hasNext()) {
+                    val it = iterator.next()
+                    if (it === existingItem) {
+                        skippedFirst = true
+                        continue
+                    }
+                    val t = it.optLong("timestampMs", 0L)
+                    if (skippedFirst && (now - t in -5_000L..WINDOW_MS) && areAmountsEqual(it.optString("amount", ""), amount)) {
+                        iterator.remove()
+                        Log.d(TAG, "Pruned duplicate historical entry for ₹$amount during merge")
+                    }
+                }
+
+                val arr = JSONArray().apply { list.forEach { put(it) } }
+                prefs.edit().putString(KEY_HISTORY, arr.toString()).apply()
+
+                Log.d(TAG, "Upgraded existing ledger entry to Dual Confirmed: ₹$amount -> BOTH ($combinedAppName)")
+
+                val updatedRecord = PaymentRecord(
+                    amount = existingItem.optString("amount", amount),
+                    appName = combinedAppName,
+                    trustLevel = "HIGH",
+                    timestampMs = existingItem.optLong("timestampMs", now),
+                    verificationStatus = existingItem.optString("verificationStatus", verificationStatus),
+                    source = "BOTH",
+                    parserVersion = parserVersion,
+                )
+
+                return RecordResult.Merged(
+                    updatedRecord = updatedRecord,
+                    originalSource = existingSource,
+                    originalLabel = existingAppName,
+                )
+            } else {
+                // Case B: Same channel duplicate or already BOTH -> discard newEvent entirely
+                Log.d(TAG, "Discarding duplicate payment event: ₹$amount from $appName (existing source: $existingSource, incoming source: $newSourceUpper)")
+                return RecordResult.DuplicateIgnored("Duplicate $newSourceUpper payment within 60s window")
+            }
+        }
+
+        // 3. No match found within 60s -> Insert as fresh entry
+        val newRecordObj = JSONObject().apply {
+            put("amount", amount)
+            put("appName", appName)
+            put("trustLevel", trustLevel)
+            put("timestampMs", now)
+            put("verificationStatus", verificationStatus)
+            put("source", newSourceUpper)
+            put("parserVersion", parserVersion)
+        }
+
+        list.add(0, newRecordObj)
+        val trimmed = if (list.size > MAX_HISTORY_SIZE) list.take(MAX_HISTORY_SIZE) else list
+        val arr = JSONArray().apply { trimmed.forEach { put(it) } }
+        prefs.edit().putString(KEY_HISTORY, arr.toString()).apply()
+
+        Log.d(TAG, "Payment history saved: ₹$amount from $appName ($verificationStatus, source: $newSourceUpper, total: ${trimmed.size})")
+
+        val record = PaymentRecord(
+            amount = amount,
+            appName = appName,
+            trustLevel = trustLevel,
+            timestampMs = now,
+            verificationStatus = verificationStatus,
+            source = newSourceUpper,
+            parserVersion = parserVersion,
+        )
+
+        return RecordResult.Fresh(record)
+    }
+
+    /**
+     * Add a payment record to history. Delegates to [recordPaymentOrMerge]
+     * to enforce strict numeric 60-second deduplication and prevent duplicate entries.
      */
     @Synchronized
     fun addPayment(
@@ -204,23 +383,14 @@ object SharedPreferencesManager {
         source: String = "NOTIFICATION",
         parserVersion: Int = 1,
     ) {
-        val list = loadHistoryList().toMutableList()
-        val record = JSONObject().apply {
-            put("amount", amount)
-            put("appName", appName)
-            put("trustLevel", trustLevel)
-            put("timestampMs", System.currentTimeMillis())
-            put("verificationStatus", verificationStatus)
-            put("source", source)
-            put("parserVersion", parserVersion)
-        }
-        // Insert at front (newest first).
-        list.add(0, record)
-        // Trim if over limit.
-        val trimmed = if (list.size > MAX_HISTORY_SIZE) list.take(MAX_HISTORY_SIZE) else list
-        val arr = JSONArray().apply { trimmed.forEach { put(it) } }
-        prefs.edit().putString(KEY_HISTORY, arr.toString()).apply()
-        Log.d(TAG, "Payment history saved: ₹$amount from $appName ($verificationStatus, total: ${trimmed.size})")
+        recordPaymentOrMerge(
+            amount = amount,
+            appName = appName,
+            trustLevel = trustLevel,
+            source = source,
+            verificationStatus = verificationStatus,
+            parserVersion = parserVersion,
+        )
     }
 
     /**
@@ -249,7 +419,7 @@ object SharedPreferencesManager {
 
     /**
      * Updates an existing recent payment record to source "BOTH" and HIGH trust.
-     * Matches by normalized amount within the last 60 seconds.
+     * Matches by normalized numeric amount within the last 60 seconds.
      * Returns true if a record was successfully merged.
      */
     @Synchronized
@@ -261,15 +431,14 @@ object SharedPreferencesManager {
     ): Boolean {
         val list = loadHistoryList().toMutableList()
         val now = System.currentTimeMillis()
-        val cleanTarget = amount.replace(",", "").toDoubleOrNull() ?: return false
 
         for (i in list.indices) {
             val item = list[i]
-            val itemAmount = item.optString("amount", "").replace(",", "").toDoubleOrNull()
+            val itemAmount = item.optString("amount", "")
             val itemTime = item.optLong("timestampMs", 0L)
 
-            // Match within 60 seconds and identical amount
-            if (itemAmount != null && itemAmount == cleanTarget && (now - itemTime) <= 60_000L) {
+            // Match within 60 seconds and normalized numeric amount
+            if (areAmountsEqual(itemAmount, amount) && (now - itemTime) in -5_000L..60_000L) {
                 item.put("source", newSource)
                 item.put("trustLevel", newTrustLevel)
                 item.put("appName", combinedAppName)

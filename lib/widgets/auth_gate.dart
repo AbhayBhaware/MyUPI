@@ -213,15 +213,15 @@ class _AuthLoadingSplash extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 88,
-              height: 88,
+              width: 100,
+              height: 100,
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: AppRadius.xlRadius,
                 border: Border.all(color: AppColors.softBlueBorder, width: 1.5),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryBlue.withAlpha(40),
+                    color: AppColors.primaryBlue.withAlpha(25),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -230,13 +230,13 @@ class _AuthLoadingSplash extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: AppRadius.xlRadius,
                 child: Padding(
-                  padding: const EdgeInsets.all(6.0),
+                  padding: const EdgeInsets.all(8.0),
                   child: Image.asset(
-                    'assets/images/logo.png',
+                    'assets/icon/icon_foreground.png',
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) => const Icon(
                       Icons.speaker,
-                      size: 42,
+                      size: 48,
                       color: AppColors.primaryBlue,
                     ),
                   ),
