@@ -24,11 +24,29 @@ import java.util.UUID
 
 private const val TAG = "MyUPI_BACKGROUND"
 
-class NativeTtsHelper(context: Context) : TextToSpeech.OnInitListener {
+class NativeTtsHelper(private val context: Context) : TextToSpeech.OnInitListener {
 
     private val tts: TextToSpeech = TextToSpeech(context.applicationContext, this)
     private var isReady = false
     private val pendingQueue: LinkedList<String> = LinkedList()
+
+    private fun isHumanVoiceEnabled(): Boolean {
+        return try {
+            val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+            prefs.getBoolean("flutter.human_voice_enabled", false)
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    private fun isChimeEnabled(): Boolean {
+        return try {
+            val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+            prefs.getBoolean("flutter.soundbox_chime_enabled", true)
+        } catch (e: Exception) {
+            true
+        }
+    }
 
     init {
         // Register utterance listener for sequential queue processing.
@@ -119,6 +137,29 @@ class NativeTtsHelper(context: Context) : TextToSpeech.OnInitListener {
      * AND amount is non-null.
      */
     fun speakPayment(rawAmount: String) {
+        val lang = SharedPreferencesManager.getLanguage()
+        val includeShopName = SharedPreferencesManager.isIncludeShopNameEnabled()
+        val merchantName = SharedPreferencesManager.getMerchantName()
+        val hasShopName = includeShopName && merchantName.isNotBlank()
+
+        // Guarded Human Voice path (Section 4):
+        // Active when humanVoiceEnabled is ON, shop name is NOT enabled (v1 rule),
+        // and voice pack exists for the active language.
+        if (!hasShopName && isHumanVoiceEnabled() && ClipAnnouncer.isPackAvailable(context, lang)) {
+            try {
+                val formatType = SharedPreferencesManager.getAnnouncementFormat()
+                val withChime = isChimeEnabled()
+                val success = ClipAnnouncer.playPayment(context, rawAmount, lang, formatType, withChime)
+                if (success) {
+                    Log.d(TAG, "ClipAnnouncer played human-voice payment for $rawAmount ($lang)")
+                    return
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "ClipAnnouncer error, falling back to system TTS: ${e.message}", e)
+            }
+        }
+
+        // Standard system TTS path (guaranteed never silent)
         val text = buildPaymentSpeech(rawAmount)
         Log.d(TAG, "TTS speaking: \"$text\"")
         enqueue(text)
@@ -128,6 +169,20 @@ class NativeTtsHelper(context: Context) : TextToSpeech.OnInitListener {
      * Speak an arbitrary test string to preview current config.
      */
     fun speakTest() {
+        val lang = SharedPreferencesManager.getLanguage()
+        if (isHumanVoiceEnabled() && ClipAnnouncer.isPackAvailable(context, lang)) {
+            try {
+                val withChime = isChimeEnabled()
+                val success = ClipAnnouncer.playTest(context, lang, withChime)
+                if (success) {
+                    Log.d(TAG, "ClipAnnouncer played human-voice test preview ($lang)")
+                    return
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "ClipAnnouncer test preview error, falling back to TTS: ${e.message}", e)
+            }
+        }
+
         val text = buildTestSpeech()
         Log.d(TAG, "TTS test: \"$text\"")
         enqueue(text)

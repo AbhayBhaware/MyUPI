@@ -1,0 +1,683 @@
+{
+  "language": "en-IN",
+  "voice": "en-IN-NeerjaNeural",
+  "sample_rate": 16000,
+  "channels": 1,
+  "format": "pcm_s16le",
+  "clip_count": 112,
+  "source_license": "Microsoft Cognitive Services / Antigravity Voice Pipeline. Pre-rendered offline bundle.",
+  "clips": {
+    "chime": {
+      "text": "[melodic chime]",
+      "file": "chime.wav",
+      "duration_ms": 400,
+      "md5": "efadf287a391fb22acb049d1de67fb62"
+    },
+    "num_4": {
+      "text": "four",
+      "file": "num_4.wav",
+      "duration_ms": 448,
+      "md5": "370c6f5d6c1824755fb15a1117c82981"
+    },
+    "num_2": {
+      "text": "two",
+      "file": "num_2.wav",
+      "duration_ms": 304,
+      "md5": "5a29794603f8df8d07d3c4fd7c46af08"
+    },
+    "num_1": {
+      "text": "one",
+      "file": "num_1.wav",
+      "duration_ms": 416,
+      "md5": "77eee72627f5d27f9136b676fc4535a7"
+    },
+    "num_0": {
+      "text": "zero",
+      "file": "num_0.wav",
+      "duration_ms": 469,
+      "md5": "6585e1723713aab69efeb1ad6e48c001"
+    },
+    "num_5": {
+      "text": "five",
+      "file": "num_5.wav",
+      "duration_ms": 502,
+      "md5": "d59fcc30a2f3b788c84a71e4e9a9d07e"
+    },
+    "num_3": {
+      "text": "three",
+      "file": "num_3.wav",
+      "duration_ms": 347,
+      "md5": "6154561cb6d0083db149105db4343da4"
+    },
+    "num_7": {
+      "text": "seven",
+      "file": "num_7.wav",
+      "duration_ms": 463,
+      "md5": "5f4838c1cd0d586dd06a052f087202c4"
+    },
+    "num_6": {
+      "text": "six",
+      "file": "num_6.wav",
+      "duration_ms": 531,
+      "md5": "750ad1d8d236f53212a4572f9453a732"
+    },
+    "num_8": {
+      "text": "eight",
+      "file": "num_8.wav",
+      "duration_ms": 348,
+      "md5": "a91c0aaa17ae2928654d08958f7f203d"
+    },
+    "num_9": {
+      "text": "nine",
+      "file": "num_9.wav",
+      "duration_ms": 483,
+      "md5": "a96ed47342cc8fd8dca20b6e1e26359e"
+    },
+    "num_11": {
+      "text": "eleven",
+      "file": "num_11.wav",
+      "duration_ms": 507,
+      "md5": "5cefb7094239785678748fd1402c6d84"
+    },
+    "num_10": {
+      "text": "ten",
+      "file": "num_10.wav",
+      "duration_ms": 356,
+      "md5": "07a9387b3fce084c466bfca9e237009e"
+    },
+    "num_12": {
+      "text": "twelve",
+      "file": "num_12.wav",
+      "duration_ms": 388,
+      "md5": "50deb6c4c4bb36abaccee836a094e6d5"
+    },
+    "num_15": {
+      "text": "fifteen",
+      "file": "num_15.wav",
+      "duration_ms": 623,
+      "md5": "b041b991e0eb012e450558f958c8e060"
+    },
+    "num_14": {
+      "text": "fourteen",
+      "file": "num_14.wav",
+      "duration_ms": 613,
+      "md5": "8c1e3b9b94d18edafa5f3de679dc1099"
+    },
+    "num_16": {
+      "text": "sixteen",
+      "file": "num_16.wav",
+      "duration_ms": 709,
+      "md5": "69cb28c153f7df63eee2e41fcbeefe1f"
+    },
+    "num_13": {
+      "text": "thirteen",
+      "file": "num_13.wav",
+      "duration_ms": 605,
+      "md5": "9c3c2b75029c98b75e9c24d3efb40bfd"
+    },
+    "num_17": {
+      "text": "seventeen",
+      "file": "num_17.wav",
+      "duration_ms": 732,
+      "md5": "8e9f763ceeb9f031dffa3f23f5204f6e"
+    },
+    "num_18": {
+      "text": "eighteen",
+      "file": "num_18.wav",
+      "duration_ms": 563,
+      "md5": "bc650f2bbaca17e04bbd9fe51b6be839"
+    },
+    "num_21": {
+      "text": "twenty one",
+      "file": "num_21.wav",
+      "duration_ms": 745,
+      "md5": "f13c0da2840ab4e5d4a09d97f6baee0a"
+    },
+    "num_22": {
+      "text": "twenty two",
+      "file": "num_22.wav",
+      "duration_ms": 621,
+      "md5": "8f29c11bfa5afb0a18be2b5967f72cb4"
+    },
+    "num_19": {
+      "text": "nineteen",
+      "file": "num_19.wav",
+      "duration_ms": 669,
+      "md5": "58b838548d0c39566cf6bb03d20f73d1"
+    },
+    "num_20": {
+      "text": "twenty",
+      "file": "num_20.wav",
+      "duration_ms": 494,
+      "md5": "8fdc8e4f2427fab22cf3e527386001d1"
+    },
+    "num_23": {
+      "text": "twenty three",
+      "file": "num_23.wav",
+      "duration_ms": 696,
+      "md5": "de3df6f87e32fd26602e7a1f191af695"
+    },
+    "num_24": {
+      "text": "twenty four",
+      "file": "num_24.wav",
+      "duration_ms": 709,
+      "md5": "f1e544587f18e36ee634bf3653e80670"
+    },
+    "num_26": {
+      "text": "twenty six",
+      "file": "num_26.wav",
+      "duration_ms": 781,
+      "md5": "2637623c7c5cf9e22be71a3565c8c0ab"
+    },
+    "num_25": {
+      "text": "twenty five",
+      "file": "num_25.wav",
+      "duration_ms": 835,
+      "md5": "a3474cf6fd97aabdd89aa47def497362"
+    },
+    "num_28": {
+      "text": "twenty eight",
+      "file": "num_28.wav",
+      "duration_ms": 765,
+      "md5": "3174dfe0ec96ac66f30dc99d4625b9f8"
+    },
+    "num_27": {
+      "text": "twenty seven",
+      "file": "num_27.wav",
+      "duration_ms": 819,
+      "md5": "10ac0e8f1a19c752da76393bb4fb4323"
+    },
+    "num_29": {
+      "text": "twenty nine",
+      "file": "num_29.wav",
+      "duration_ms": 778,
+      "md5": "9e2991ef6ca80a59e7f4489308266947"
+    },
+    "num_30": {
+      "text": "thirty",
+      "file": "num_30.wav",
+      "duration_ms": 483,
+      "md5": "9b7106ac6df050d2d7380567a3c5edbc"
+    },
+    "num_34": {
+      "text": "thirty four",
+      "file": "num_34.wav",
+      "duration_ms": 724,
+      "md5": "a7467cf8a98010736fdc6406a26987c2"
+    },
+    "num_33": {
+      "text": "thirty three",
+      "file": "num_33.wav",
+      "duration_ms": 744,
+      "md5": "36c850e95d09b175f90c0a1f28f6f701"
+    },
+    "num_32": {
+      "text": "thirty two",
+      "file": "num_32.wav",
+      "duration_ms": 683,
+      "md5": "d19562ec4cceb82fffbbd66dc406908a"
+    },
+    "num_31": {
+      "text": "thirty one",
+      "file": "num_31.wav",
+      "duration_ms": 713,
+      "md5": "6df238987351c21e62cce24adffea5a5"
+    },
+    "num_35": {
+      "text": "thirty five",
+      "file": "num_35.wav",
+      "duration_ms": 843,
+      "md5": "41a8ae040eba4eed9fbadfe15b446cad"
+    },
+    "num_36": {
+      "text": "thirty six",
+      "file": "num_36.wav",
+      "duration_ms": 834,
+      "md5": "4d15750dd2579d998f70c621678d42f6"
+    },
+    "num_37": {
+      "text": "thirty seven",
+      "file": "num_37.wav",
+      "duration_ms": 825,
+      "md5": "9ebfe0f5dc07a97a615c48f3b6856e07"
+    },
+    "num_39": {
+      "text": "thirty nine",
+      "file": "num_39.wav",
+      "duration_ms": 758,
+      "md5": "5ab67e39fda768486cbc0682b0dff297"
+    },
+    "num_40": {
+      "text": "forty",
+      "file": "num_40.wav",
+      "duration_ms": 551,
+      "md5": "9ac855245fa0d240f2fd504841621b4f"
+    },
+    "num_41": {
+      "text": "forty one",
+      "file": "num_41.wav",
+      "duration_ms": 796,
+      "md5": "523cfe28228ed06faac7eb8fa79cb672"
+    },
+    "num_38": {
+      "text": "thirty eight",
+      "file": "num_38.wav",
+      "duration_ms": 747,
+      "md5": "9800c1843072ab21900617272f7d9d3a"
+    },
+    "num_42": {
+      "text": "forty two",
+      "file": "num_42.wav",
+      "duration_ms": 688,
+      "md5": "7bd4a2f22387e13b668b740b588e7d60"
+    },
+    "num_43": {
+      "text": "forty three",
+      "file": "num_43.wav",
+      "duration_ms": 773,
+      "md5": "02fb132d55317c1d04bf9fd923ab9510"
+    },
+    "num_46": {
+      "text": "forty six",
+      "file": "num_46.wav",
+      "duration_ms": 882,
+      "md5": "170ac361dafbd9c932474699cbdb21d7"
+    },
+    "num_44": {
+      "text": "forty four",
+      "file": "num_44.wav",
+      "duration_ms": 808,
+      "md5": "2a54bb0d016644f33220c49a96c96414"
+    },
+    "num_45": {
+      "text": "forty five",
+      "file": "num_45.wav",
+      "duration_ms": 949,
+      "md5": "a3ed27d2d1096bb0babd1e254841a49c"
+    },
+    "num_47": {
+      "text": "forty seven",
+      "file": "num_47.wav",
+      "duration_ms": 870,
+      "md5": "a39d845a8b7405c15c2d9f7679d58152"
+    },
+    "num_48": {
+      "text": "forty eight",
+      "file": "num_48.wav",
+      "duration_ms": 795,
+      "md5": "4ea4c5006391ecaf7147643cf93bed5b"
+    },
+    "num_49": {
+      "text": "forty nine",
+      "file": "num_49.wav",
+      "duration_ms": 836,
+      "md5": "9ec509d0779b77f923e966079de96320"
+    },
+    "num_53": {
+      "text": "fifty three",
+      "file": "num_53.wav",
+      "duration_ms": 826,
+      "md5": "537cca40384b59816028ab21a4b08583"
+    },
+    "num_52": {
+      "text": "fifty two",
+      "file": "num_52.wav",
+      "duration_ms": 768,
+      "md5": "ac05f37295e8b3d3c4b5e675e6c93d69"
+    },
+    "num_51": {
+      "text": "fifty one",
+      "file": "num_51.wav",
+      "duration_ms": 810,
+      "md5": "1b843be0814618e7a60870c180eafdc0"
+    },
+    "num_50": {
+      "text": "fifty",
+      "file": "num_50.wav",
+      "duration_ms": 558,
+      "md5": "701ae17f1320314dc4ec41584da57efb"
+    },
+    "num_54": {
+      "text": "fifty four",
+      "file": "num_54.wav",
+      "duration_ms": 813,
+      "md5": "b8f26cef06a9da36f762894561ab98c0"
+    },
+    "num_55": {
+      "text": "fifty five",
+      "file": "num_55.wav",
+      "duration_ms": 899,
+      "md5": "89bcfb5114e6df545d4d4a7b9492d4aa"
+    },
+    "num_59": {
+      "text": "fifty nine",
+      "file": "num_59.wav",
+      "duration_ms": 852,
+      "md5": "999d60743292b25ed796cd8994fa4ed2"
+    },
+    "num_57": {
+      "text": "fifty seven",
+      "file": "num_57.wav",
+      "duration_ms": 939,
+      "md5": "d12c50270594a5922751197b66f08137"
+    },
+    "num_56": {
+      "text": "fifty six",
+      "file": "num_56.wav",
+      "duration_ms": 892,
+      "md5": "100f7c4a65bc1b2b5872e05ad01da912"
+    },
+    "num_58": {
+      "text": "fifty eight",
+      "file": "num_58.wav",
+      "duration_ms": 825,
+      "md5": "1c04ccb3379079c0d109bdceb6dff1a9"
+    },
+    "num_60": {
+      "text": "sixty",
+      "file": "num_60.wav",
+      "duration_ms": 634,
+      "md5": "e314a8c120ca88f33efdf79cda51d082"
+    },
+    "num_61": {
+      "text": "sixty one",
+      "file": "num_61.wav",
+      "duration_ms": 821,
+      "md5": "e9d2619bfb9f6b0d7f5b027a033b74af"
+    },
+    "num_62": {
+      "text": "sixty two",
+      "file": "num_62.wav",
+      "duration_ms": 827,
+      "md5": "3bbf395abd171c8860e6167689a51e28"
+    },
+    "num_63": {
+      "text": "sixty three",
+      "file": "num_63.wav",
+      "duration_ms": 882,
+      "md5": "4ef21bb96de27f966c0a5736b13d8777"
+    },
+    "num_64": {
+      "text": "sixty four",
+      "file": "num_64.wav",
+      "duration_ms": 847,
+      "md5": "c22061ceb9a7f87658201897aa34eef8"
+    },
+    "num_65": {
+      "text": "sixty five",
+      "file": "num_65.wav",
+      "duration_ms": 942,
+      "md5": "fe464c7adaea65684ec990c721d52b73"
+    },
+    "num_66": {
+      "text": "sixty six",
+      "file": "num_66.wav",
+      "duration_ms": 987,
+      "md5": "e0e655d525d638dd792a2de2de11d11e"
+    },
+    "num_67": {
+      "text": "sixty seven",
+      "file": "num_67.wav",
+      "duration_ms": 942,
+      "md5": "d40741cec79aca2779c405de745db1dd"
+    },
+    "num_68": {
+      "text": "sixty eight",
+      "file": "num_68.wav",
+      "duration_ms": 895,
+      "md5": "b121d46034d45f5c26114f5e445e06cf"
+    },
+    "num_69": {
+      "text": "sixty nine",
+      "file": "num_69.wav",
+      "duration_ms": 931,
+      "md5": "3ed3c635ecf1206514ee5cb8254c9db1"
+    },
+    "num_70": {
+      "text": "seventy",
+      "file": "num_70.wav",
+      "duration_ms": 600,
+      "md5": "b09abd026af572591b162026481ca305"
+    },
+    "num_71": {
+      "text": "seventy one",
+      "file": "num_71.wav",
+      "duration_ms": 875,
+      "md5": "1c61604b904b9e480869458a7ec9abcf"
+    },
+    "num_72": {
+      "text": "seventy two",
+      "file": "num_72.wav",
+      "duration_ms": 816,
+      "md5": "53b3d9fecf57de2dc23986cd7e7d7290"
+    },
+    "num_73": {
+      "text": "seventy three",
+      "file": "num_73.wav",
+      "duration_ms": 873,
+      "md5": "28c1e52feec258b68758dcdd2bdd1769"
+    },
+    "num_75": {
+      "text": "seventy five",
+      "file": "num_75.wav",
+      "duration_ms": 965,
+      "md5": "d9e2f275aa8fcf080a1de5b999e4f802"
+    },
+    "num_74": {
+      "text": "seventy four",
+      "file": "num_74.wav",
+      "duration_ms": 852,
+      "md5": "37f8b8b606979970e83f340e6ae25818"
+    },
+    "num_76": {
+      "text": "seventy six",
+      "file": "num_76.wav",
+      "duration_ms": 971,
+      "md5": "cb920797a8d2d0c0395872326921d56d"
+    },
+    "num_77": {
+      "text": "seventy seven",
+      "file": "num_77.wav",
+      "duration_ms": 981,
+      "md5": "e838bcae15b19d6b8fff7f5d420db16d"
+    },
+    "num_78": {
+      "text": "seventy eight",
+      "file": "num_78.wav",
+      "duration_ms": 860,
+      "md5": "488daafe095fc2a65b3dcfa033582184"
+    },
+    "num_79": {
+      "text": "seventy nine",
+      "file": "num_79.wav",
+      "duration_ms": 895,
+      "md5": "0d818d50345c1cecfbc01878836587f0"
+    },
+    "num_81": {
+      "text": "eighty one",
+      "file": "num_81.wav",
+      "duration_ms": 753,
+      "md5": "af9e46e72fccc28052b92cd6f824b499"
+    },
+    "num_80": {
+      "text": "eighty",
+      "file": "num_80.wav",
+      "duration_ms": 481,
+      "md5": "7e5f0d559de08c9b70dc4b6984ce88b8"
+    },
+    "num_82": {
+      "text": "eighty two",
+      "file": "num_82.wav",
+      "duration_ms": 641,
+      "md5": "528bc78a554e3cd54b0229c5cdd8b469"
+    },
+    "num_84": {
+      "text": "eighty four",
+      "file": "num_84.wav",
+      "duration_ms": 734,
+      "md5": "45656ab1edf3a1783543c10369db7682"
+    },
+    "num_83": {
+      "text": "eighty three",
+      "file": "num_83.wav",
+      "duration_ms": 725,
+      "md5": "64a372a54a54fdc9f9f235f75cb4b177"
+    },
+    "num_85": {
+      "text": "eighty five",
+      "file": "num_85.wav",
+      "duration_ms": 828,
+      "md5": "96a297d72a9179105e7e2a32483d10b4"
+    },
+    "num_87": {
+      "text": "eighty seven",
+      "file": "num_87.wav",
+      "duration_ms": 812,
+      "md5": "0de5bd82ea9899db533162ed1250c5a1"
+    },
+    "num_88": {
+      "text": "eighty eight",
+      "file": "num_88.wav",
+      "duration_ms": 718,
+      "md5": "948221055162d8ab562f4267f86d15e4"
+    },
+    "num_86": {
+      "text": "eighty six",
+      "file": "num_86.wav",
+      "duration_ms": 833,
+      "md5": "66cb992589ca440c0c9567dbc887c9f3"
+    },
+    "num_89": {
+      "text": "eighty nine",
+      "file": "num_89.wav",
+      "duration_ms": 723,
+      "md5": "454cd8080690676441bc079e664e4f51"
+    },
+    "num_90": {
+      "text": "ninety",
+      "file": "num_90.wav",
+      "duration_ms": 578,
+      "md5": "2370e99bb280104ad4e57299b4caa28b"
+    },
+    "num_93": {
+      "text": "ninety three",
+      "file": "num_93.wav",
+      "duration_ms": 816,
+      "md5": "ea527c1eac66ba62921fd0e115add402"
+    },
+    "num_91": {
+      "text": "ninety one",
+      "file": "num_91.wav",
+      "duration_ms": 823,
+      "md5": "92186829eb16f97007799c2dc67e7147"
+    },
+    "num_92": {
+      "text": "ninety two",
+      "file": "num_92.wav",
+      "duration_ms": 757,
+      "md5": "09b55c0a5350f9acd47c457f25b1aee2"
+    },
+    "num_94": {
+      "text": "ninety four",
+      "file": "num_94.wav",
+      "duration_ms": 773,
+      "md5": "66a421c502ecfb9c2f684eb147298d4a"
+    },
+    "num_95": {
+      "text": "ninety five",
+      "file": "num_95.wav",
+      "duration_ms": 936,
+      "md5": "67b4da52607524049e92ae9ef5158317"
+    },
+    "num_96": {
+      "text": "ninety six",
+      "file": "num_96.wav",
+      "duration_ms": 908,
+      "md5": "7039470690c90cca9eb72ee99cc2fecc"
+    },
+    "num_97": {
+      "text": "ninety seven",
+      "file": "num_97.wav",
+      "duration_ms": 942,
+      "md5": "42b20ea86a1657630a0177fec2a4903d"
+    },
+    "num_98": {
+      "text": "ninety eight",
+      "file": "num_98.wav",
+      "duration_ms": 859,
+      "md5": "d9d054d666fb99d58932618b2d32141b"
+    },
+    "num_99": {
+      "text": "ninety nine",
+      "file": "num_99.wav",
+      "duration_ms": 865,
+      "md5": "d48be88149d3c9bc6bb2c3d721e771c9"
+    },
+    "thousand": {
+      "text": "thousand",
+      "file": "thousand.wav",
+      "duration_ms": 540,
+      "md5": "9be21bcde7274356ba6a945f09e62e5f"
+    },
+    "hundred": {
+      "text": "hundred",
+      "file": "hundred.wav",
+      "duration_ms": 516,
+      "md5": "cae09c182925b3da9de90cc4fd4896ca"
+    },
+    "lakh": {
+      "text": "lakh",
+      "file": "lakh.wav",
+      "duration_ms": 505,
+      "md5": "1eb11b52e782125f72ef87eb9e2c0b0d"
+    },
+    "rupee": {
+      "text": "rupee",
+      "file": "rupee.wav",
+      "duration_ms": 493,
+      "md5": "85ee4e909ef9b0e830f2bd89620958c3"
+    },
+    "rupees": {
+      "text": "rupees",
+      "file": "rupees.wav",
+      "duration_ms": 650,
+      "md5": "9133f2bcc99e80fcadf73dc503fb20b7"
+    },
+    "and": {
+      "text": "and",
+      "file": "and.wav",
+      "duration_ms": 342,
+      "md5": "e3ab4d4264c3c55e1aa321d07b0e3eb9"
+    },
+    "crore": {
+      "text": "crore",
+      "file": "crore.wav",
+      "duration_ms": 463,
+      "md5": "bafa7318d3e57a8d3f62171623726c01"
+    },
+    "paise": {
+      "text": "paise",
+      "file": "paise.wav",
+      "duration_ms": 512,
+      "md5": "3c8d76160edd8154dca105dc2c3e76a8"
+    },
+    "payment_received": {
+      "text": "Payment received",
+      "file": "payment_received.wav",
+      "duration_ms": 931,
+      "md5": "0537d91caf5ce8f6c539f4645c537c04"
+    },
+    "received": {
+      "text": "received",
+      "file": "received.wav",
+      "duration_ms": 557,
+      "md5": "0c9beece8bac9b96580fda803baaea1a"
+    },
+    "thank_you": {
+      "text": "Thank you",
+      "file": "thank_you.wav",
+      "duration_ms": 604,
+      "md5": "e6714252102a60efd45a791bc5ee8f81"
+    }
+  }
+}

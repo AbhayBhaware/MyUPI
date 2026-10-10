@@ -1,0 +1,683 @@
+{
+  "language": "kn-IN",
+  "voice": "kn-IN-SapnaNeural",
+  "sample_rate": 16000,
+  "channels": 1,
+  "format": "pcm_s16le",
+  "clip_count": 112,
+  "source_license": "Microsoft Cognitive Services / Antigravity Voice Pipeline. Pre-rendered offline bundle.",
+  "clips": {
+    "chime": {
+      "text": "[melodic chime]",
+      "file": "chime.wav",
+      "duration_ms": 400,
+      "md5": "efadf287a391fb22acb049d1de67fb62"
+    },
+    "num_2": {
+      "text": "ಎರಡು",
+      "file": "num_2.wav",
+      "duration_ms": 521,
+      "md5": "b98beddf3f013f48295a11b69c98849a"
+    },
+    "num_3": {
+      "text": "ಮೂರು",
+      "file": "num_3.wav",
+      "duration_ms": 419,
+      "md5": "f3850e8dfeb2280d0cffd5f552c79f89"
+    },
+    "num_4": {
+      "text": "ನಾಲ್ಕು",
+      "file": "num_4.wav",
+      "duration_ms": 593,
+      "md5": "66d643973599f238cc68587d8df804e9"
+    },
+    "num_5": {
+      "text": "ಐದು",
+      "file": "num_5.wav",
+      "duration_ms": 830,
+      "md5": "540ec03b213f47a10d7de3f8956363db"
+    },
+    "num_6": {
+      "text": "ಆರು",
+      "file": "num_6.wav",
+      "duration_ms": 499,
+      "md5": "f8a3958bc14877fde1b05965944318a1"
+    },
+    "num_1": {
+      "text": "ಒಂದು",
+      "file": "num_1.wav",
+      "duration_ms": 444,
+      "md5": "cb2c972303e55d28bc69804646f1b8af"
+    },
+    "num_0": {
+      "text": "ಸೊನ್ನೆ",
+      "file": "num_0.wav",
+      "duration_ms": 500,
+      "md5": "7658ad6fd065944ddc66838b7e619b97"
+    },
+    "num_7": {
+      "text": "ಏಳು",
+      "file": "num_7.wav",
+      "duration_ms": 541,
+      "md5": "e0f14712670919bf46f3f7ee04bee1f2"
+    },
+    "num_11": {
+      "text": "ಹನ್ನೊಂದು",
+      "file": "num_11.wav",
+      "duration_ms": 645,
+      "md5": "d5f55f259bcbdc1e6b7b19d964ea3d9a"
+    },
+    "num_8": {
+      "text": "ಎಂಟು",
+      "file": "num_8.wav",
+      "duration_ms": 575,
+      "md5": "d358c000527869d32b47b02095ac051e"
+    },
+    "num_9": {
+      "text": "ಒಂಬತ್ತು",
+      "file": "num_9.wav",
+      "duration_ms": 567,
+      "md5": "4e5eddc6c686bc5ec07dd1696475cc0c"
+    },
+    "num_10": {
+      "text": "ಹತ್ತು",
+      "file": "num_10.wav",
+      "duration_ms": 430,
+      "md5": "b3483d4332396667f4e4a2049fc52922"
+    },
+    "num_15": {
+      "text": "ಹದಿನೈದು",
+      "file": "num_15.wav",
+      "duration_ms": 738,
+      "md5": "70fef1c0067bd8c6c24d4423f12bfc33"
+    },
+    "num_13": {
+      "text": "ಹದಿಮೂರು",
+      "file": "num_13.wav",
+      "duration_ms": 692,
+      "md5": "3c9445443ad7d2c8bda4635b8f68005c"
+    },
+    "num_14": {
+      "text": "ಹದಿನಾಲ್ಕು",
+      "file": "num_14.wav",
+      "duration_ms": 781,
+      "md5": "dd65a54c3a9b604441f0b6736d44033a"
+    },
+    "num_12": {
+      "text": "ಹನ್ನೆರಡು",
+      "file": "num_12.wav",
+      "duration_ms": 667,
+      "md5": "6cc97dabd142a06a89eb638bcfc83d67"
+    },
+    "num_17": {
+      "text": "ಹದಿನೇಳು",
+      "file": "num_17.wav",
+      "duration_ms": 703,
+      "md5": "03546b473d4eb83c7a6bccca41b85e82"
+    },
+    "num_16": {
+      "text": "ಹದಿನಾರು",
+      "file": "num_16.wav",
+      "duration_ms": 668,
+      "md5": "e2b706b9437eebeb31c9e644e0ccf2c5"
+    },
+    "num_20": {
+      "text": "ಇಪ್ಪತ್ತು",
+      "file": "num_20.wav",
+      "duration_ms": 585,
+      "md5": "28a0f94d8dc07db396ed2397b8188477"
+    },
+    "num_19": {
+      "text": "ಹತ್ತೊಂಬತ್ತು",
+      "file": "num_19.wav",
+      "duration_ms": 728,
+      "md5": "ef6762678988855310672b5da8a4810d"
+    },
+    "num_18": {
+      "text": "ಹದಿನೆಂಟು",
+      "file": "num_18.wav",
+      "duration_ms": 754,
+      "md5": "c06b72d7f84950a7800713c0de015eef"
+    },
+    "num_22": {
+      "text": "ಇಪ್ಪತ್ತೆರಡು",
+      "file": "num_22.wav",
+      "duration_ms": 752,
+      "md5": "295285f079f0c8ec4524741f30595542"
+    },
+    "num_21": {
+      "text": "ಇಪ್ಪತ್ತೊಂದು",
+      "file": "num_21.wav",
+      "duration_ms": 769,
+      "md5": "5aeab4819b3f50e51c49ca11df44fb02"
+    },
+    "num_23": {
+      "text": "ಇಪ್ಪತ್ತು ಮೂರು",
+      "file": "num_23.wav",
+      "duration_ms": 905,
+      "md5": "8598f8f320577304fcb7de3de0973229"
+    },
+    "num_25": {
+      "text": "ಇಪ್ಪತ್ತೈದು",
+      "file": "num_25.wav",
+      "duration_ms": 779,
+      "md5": "95f2b83cb0532e41703c6ed4c08bb1d3"
+    },
+    "num_28": {
+      "text": "ಇಪ್ಪತ್ತೆಂಟು",
+      "file": "num_28.wav",
+      "duration_ms": 810,
+      "md5": "8e545bbe4c91f93c5451d3b7f73fc06f"
+    },
+    "num_27": {
+      "text": "ಇಪ್ಪತ್ತೇಳು",
+      "file": "num_27.wav",
+      "duration_ms": 765,
+      "md5": "e547cd179a9f790453adfc550bf4d24b"
+    },
+    "num_26": {
+      "text": "ಇಪ್ಪತ್ತಾರು",
+      "file": "num_26.wav",
+      "duration_ms": 723,
+      "md5": "13d0b19383658e6678bb14b7ab9c0aaa"
+    },
+    "num_24": {
+      "text": "ಇಪ್ಪತ್ತು ನಾಲ್ಕು",
+      "file": "num_24.wav",
+      "duration_ms": 979,
+      "md5": "8fdbfb44332e1b2b92cebbff5175f8e0"
+    },
+    "num_30": {
+      "text": "ಮೂವತ್ತು",
+      "file": "num_30.wav",
+      "duration_ms": 554,
+      "md5": "c0ce67f485820abca8e92a5508713cd1"
+    },
+    "num_29": {
+      "text": "ಇಪ್ಪತ್ತೊಂಬತ್ತು",
+      "file": "num_29.wav",
+      "duration_ms": 848,
+      "md5": "71010fd40976948db2eec2395f615ecb"
+    },
+    "num_31": {
+      "text": "ಮೂವತ್ತೊಂದು",
+      "file": "num_31.wav",
+      "duration_ms": 679,
+      "md5": "dfdf7a1d85b8cbbb7ec80c2f0c2ccb3f"
+    },
+    "num_32": {
+      "text": "ಮೂವತ್ತೆರಡು",
+      "file": "num_32.wav",
+      "duration_ms": 725,
+      "md5": "a8f3e0c722f84a390cca8dabf723799b"
+    },
+    "num_35": {
+      "text": "ಮೂವತ್ತೈದು",
+      "file": "num_35.wav",
+      "duration_ms": 723,
+      "md5": "bd9834a2517e86c0e027890f4e41fc61"
+    },
+    "num_36": {
+      "text": "ಮೂವತ್ತಾರು",
+      "file": "num_36.wav",
+      "duration_ms": 705,
+      "md5": "e4233e4913989a808d5c37c1852798bd"
+    },
+    "num_37": {
+      "text": "ಮೂವತ್ತೇಳು",
+      "file": "num_37.wav",
+      "duration_ms": 750,
+      "md5": "b31109aecb3c7c17e0530070478da3fe"
+    },
+    "num_34": {
+      "text": "ಮೂವತ್ನಾಲ್ಕು",
+      "file": "num_34.wav",
+      "duration_ms": 795,
+      "md5": "c317e4d9f1b21b545a948783ac31ba31"
+    },
+    "num_33": {
+      "text": "ಮೂವತ್ಮೂರು",
+      "file": "num_33.wav",
+      "duration_ms": 727,
+      "md5": "3a830808cb757fc06e4518855f8f11de"
+    },
+    "num_40": {
+      "text": "ನಲವತ್ತು",
+      "file": "num_40.wav",
+      "duration_ms": 652,
+      "md5": "7f76ee6a0e792e2ddd32418ef2fdf63f"
+    },
+    "num_39": {
+      "text": "ಮೂವತ್ತೊಂಬತ್ತು",
+      "file": "num_39.wav",
+      "duration_ms": 833,
+      "md5": "45786d8f4efdbc72400cac2e49185d93"
+    },
+    "num_38": {
+      "text": "ಮೂವತ್ತೆಂಟು",
+      "file": "num_38.wav",
+      "duration_ms": 781,
+      "md5": "a3db3e59239b322a8ae0313cae626db9"
+    },
+    "num_41": {
+      "text": "ನಲವತ್ತೊಂದು",
+      "file": "num_41.wav",
+      "duration_ms": 816,
+      "md5": "c493733412fae798bd8534127936b7e3"
+    },
+    "num_43": {
+      "text": "ನಲವತ್ಮೂರು",
+      "file": "num_43.wav",
+      "duration_ms": 822,
+      "md5": "3aa5eb36a3bdc436d0efc0a07df1d156"
+    },
+    "num_42": {
+      "text": "ನಲವತ್ತೆರಡು",
+      "file": "num_42.wav",
+      "duration_ms": 813,
+      "md5": "835c5dc0099c3046eab15ac1d377eba1"
+    },
+    "num_46": {
+      "text": "ನಲವತ್ತಾರು",
+      "file": "num_46.wav",
+      "duration_ms": 788,
+      "md5": "e573265522f693b9a7c14ac9d4802b3a"
+    },
+    "num_45": {
+      "text": "ನಲವತ್ತೈದು",
+      "file": "num_45.wav",
+      "duration_ms": 844,
+      "md5": "d77b4817e5bf0fbd853a548613d00765"
+    },
+    "num_47": {
+      "text": "ನಲವತ್ತೇಳು",
+      "file": "num_47.wav",
+      "duration_ms": 842,
+      "md5": "26ae31393e6b03b4e65d226825ee108a"
+    },
+    "num_49": {
+      "text": "ನಲವತ್ತೊಂಬತ್ತು",
+      "file": "num_49.wav",
+      "duration_ms": 908,
+      "md5": "1e4fc200aae932647cc500b6acb23ff6"
+    },
+    "num_48": {
+      "text": "ನಲವತ್ತೆಂಟು",
+      "file": "num_48.wav",
+      "duration_ms": 877,
+      "md5": "14f1435ea62dc34bc72ae4cd16bd4bd7"
+    },
+    "num_50": {
+      "text": "ಐವತ್ತು",
+      "file": "num_50.wav",
+      "duration_ms": 628,
+      "md5": "30e9391bb71c11b1fb16e2e2b4d4b5fb"
+    },
+    "num_44": {
+      "text": "ನಲವತ್ನಾಲ್ಕು",
+      "file": "num_44.wav",
+      "duration_ms": 904,
+      "md5": "fac2219776b4e7aee973b71c8e04af0c"
+    },
+    "num_52": {
+      "text": "ಐವತ್ತೆರಡು",
+      "file": "num_52.wav",
+      "duration_ms": 808,
+      "md5": "db01f588617180afdbec827a1cf1fd6e"
+    },
+    "num_51": {
+      "text": "ಐವತ್ತೊಂದು",
+      "file": "num_51.wav",
+      "duration_ms": 802,
+      "md5": "a5bb2490cc169a8ebb22c2be46557356"
+    },
+    "num_53": {
+      "text": "ಐವತ್ಮೂರು",
+      "file": "num_53.wav",
+      "duration_ms": 765,
+      "md5": "845a069b9f129052eb2c31a62eb8f8da"
+    },
+    "num_58": {
+      "text": "ಐವತ್ತೆಂಟು",
+      "file": "num_58.wav",
+      "duration_ms": 894,
+      "md5": "a64ac127c21e9508649a5526a8020c6f"
+    },
+    "num_55": {
+      "text": "ಐವತ್ತೈದು",
+      "file": "num_55.wav",
+      "duration_ms": 815,
+      "md5": "ebda31cce9fc8939b6e7e7ef1bc4295c"
+    },
+    "num_56": {
+      "text": "ಐವತ್ತಾರು",
+      "file": "num_56.wav",
+      "duration_ms": 779,
+      "md5": "68aa4d5fd1ed73a1bb04be8e8c4f0e73"
+    },
+    "num_57": {
+      "text": "ಐವತ್ತೇಳು",
+      "file": "num_57.wav",
+      "duration_ms": 855,
+      "md5": "0323b88a9177712fc67375499d7d412e"
+    },
+    "num_54": {
+      "text": "ಐವತ್ನಾಲ್ಕು",
+      "file": "num_54.wav",
+      "duration_ms": 909,
+      "md5": "303002943fe8a3f6fcbce34e7775c3ca"
+    },
+    "num_59": {
+      "text": "ಐವತ್ತೊಂಬತ್ತು",
+      "file": "num_59.wav",
+      "duration_ms": 943,
+      "md5": "22417e80fcf1c2b56c6bd6af5efe78a3"
+    },
+    "num_60": {
+      "text": "ಅರವತ್ತು",
+      "file": "num_60.wav",
+      "duration_ms": 600,
+      "md5": "3ce2798555f9eb8eb2cd033c47b24808"
+    },
+    "num_62": {
+      "text": "ಅರವತ್ತೆರಡು",
+      "file": "num_62.wav",
+      "duration_ms": 804,
+      "md5": "6889a8243bf740fae291175daf599ab4"
+    },
+    "num_61": {
+      "text": "ಅರವತ್ತೊಂದು",
+      "file": "num_61.wav",
+      "duration_ms": 790,
+      "md5": "65b1815c3b97e392ee8b03270b8303b2"
+    },
+    "num_64": {
+      "text": "ಅರವತ್ನಾಲ್ಕು",
+      "file": "num_64.wav",
+      "duration_ms": 879,
+      "md5": "2247b0e515c1fdb9b48800c3e9763549"
+    },
+    "num_65": {
+      "text": "ಅರವತ್ತೈದು",
+      "file": "num_65.wav",
+      "duration_ms": 805,
+      "md5": "6b1d0461f18eb22d75f50b28fd830c9e"
+    },
+    "num_63": {
+      "text": "ಅರವತ್ಮೂರು",
+      "file": "num_63.wav",
+      "duration_ms": 775,
+      "md5": "9c7132483abb85579c4d375a8a01f4bb"
+    },
+    "num_66": {
+      "text": "ಅರವತ್ತಾರು",
+      "file": "num_66.wav",
+      "duration_ms": 721,
+      "md5": "57ec7e4e1ef566466303b826c7f78ac1"
+    },
+    "num_67": {
+      "text": "ಅರವತ್ತೇಳು",
+      "file": "num_67.wav",
+      "duration_ms": 770,
+      "md5": "0be269eb9e7ce0f30b7b49535cddd1aa"
+    },
+    "num_68": {
+      "text": "ಅರವತ್ತೆಂಟು",
+      "file": "num_68.wav",
+      "duration_ms": 831,
+      "md5": "4ecd61b993d4e98d621d2b57cbc3cbb4"
+    },
+    "num_69": {
+      "text": "ಅರವತ್ತೊಂಬತ್ತು",
+      "file": "num_69.wav",
+      "duration_ms": 910,
+      "md5": "349d8292c21cfeff8320f543cd315773"
+    },
+    "num_70": {
+      "text": "ಎಪ್ಪತ್ತು",
+      "file": "num_70.wav",
+      "duration_ms": 622,
+      "md5": "114ea9fdd51e2a7171acbf766307dc9b"
+    },
+    "num_71": {
+      "text": "ಎಪ್ಪತ್ತೊಂದು",
+      "file": "num_71.wav",
+      "duration_ms": 799,
+      "md5": "394fc55301b839866753f81728d91708"
+    },
+    "num_72": {
+      "text": "ಎಪ್ಪತ್ತೆರಡು",
+      "file": "num_72.wav",
+      "duration_ms": 729,
+      "md5": "5f34071b714de26515b0268eea3b856e"
+    },
+    "num_75": {
+      "text": "ಎಪ್ಪತ್ತೈದು",
+      "file": "num_75.wav",
+      "duration_ms": 767,
+      "md5": "d079de3ff578d8a6b74c75a1d0cd6be3"
+    },
+    "num_76": {
+      "text": "ಎಪ್ಪತ್ತಾರು",
+      "file": "num_76.wav",
+      "duration_ms": 705,
+      "md5": "ccbd2dda52fa5912f167512babf3c33f"
+    },
+    "num_77": {
+      "text": "ಎಪ್ಪತ್ತೇಳು",
+      "file": "num_77.wav",
+      "duration_ms": 777,
+      "md5": "e3dcf854dbf0af4ab40f368a0616c594"
+    },
+    "num_73": {
+      "text": "ಎಪ್ಪತ್ಮೂರು",
+      "file": "num_73.wav",
+      "duration_ms": 779,
+      "md5": "d819e2f04765ad407bd0ca14f6238e71"
+    },
+    "num_74": {
+      "text": "ಎಪ್ಪತ್ನಾಲ್ಕು",
+      "file": "num_74.wav",
+      "duration_ms": 833,
+      "md5": "371ffa555d72f4603713884f8a20935a"
+    },
+    "num_78": {
+      "text": "ಎಪ್ಪತ್ತೆಂಟು",
+      "file": "num_78.wav",
+      "duration_ms": 826,
+      "md5": "0de7c314c073639d2f9ad7b7493e8100"
+    },
+    "num_79": {
+      "text": "ಎಪ್ಪತ್ತೊಂಬತ್ತು",
+      "file": "num_79.wav",
+      "duration_ms": 876,
+      "md5": "edc1e2ac47bb4d9a96b7ab00aca2a85a"
+    },
+    "num_80": {
+      "text": "ಎಂಬತ್ತು",
+      "file": "num_80.wav",
+      "duration_ms": 599,
+      "md5": "76b74ab51962e91efc76c7dc1790bf3c"
+    },
+    "num_82": {
+      "text": "ಎಂಬತ್ತೆರಡು",
+      "file": "num_82.wav",
+      "duration_ms": 777,
+      "md5": "37b6261d5446016975f2c8e8f8e0a3ef"
+    },
+    "num_81": {
+      "text": "ಎಂಬತ್ತೊಂದು",
+      "file": "num_81.wav",
+      "duration_ms": 731,
+      "md5": "65b3ef86acfa0b774ad867752617ea8c"
+    },
+    "num_83": {
+      "text": "ಎಂಬತ್ಮೂರು",
+      "file": "num_83.wav",
+      "duration_ms": 775,
+      "md5": "06058d038bec890a25eddfc26d4ff739"
+    },
+    "num_85": {
+      "text": "ಎಂಬತ್ತೈದು",
+      "file": "num_85.wav",
+      "duration_ms": 761,
+      "md5": "05a20269046d7e756b75aff7deb5d644"
+    },
+    "num_86": {
+      "text": "ಎಂಬತ್ತಾರು",
+      "file": "num_86.wav",
+      "duration_ms": 692,
+      "md5": "f0f0aa4f3644be8cf1b81317ce89ec37"
+    },
+    "num_87": {
+      "text": "ಎಂಬತ್ತೇಳು",
+      "file": "num_87.wav",
+      "duration_ms": 747,
+      "md5": "0ad7bfbcf5a20696ccf03623a245267c"
+    },
+    "num_88": {
+      "text": "ಎಂಬತ್ತೆಂಟು",
+      "file": "num_88.wav",
+      "duration_ms": 841,
+      "md5": "d81ebfcd58c2a5197888cd44a3725f66"
+    },
+    "num_84": {
+      "text": "ಎಂಬತ್ನಾಲ್ಕು",
+      "file": "num_84.wav",
+      "duration_ms": 882,
+      "md5": "a210ec167ece4e98202e8acc075849c6"
+    },
+    "num_89": {
+      "text": "ಎಂಬತ್ತೊಂಬತ್ತು",
+      "file": "num_89.wav",
+      "duration_ms": 906,
+      "md5": "a8073de97fea2b21cdbf7a2a5068a000"
+    },
+    "num_90": {
+      "text": "ತೊಂಬತ್ತು",
+      "file": "num_90.wav",
+      "duration_ms": 558,
+      "md5": "8f38d5ad8572e83e8e202ab4e938a467"
+    },
+    "num_91": {
+      "text": "ತೊಂಬತ್ತೊಂದು",
+      "file": "num_91.wav",
+      "duration_ms": 729,
+      "md5": "e09f8c63c17235e555fa05ac7d809592"
+    },
+    "num_92": {
+      "text": "ತೊಂಬತ್ತೆರಡು",
+      "file": "num_92.wav",
+      "duration_ms": 739,
+      "md5": "23fd495fbba474c521cf418262e24761"
+    },
+    "num_93": {
+      "text": "ತೊಂಬತ್ಮೂರು",
+      "file": "num_93.wav",
+      "duration_ms": 756,
+      "md5": "6173c0754c2d51ce8fb298efd2700416"
+    },
+    "num_95": {
+      "text": "ತೊಂಬತ್ತೈದು",
+      "file": "num_95.wav",
+      "duration_ms": 779,
+      "md5": "c94899091bcbfcbbb92c7db81068789e"
+    },
+    "num_96": {
+      "text": "ತೊಂಬತ್ತಾರು",
+      "file": "num_96.wav",
+      "duration_ms": 715,
+      "md5": "4e014ebd6b656cb996a3e8aa34978e2f"
+    },
+    "num_94": {
+      "text": "ತೊಂಬತ್ನಾಲ್ಕು",
+      "file": "num_94.wav",
+      "duration_ms": 819,
+      "md5": "e8030605651ae02abf738c2b0e2ed0b1"
+    },
+    "num_97": {
+      "text": "ತೊಂಬತ್ತೇಳು",
+      "file": "num_97.wav",
+      "duration_ms": 763,
+      "md5": "362eea824600c021dcabf44dd76f2cd0"
+    },
+    "num_99": {
+      "text": "ತೊಂಬತ್ತೊಂಬತ್ತು",
+      "file": "num_99.wav",
+      "duration_ms": 867,
+      "md5": "d943c98559278f871a2801c9be84ff66"
+    },
+    "num_98": {
+      "text": "ತೊಂಬತ್ತೆಂಟು",
+      "file": "num_98.wav",
+      "duration_ms": 768,
+      "md5": "f3d11d68b0c049c58a7f0f76a15ed2fb"
+    },
+    "hundred": {
+      "text": "ನೂರು",
+      "file": "hundred.wav",
+      "duration_ms": 447,
+      "md5": "f71ae0ee8fcbf6eb1a6733dcfd0aaa14"
+    },
+    "crore": {
+      "text": "ಕೋಟಿ",
+      "file": "crore.wav",
+      "duration_ms": 451,
+      "md5": "90753acf3aa4d1accf8ac0da317f624b"
+    },
+    "lakh": {
+      "text": "ಲಕ್ಷ",
+      "file": "lakh.wav",
+      "duration_ms": 617,
+      "md5": "4dc3c500a7a214711e149936d90eb3de"
+    },
+    "thousand": {
+      "text": "ಸಾವಿರ",
+      "file": "thousand.wav",
+      "duration_ms": 591,
+      "md5": "503effce901632b2d26057733f4227ef"
+    },
+    "paise": {
+      "text": "ಪೈಸೆ",
+      "file": "paise.wav",
+      "duration_ms": 482,
+      "md5": "cc2906cdfb5a2d2e65bc5e496071d9d4"
+    },
+    "rupees": {
+      "text": "ರೂಪಾಯಿ",
+      "file": "rupees.wav",
+      "duration_ms": 606,
+      "md5": "9d742f3a0cf067543bad23cc85024ac8"
+    },
+    "and": {
+      "text": "ಮತ್ತು",
+      "file": "and.wav",
+      "duration_ms": 425,
+      "md5": "fd2772a4d21be46601c8a7bf98defe46"
+    },
+    "rupee": {
+      "text": "ರೂಪಾಯಿ",
+      "file": "rupee.wav",
+      "duration_ms": 617,
+      "md5": "612dd7dc8713a9163a687fa6cefce8c4"
+    },
+    "payment_received": {
+      "text": "ಪಾವತಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ",
+      "file": "payment_received.wav",
+      "duration_ms": 1654,
+      "md5": "dc3d70138baa7eff884cad4b493edcfc"
+    },
+    "thank_you": {
+      "text": "ಧನ್ಯವಾದಗಳು",
+      "file": "thank_you.wav",
+      "duration_ms": 901,
+      "md5": "cc258985e5cbdd5c4687a25312980104"
+    },
+    "received": {
+      "text": "ಸ್ವೀಕರಿಸಲಾಗಿದೆ",
+      "file": "received.wav",
+      "duration_ms": 1114,
+      "md5": "cf122a032651ef21e01ff287354d8ec8"
+    }
+  }
+}

@@ -1,0 +1,683 @@
+{
+  "language": "gu-IN",
+  "voice": "gu-IN-DhwaniNeural",
+  "sample_rate": 16000,
+  "channels": 1,
+  "format": "pcm_s16le",
+  "clip_count": 112,
+  "source_license": "Microsoft Cognitive Services / Antigravity Voice Pipeline. Pre-rendered offline bundle.",
+  "clips": {
+    "chime": {
+      "text": "[melodic chime]",
+      "file": "chime.wav",
+      "duration_ms": 400,
+      "md5": "efadf287a391fb22acb049d1de67fb62"
+    },
+    "num_7": {
+      "text": "સાત",
+      "file": "num_7.wav",
+      "duration_ms": 444,
+      "md5": "ccb7b53086870bc21e53151c298803e2"
+    },
+    "num_2": {
+      "text": "બે",
+      "file": "num_2.wav",
+      "duration_ms": 301,
+      "md5": "7e2997634b38b8c820a254643f0a0d07"
+    },
+    "num_4": {
+      "text": "ચાર",
+      "file": "num_4.wav",
+      "duration_ms": 325,
+      "md5": "289e356f9b7631a7ef0f0a16ed4d2c83"
+    },
+    "num_5": {
+      "text": "પાંચ",
+      "file": "num_5.wav",
+      "duration_ms": 378,
+      "md5": "51fb71fc3604ff9e9731508a3506c1a4"
+    },
+    "num_0": {
+      "text": "શૂન્ય",
+      "file": "num_0.wav",
+      "duration_ms": 553,
+      "md5": "6975821f3bc30c25f0930f079ffad67f"
+    },
+    "num_6": {
+      "text": "છ",
+      "file": "num_6.wav",
+      "duration_ms": 290,
+      "md5": "c5302e48ecce28ee97a7ad1d507236e5"
+    },
+    "num_3": {
+      "text": "ત્રણ",
+      "file": "num_3.wav",
+      "duration_ms": 333,
+      "md5": "1951493272ee77ce8bd26ed72a176834"
+    },
+    "num_1": {
+      "text": "એક",
+      "file": "num_1.wav",
+      "duration_ms": 191,
+      "md5": "77b9c1f2599da950db0e8bc6eb74a5e3"
+    },
+    "num_13": {
+      "text": "તેર",
+      "file": "num_13.wav",
+      "duration_ms": 288,
+      "md5": "b8078cd306d5a81f6f12531c3fef32d5"
+    },
+    "num_14": {
+      "text": "ચૌદ",
+      "file": "num_14.wav",
+      "duration_ms": 385,
+      "md5": "50cc6ec331862242cc4aa75b7e32c7f8"
+    },
+    "num_11": {
+      "text": "અગિયાર",
+      "file": "num_11.wav",
+      "duration_ms": 466,
+      "md5": "b3e8ea64174d7220630a36e9aec27782"
+    },
+    "num_12": {
+      "text": "બાર",
+      "file": "num_12.wav",
+      "duration_ms": 362,
+      "md5": "9751b90540b2b4dd59e1231fd9713d4c"
+    },
+    "num_10": {
+      "text": "દસ",
+      "file": "num_10.wav",
+      "duration_ms": 406,
+      "md5": "a88df5fc7d5d6fcebfa63395cb6dbee5"
+    },
+    "num_9": {
+      "text": "નવ",
+      "file": "num_9.wav",
+      "duration_ms": 312,
+      "md5": "3022f4244996ef40ecc7e8603719cf00"
+    },
+    "num_8": {
+      "text": "આઠ",
+      "file": "num_8.wav",
+      "duration_ms": 333,
+      "md5": "10b8ecc674ec224094ebcfb1bf503cce"
+    },
+    "num_15": {
+      "text": "પંદર",
+      "file": "num_15.wav",
+      "duration_ms": 409,
+      "md5": "4eef162087daa7dc7d480c70acbdb12e"
+    },
+    "num_16": {
+      "text": "સોળ",
+      "file": "num_16.wav",
+      "duration_ms": 429,
+      "md5": "845da219a77ddd257eac61a094dada35"
+    },
+    "num_17": {
+      "text": "સત્તર",
+      "file": "num_17.wav",
+      "duration_ms": 563,
+      "md5": "9a8226201ce17a62ea5a963a0f505ce7"
+    },
+    "num_22": {
+      "text": "બાવીસ",
+      "file": "num_22.wav",
+      "duration_ms": 588,
+      "md5": "5e8febb30dd5a8c81848764666e0db07"
+    },
+    "num_19": {
+      "text": "ઓગણીસ",
+      "file": "num_19.wav",
+      "duration_ms": 574,
+      "md5": "b434a1654d8f7db0d6d641eac9b0cc7c"
+    },
+    "num_18": {
+      "text": "અઢાર",
+      "file": "num_18.wav",
+      "duration_ms": 438,
+      "md5": "0ad08d468784888f81e9c0b360290734"
+    },
+    "num_20": {
+      "text": "વીસ",
+      "file": "num_20.wav",
+      "duration_ms": 428,
+      "md5": "cd9a1234949aef965cc60ad5e0dd6013"
+    },
+    "num_21": {
+      "text": "એકવીસ",
+      "file": "num_21.wav",
+      "duration_ms": 588,
+      "md5": "bc7f2952500e1735c64ae290c28c5eb3"
+    },
+    "num_23": {
+      "text": "તેવીસ",
+      "file": "num_23.wav",
+      "duration_ms": 535,
+      "md5": "b39d5cf9a10ee9197637de34075d1a60"
+    },
+    "num_24": {
+      "text": "ચોવીસ",
+      "file": "num_24.wav",
+      "duration_ms": 573,
+      "md5": "9faf34c296f8dcb92deb7188f0df7cbd"
+    },
+    "num_25": {
+      "text": "પચ્ચીસ",
+      "file": "num_25.wav",
+      "duration_ms": 549,
+      "md5": "7051ea65683399e1ce0fba89df800085"
+    },
+    "num_26": {
+      "text": "છવીસ",
+      "file": "num_26.wav",
+      "duration_ms": 587,
+      "md5": "786c5dd434fc9ce8965a774c537e4864"
+    },
+    "num_28": {
+      "text": "અઠ્ઠાવીસ",
+      "file": "num_28.wav",
+      "duration_ms": 695,
+      "md5": "f099a7d105e4a443a6732acf7e440693"
+    },
+    "num_30": {
+      "text": "ત્રીસ",
+      "file": "num_30.wav",
+      "duration_ms": 386,
+      "md5": "cbf4f85eefddb0671de1cd82aa320aa4"
+    },
+    "num_29": {
+      "text": "ઓગણત્રીસ",
+      "file": "num_29.wav",
+      "duration_ms": 803,
+      "md5": "0f1ae4c8fad5eeec117efcebe8fb9f73"
+    },
+    "num_31": {
+      "text": "એકત્રીસ",
+      "file": "num_31.wav",
+      "duration_ms": 727,
+      "md5": "192ba4cf64116431d1fa4f0bc6cdbe5e"
+    },
+    "num_32": {
+      "text": "બત્રીસ",
+      "file": "num_32.wav",
+      "duration_ms": 593,
+      "md5": "8ce7b9bb7c8db80e5b3dacb31c3696ea"
+    },
+    "num_33": {
+      "text": "તેત્રીસ",
+      "file": "num_33.wav",
+      "duration_ms": 587,
+      "md5": "9f96d1b88dabd66b8da12f67361fcbd7"
+    },
+    "num_27": {
+      "text": "સત્તાવીસ",
+      "file": "num_27.wav",
+      "duration_ms": 810,
+      "md5": "8a921c92bfb74d09fdcfa8076e415eae"
+    },
+    "num_34": {
+      "text": "ચોત્રીસ",
+      "file": "num_34.wav",
+      "duration_ms": 639,
+      "md5": "1c7286b7133ba5bb3002c04cc0649903"
+    },
+    "num_35": {
+      "text": "પાંત્રીસ",
+      "file": "num_35.wav",
+      "duration_ms": 652,
+      "md5": "7377303f2044bd0e3386e2bd6d44aa6a"
+    },
+    "num_36": {
+      "text": "છત્રીસ",
+      "file": "num_36.wav",
+      "duration_ms": 608,
+      "md5": "1bcd9b9fde19cb7fab6bf69e8e583df7"
+    },
+    "num_37": {
+      "text": "સડત્રીસ",
+      "file": "num_37.wav",
+      "duration_ms": 756,
+      "md5": "cae3c9691d593a645ea8f7ba1845280e"
+    },
+    "num_38": {
+      "text": "ઓડત્રીસ",
+      "file": "num_38.wav",
+      "duration_ms": 687,
+      "md5": "422f040c03dd09e99f3d0e4cd95cdc14"
+    },
+    "num_40": {
+      "text": "ચાલીસ",
+      "file": "num_40.wav",
+      "duration_ms": 506,
+      "md5": "12771698eee551957224bf5aa73d7e48"
+    },
+    "num_41": {
+      "text": "એકતાલીસ",
+      "file": "num_41.wav",
+      "duration_ms": 760,
+      "md5": "d6f2465691b38354bbe1d57fba8eeb86"
+    },
+    "num_39": {
+      "text": "ઓગણચાલીસ",
+      "file": "num_39.wav",
+      "duration_ms": 920,
+      "md5": "6a682d23743f20ebfa3b6986e1243c62"
+    },
+    "num_42": {
+      "text": "બેતાલીસ",
+      "file": "num_42.wav",
+      "duration_ms": 758,
+      "md5": "aad35665ef65c8ac7a0135cd516908ff"
+    },
+    "num_44": {
+      "text": "ચુંમાલીસ",
+      "file": "num_44.wav",
+      "duration_ms": 674,
+      "md5": "d74c26870f77e3731571ab0ed640d34c"
+    },
+    "num_43": {
+      "text": "તેતાલીસ",
+      "file": "num_43.wav",
+      "duration_ms": 695,
+      "md5": "b1cec6c2c69bfa2f9f9c7e4cd3d93c66"
+    },
+    "num_46": {
+      "text": "છેતાલીસ",
+      "file": "num_46.wav",
+      "duration_ms": 761,
+      "md5": "7835a43673c62d85f03cb5c154fc501b"
+    },
+    "num_45": {
+      "text": "પિસ્તાલીસ",
+      "file": "num_45.wav",
+      "duration_ms": 672,
+      "md5": "2675c5edcf15d4f1678bfb58860cd419"
+    },
+    "num_47": {
+      "text": "સુડતાલીસ",
+      "file": "num_47.wav",
+      "duration_ms": 808,
+      "md5": "df82821fc22384b938571cacc9186724"
+    },
+    "num_48": {
+      "text": "અડતાલીસ",
+      "file": "num_48.wav",
+      "duration_ms": 727,
+      "md5": "4f73af2683f4e52113c712e6e59cf4c5"
+    },
+    "num_50": {
+      "text": "પચાસ",
+      "file": "num_50.wav",
+      "duration_ms": 529,
+      "md5": "244f0303109080f31b671b64a5e27e3e"
+    },
+    "num_49": {
+      "text": "ઓગણપચાસ",
+      "file": "num_49.wav",
+      "duration_ms": 848,
+      "md5": "3a49d821da6fdb2c88b11fdeb176daf9"
+    },
+    "num_52": {
+      "text": "બાવન",
+      "file": "num_52.wav",
+      "duration_ms": 528,
+      "md5": "32dfa628c63604e6196da3fac63af24f"
+    },
+    "num_51": {
+      "text": "એકાવન",
+      "file": "num_51.wav",
+      "duration_ms": 652,
+      "md5": "b1f29e6e1cb0430f7ea27d676f9ce58c"
+    },
+    "num_54": {
+      "text": "ચોપન",
+      "file": "num_54.wav",
+      "duration_ms": 516,
+      "md5": "dc433af6f4cd45105afe5d954ac067fb"
+    },
+    "num_53": {
+      "text": "ત્રેપન",
+      "file": "num_53.wav",
+      "duration_ms": 512,
+      "md5": "8ee27b7cb1fb61bee40ab73c0bd9e25c"
+    },
+    "num_55": {
+      "text": "પંચાવન",
+      "file": "num_55.wav",
+      "duration_ms": 634,
+      "md5": "b410f3c319a4be5a646b37222973a429"
+    },
+    "num_56": {
+      "text": "છપ્પન",
+      "file": "num_56.wav",
+      "duration_ms": 545,
+      "md5": "25830a71a4f674d968c0780dc223d7e5"
+    },
+    "num_60": {
+      "text": "સાઠ",
+      "file": "num_60.wav",
+      "duration_ms": 446,
+      "md5": "1b075df6f51a1bebd1d233c525b7dd38"
+    },
+    "num_59": {
+      "text": "ઓગણસાઠ",
+      "file": "num_59.wav",
+      "duration_ms": 562,
+      "md5": "74ccfa0e7d7ece0228229cd3ccb4f253"
+    },
+    "num_58": {
+      "text": "અઠ્ઠાવન",
+      "file": "num_58.wav",
+      "duration_ms": 672,
+      "md5": "616aec1d6ef182b7e2042f612bf2512d"
+    },
+    "num_57": {
+      "text": "સત્તાવન",
+      "file": "num_57.wav",
+      "duration_ms": 745,
+      "md5": "21a5d17551a403c20f63a6ae5e1d3a17"
+    },
+    "num_61": {
+      "text": "એકસઠ",
+      "file": "num_61.wav",
+      "duration_ms": 517,
+      "md5": "8ce05e6d060cd53debd01e3adbd9fac1"
+    },
+    "num_62": {
+      "text": "બાસઠ",
+      "file": "num_62.wav",
+      "duration_ms": 546,
+      "md5": "5fd1a03bd35690f98383e9a0b9c394fc"
+    },
+    "num_64": {
+      "text": "ચોસઠ",
+      "file": "num_64.wav",
+      "duration_ms": 487,
+      "md5": "f56788278e19356262db47492a80fbcc"
+    },
+    "num_63": {
+      "text": "ત્રણસઠ",
+      "file": "num_63.wav",
+      "duration_ms": 556,
+      "md5": "1e66ef3a9d76d52de29f6e367306848c"
+    },
+    "num_66": {
+      "text": "છાસઠ",
+      "file": "num_66.wav",
+      "duration_ms": 503,
+      "md5": "a9c3f5a2fe95f4e0235f27ba2a986231"
+    },
+    "num_65": {
+      "text": "પાંસઠ",
+      "file": "num_65.wav",
+      "duration_ms": 482,
+      "md5": "10ee67adedd9115db122f5df03909572"
+    },
+    "num_69": {
+      "text": "અગણોસિત્તેર",
+      "file": "num_69.wav",
+      "duration_ms": 914,
+      "md5": "89fdd99f9e115a4a878aa50b06378478"
+    },
+    "num_67": {
+      "text": "સડસઠ",
+      "file": "num_67.wav",
+      "duration_ms": 609,
+      "md5": "37c6b19ecc65c6dccf6c139313bc0c3f"
+    },
+    "num_68": {
+      "text": "અડસઠ",
+      "file": "num_68.wav",
+      "duration_ms": 491,
+      "md5": "b03023b64de73a5bf8de3acdc060dc79"
+    },
+    "num_70": {
+      "text": "સિત્તેર",
+      "file": "num_70.wav",
+      "duration_ms": 578,
+      "md5": "2fc906e64ab68a7724d2f80943139bff"
+    },
+    "num_71": {
+      "text": "એકોતેર",
+      "file": "num_71.wav",
+      "duration_ms": 620,
+      "md5": "b412103e2ac4d1d017f1a31807cca80b"
+    },
+    "num_73": {
+      "text": "તોતેર",
+      "file": "num_73.wav",
+      "duration_ms": 473,
+      "md5": "10f8fec448585d604d2dd4080b237800"
+    },
+    "num_75": {
+      "text": "પંચોતેર",
+      "file": "num_75.wav",
+      "duration_ms": 663,
+      "md5": "a96bcf2058361c7283eac8f81a72d0ba"
+    },
+    "num_74": {
+      "text": "ચુમોતેર",
+      "file": "num_74.wav",
+      "duration_ms": 628,
+      "md5": "751791eb1315971ea4ee00b5ca82ecf8"
+    },
+    "num_76": {
+      "text": "છોતેર",
+      "file": "num_76.wav",
+      "duration_ms": 522,
+      "md5": "0021ee045e836d228e0225f594f2fa54"
+    },
+    "num_72": {
+      "text": "બોતેર",
+      "file": "num_72.wav",
+      "duration_ms": 558,
+      "md5": "413c58f05b32588033845a2523d89e0e"
+    },
+    "num_77": {
+      "text": "સીંતોતેર",
+      "file": "num_77.wav",
+      "duration_ms": 771,
+      "md5": "63a0bf112c372ed3ceff2664974d9c37"
+    },
+    "num_78": {
+      "text": "ઇઠોતેર",
+      "file": "num_78.wav",
+      "duration_ms": 603,
+      "md5": "5d75e5c5a4f574d2ba9b862790c6cd82"
+    },
+    "num_79": {
+      "text": "ઓગણએંસી",
+      "file": "num_79.wav",
+      "duration_ms": 821,
+      "md5": "454168f9e03d88962c6871f899980353"
+    },
+    "num_81": {
+      "text": "એક્યાસી",
+      "file": "num_81.wav",
+      "duration_ms": 677,
+      "md5": "d5c4bbd57ccf7c05266aed53b4ff0fc7"
+    },
+    "num_80": {
+      "text": "એંસી",
+      "file": "num_80.wav",
+      "duration_ms": 456,
+      "md5": "dd437c332da965f2709470404c17aac3"
+    },
+    "num_83": {
+      "text": "ત્યાસી",
+      "file": "num_83.wav",
+      "duration_ms": 465,
+      "md5": "c1e012f86d9e8f679d1ca29b81330632"
+    },
+    "num_85": {
+      "text": "પંચાસી",
+      "file": "num_85.wav",
+      "duration_ms": 626,
+      "md5": "19f80002af5816ef3afaa2d30a7f57a5"
+    },
+    "num_82": {
+      "text": "બ્યાસી",
+      "file": "num_82.wav",
+      "duration_ms": 534,
+      "md5": "7ea1a2b45df4438aeaa0dde5d55dc879"
+    },
+    "num_84": {
+      "text": "ચોરાસી",
+      "file": "num_84.wav",
+      "duration_ms": 661,
+      "md5": "03af328c4ce8587a249ac6e5fa777e35"
+    },
+    "num_86": {
+      "text": "છ્યાસી",
+      "file": "num_86.wav",
+      "duration_ms": 484,
+      "md5": "888f464fc4f02c6b4187f7ef43b6898c"
+    },
+    "num_87": {
+      "text": "સત્યાસી",
+      "file": "num_87.wav",
+      "duration_ms": 718,
+      "md5": "5376971651808dc3ebbc64ffa0df8dda"
+    },
+    "num_93": {
+      "text": "ત્રાણું",
+      "file": "num_93.wav",
+      "duration_ms": 422,
+      "md5": "d1afae96fb86e7daafe007ddbeb435f3"
+    },
+    "num_88": {
+      "text": "અઠ્યાસી",
+      "file": "num_88.wav",
+      "duration_ms": 634,
+      "md5": "9dfe506d5f1a6b3311e7f85a239f858a"
+    },
+    "num_92": {
+      "text": "બાણું",
+      "file": "num_92.wav",
+      "duration_ms": 429,
+      "md5": "b46211f3412e3bf6936b1713408e2e5b"
+    },
+    "num_90": {
+      "text": "નેવું",
+      "file": "num_90.wav",
+      "duration_ms": 491,
+      "md5": "bcc2208f12337c67ed1e827529f215a3"
+    },
+    "num_91": {
+      "text": "એકાણું",
+      "file": "num_91.wav",
+      "duration_ms": 559,
+      "md5": "9a3d4179f2b920e3b558d99f6d71a3bd"
+    },
+    "num_89": {
+      "text": "નેવ્યાસી",
+      "file": "num_89.wav",
+      "duration_ms": 766,
+      "md5": "758988303ca830b397d3c80575f7881b"
+    },
+    "num_94": {
+      "text": "ચોરાણું",
+      "file": "num_94.wav",
+      "duration_ms": 581,
+      "md5": "b8be07744f13d40a3b7cf50cc31c4e9c"
+    },
+    "num_99": {
+      "text": "નવ્વાણું",
+      "file": "num_99.wav",
+      "duration_ms": 752,
+      "md5": "6b91c127c730ffbc552b032d12d62879"
+    },
+    "hundred": {
+      "text": "સો",
+      "file": "hundred.wav",
+      "duration_ms": 318,
+      "md5": "01707895c51b338bf5c442283e02a650"
+    },
+    "num_95": {
+      "text": "પંચાણું",
+      "file": "num_95.wav",
+      "duration_ms": 588,
+      "md5": "8ee2d650bccf8feb8cff340e05514ea6"
+    },
+    "thousand": {
+      "text": "હજાર",
+      "file": "thousand.wav",
+      "duration_ms": 431,
+      "md5": "6a0ef4cecaf3f1b0c0201c5a4f0ac8eb"
+    },
+    "num_97": {
+      "text": "સત્તાણું",
+      "file": "num_97.wav",
+      "duration_ms": 666,
+      "md5": "7e1b04b9276e17b1ed26da22722e1782"
+    },
+    "num_96": {
+      "text": "છન્નું",
+      "file": "num_96.wav",
+      "duration_ms": 480,
+      "md5": "b30b1a0336ad33ae38af1fdb60d9813e"
+    },
+    "num_98": {
+      "text": "અઠ્ઠાણું",
+      "file": "num_98.wav",
+      "duration_ms": 629,
+      "md5": "0fd089302fee3ca6a18b06df3416819f"
+    },
+    "lakh": {
+      "text": "લાખ",
+      "file": "lakh.wav",
+      "duration_ms": 457,
+      "md5": "c049f6533cfc6eeaada21d9e37086218"
+    },
+    "rupees": {
+      "text": "રૂપિયા",
+      "file": "rupees.wav",
+      "duration_ms": 521,
+      "md5": "03f1cc7229f818ca5f814f1983888f38"
+    },
+    "rupee": {
+      "text": "રૂપિયા",
+      "file": "rupee.wav",
+      "duration_ms": 521,
+      "md5": "03f1cc7229f818ca5f814f1983888f38"
+    },
+    "and": {
+      "text": "અને",
+      "file": "and.wav",
+      "duration_ms": 333,
+      "md5": "13eed215602fd27e0e802bee6965bcf4"
+    },
+    "crore": {
+      "text": "કરોડ",
+      "file": "crore.wav",
+      "duration_ms": 390,
+      "md5": "afcbfed172242028c079760ca1bdc346"
+    },
+    "paise": {
+      "text": "પૈસા",
+      "file": "paise.wav",
+      "duration_ms": 405,
+      "md5": "299adeae3fd48b0e54d148dcc5965220"
+    },
+    "payment_received": {
+      "text": "પેમેન્ટ પ્રાપ્ત થયું",
+      "file": "payment_received.wav",
+      "duration_ms": 1366,
+      "md5": "d846e1d99cce470926100be9eafd1f7a"
+    },
+    "thank_you": {
+      "text": "આભાર",
+      "file": "thank_you.wav",
+      "duration_ms": 522,
+      "md5": "3a8936d29f779035855f11ad613bfcea"
+    },
+    "received": {
+      "text": "પ્રાપ્ત થયા",
+      "file": "received.wav",
+      "duration_ms": 828,
+      "md5": "e7cfd259f0d4893c392cd778f2c84fe9"
+    }
+  }
+}

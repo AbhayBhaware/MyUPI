@@ -11,6 +11,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../app_channels.dart';
 import '../services/firestore_service.dart';
@@ -48,6 +49,8 @@ class _SettingsScreenState extends State<SettingsScreen>
   String _merchantName = 'MyUPI';
   String _announceFormat = 'A';
   bool _includeShopName = false;
+  bool _humanVoice = false;
+  bool _chimeEnabled = true;
   bool? _notifAccess;
   bool _isRestoring = false;
 
@@ -81,6 +84,11 @@ class _SettingsScreenState extends State<SettingsScreen>
       final mName = await kMethodChannel.invokeMethod<String>('getMerchantName') ?? 'MyUPI';
       final aFmt = await kMethodChannel.invokeMethod<String>('getAnnouncementFormat') ?? 'A';
       final inc = await kMethodChannel.invokeMethod<bool>('getIncludeShopName') ?? false;
+
+      final prefs = await SharedPreferences.getInstance();
+      final human = prefs.getBool('human_voice_enabled') ?? false;
+      final chime = prefs.getBool('soundbox_chime_enabled') ?? true;
+
       if (!mounted) return;
       setState(() {
         _soundboxEnabled = on;
@@ -89,8 +97,26 @@ class _SettingsScreenState extends State<SettingsScreen>
         _merchantName = mName;
         _announceFormat = aFmt;
         _includeShopName = inc;
+        _humanVoice = human;
+        _chimeEnabled = chime;
       });
     } on PlatformException catch (_) {}
+  }
+
+  Future<void> _setHumanVoice(bool val) async {
+    setState(() => _humanVoice = val);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('human_voice_enabled', val);
+    } catch (_) {}
+  }
+
+  Future<void> _setChime(bool val) async {
+    setState(() => _chimeEnabled = val);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('soundbox_chime_enabled', val);
+    } catch (_) {}
   }
 
   Future<void> _checkAccess() async {
@@ -296,6 +322,96 @@ class _SettingsScreenState extends State<SettingsScreen>
                         ),
                       ),
                     ),
+                  ),
+                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+                  ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: const Icon(Icons.record_voice_over_rounded, color: AppColors.primaryBlue, size: 20),
+                    ),
+                    title: Row(
+                      children: [
+                        const Text('Announcement Voice', style: AppTypography.titleSmall),
+                        const SizedBox(width: 6),
+                        if (_humanVoice)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.success.withAlpha(25),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: AppColors.success.withAlpha(60)),
+                            ),
+                            child: const Text(
+                              'HUMAN',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.success,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    subtitle: Text(
+                      _humanVoice
+                          ? (_includeShopName
+                              ? 'Human voice active • Note: Shop name uses standard TTS'
+                              : 'Natural human voice (offline pack)')
+                          : 'Standard voice (device system TTS)',
+                      style: AppTypography.caption,
+                    ),
+                    trailing: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: AppRadius.smRadius,
+                        border: Border.all(color: AppColors.cardBorder),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<bool>(
+                          value: _humanVoice,
+                          icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.textSecondary),
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: _humanVoice ? AppColors.success : AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: false, child: Text('Standard')),
+                            DropdownMenuItem(value: true, child: Text('Human Voice')),
+                          ],
+                          onChanged: (v) {
+                            if (v != null) _setHumanVoice(v);
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+                  SwitchListTile(
+                    activeThumbColor: AppColors.primaryBlue,
+                    title: const Text('Payment Attention Chime', style: AppTypography.titleSmall),
+                    subtitle: const Text('Play melodic chime before speech', style: AppTypography.caption),
+                    secondary: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: _chimeEnabled ? AppColors.lightBlue : AppColors.background,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: Icon(
+                        _chimeEnabled ? Icons.notifications_active_rounded : Icons.notifications_off_outlined,
+                        color: _chimeEnabled ? AppColors.primaryBlue : AppColors.textTertiary,
+                        size: 20,
+                      ),
+                    ),
+                    value: _chimeEnabled,
+                    onChanged: _setChime,
                   ),
                   const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
                   // Tidy, non-wrapping Announcement Format with preview bubble

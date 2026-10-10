@@ -1,0 +1,683 @@
+{
+  "language": "hi-IN",
+  "voice": "hi-IN-SwaraNeural",
+  "sample_rate": 16000,
+  "channels": 1,
+  "format": "pcm_s16le",
+  "clip_count": 112,
+  "source_license": "Microsoft Cognitive Services / Antigravity Voice Pipeline. Pre-rendered offline bundle.",
+  "clips": {
+    "chime": {
+      "text": "[melodic chime]",
+      "file": "chime.wav",
+      "duration_ms": 400,
+      "md5": "efadf287a391fb22acb049d1de67fb62"
+    },
+    "num_7": {
+      "text": "सात",
+      "file": "num_7.wav",
+      "duration_ms": 569,
+      "md5": "0b15b9fb7933c1ebe7394a79f9e0d7e9"
+    },
+    "num_2": {
+      "text": "दो",
+      "file": "num_2.wav",
+      "duration_ms": 421,
+      "md5": "8f54164ff71e851402dd12fbcc738c1c"
+    },
+    "num_1": {
+      "text": "एक",
+      "file": "num_1.wav",
+      "duration_ms": 376,
+      "md5": "8f3c6240a1dab39f9b7a7fe5150782fc"
+    },
+    "num_4": {
+      "text": "चार",
+      "file": "num_4.wav",
+      "duration_ms": 408,
+      "md5": "d3f8629d4c8412ee5e43a18326d88074"
+    },
+    "num_3": {
+      "text": "तीन",
+      "file": "num_3.wav",
+      "duration_ms": 417,
+      "md5": "30f261c871070b10ed52c31c3bda28d8"
+    },
+    "num_6": {
+      "text": "छह",
+      "file": "num_6.wav",
+      "duration_ms": 323,
+      "md5": "47a1c2122f7190dfd18385e8787d6a62"
+    },
+    "num_0": {
+      "text": "शून्य",
+      "file": "num_0.wav",
+      "duration_ms": 518,
+      "md5": "866fb17a30825c1396c39a2b81632a24"
+    },
+    "num_5": {
+      "text": "पाँच",
+      "file": "num_5.wav",
+      "duration_ms": 402,
+      "md5": "d9829a7cbd053d73ee4c3d70cf8f80e2"
+    },
+    "num_11": {
+      "text": "ग्यारह",
+      "file": "num_11.wav",
+      "duration_ms": 542,
+      "md5": "c157bd51075f3d912a630d78e07b935c"
+    },
+    "num_13": {
+      "text": "तेरह",
+      "file": "num_13.wav",
+      "duration_ms": 405,
+      "md5": "2ae905752b843680128de322d5b73eae"
+    },
+    "num_15": {
+      "text": "पंद्रह",
+      "file": "num_15.wav",
+      "duration_ms": 480,
+      "md5": "f165774818f207e8fd5d72fbd7fb6779"
+    },
+    "num_12": {
+      "text": "बारह",
+      "file": "num_12.wav",
+      "duration_ms": 543,
+      "md5": "3bba7a5f91945d85f76806ec96be5ee5"
+    },
+    "num_10": {
+      "text": "दस",
+      "file": "num_10.wav",
+      "duration_ms": 549,
+      "md5": "0dccece6b4e4176682610d0bf1d8f802"
+    },
+    "num_14": {
+      "text": "चौदह",
+      "file": "num_14.wav",
+      "duration_ms": 546,
+      "md5": "dcc7b95214e2c670039bc787dfc89257"
+    },
+    "num_8": {
+      "text": "आठ",
+      "file": "num_8.wav",
+      "duration_ms": 437,
+      "md5": "a4e6b674921f91c3ea7e2bc0a8780a71"
+    },
+    "num_9": {
+      "text": "नौ",
+      "file": "num_9.wav",
+      "duration_ms": 413,
+      "md5": "d6337bfd0cf48a03eef26722ad0206f8"
+    },
+    "num_20": {
+      "text": "बीस",
+      "file": "num_20.wav",
+      "duration_ms": 627,
+      "md5": "b3084561cdd248b2f3d10b47e8f53eaf"
+    },
+    "num_17": {
+      "text": "सत्रह",
+      "file": "num_17.wav",
+      "duration_ms": 616,
+      "md5": "1459a094a36e93d7918d4c974897817d"
+    },
+    "num_18": {
+      "text": "अठारह",
+      "file": "num_18.wav",
+      "duration_ms": 601,
+      "md5": "c6d6bc3acdbcf6e09b0978c3b28ed56f"
+    },
+    "num_23": {
+      "text": "तेईस",
+      "file": "num_23.wav",
+      "duration_ms": 539,
+      "md5": "26f87a5d0f195082f47d685675bab4b1"
+    },
+    "num_22": {
+      "text": "बाईस",
+      "file": "num_22.wav",
+      "duration_ms": 639,
+      "md5": "e3a142ae81df3d9718e329ba47ef6524"
+    },
+    "num_16": {
+      "text": "सोलह",
+      "file": "num_16.wav",
+      "duration_ms": 637,
+      "md5": "3ef1d10f47325e27b8b231d23c9689e0"
+    },
+    "num_19": {
+      "text": "उन्नीस",
+      "file": "num_19.wav",
+      "duration_ms": 694,
+      "md5": "d081e7a32ed20ddff5e1e3f4c0420338"
+    },
+    "num_21": {
+      "text": "इक्कीस",
+      "file": "num_21.wav",
+      "duration_ms": 710,
+      "md5": "50712fa50e7cda91cb48af2c757ede8d"
+    },
+    "num_25": {
+      "text": "पच्चीस",
+      "file": "num_25.wav",
+      "duration_ms": 661,
+      "md5": "554b17b91f9f025b8fc41cac33d94dbe"
+    },
+    "num_30": {
+      "text": "तीस",
+      "file": "num_30.wav",
+      "duration_ms": 528,
+      "md5": "dcaa1bf8eaee38dd846ff2423733dbbd"
+    },
+    "num_24": {
+      "text": "चौबीस",
+      "file": "num_24.wav",
+      "duration_ms": 732,
+      "md5": "eeb5bec08f173dfd059ab88481a07bc7"
+    },
+    "num_26": {
+      "text": "छब्बीस",
+      "file": "num_26.wav",
+      "duration_ms": 684,
+      "md5": "6d24ba6b69d86c9e75f0f86f8b8a1ee6"
+    },
+    "num_29": {
+      "text": "उनतीस",
+      "file": "num_29.wav",
+      "duration_ms": 689,
+      "md5": "10e7bb49f29caf1958e64d72043fb5a6"
+    },
+    "num_28": {
+      "text": "अट्ठाईस",
+      "file": "num_28.wav",
+      "duration_ms": 737,
+      "md5": "177ea4cd8c03af166fbe08e241e9803e"
+    },
+    "num_27": {
+      "text": "सत्ताईस",
+      "file": "num_27.wav",
+      "duration_ms": 792,
+      "md5": "c9bc6a2ebba2891366488163ff847de7"
+    },
+    "num_31": {
+      "text": "इकत्तीस",
+      "file": "num_31.wav",
+      "duration_ms": 804,
+      "md5": "7f79b909c12e2b3c8c8fd5c7811e084f"
+    },
+    "num_32": {
+      "text": "बत्तीस",
+      "file": "num_32.wav",
+      "duration_ms": 729,
+      "md5": "828a5c36c9870cf398fb01da33826dac"
+    },
+    "num_33": {
+      "text": "तैंतीस",
+      "file": "num_33.wav",
+      "duration_ms": 707,
+      "md5": "fa858953e1a4d1391b2cc2a2d39bd392"
+    },
+    "num_34": {
+      "text": "चौंतीस",
+      "file": "num_34.wav",
+      "duration_ms": 745,
+      "md5": "8253e8d0e15298e44af5dac52d213143"
+    },
+    "num_38": {
+      "text": "अड़तीस",
+      "file": "num_38.wav",
+      "duration_ms": 654,
+      "md5": "9c4a6d88cc3340d332b6065a77cec448"
+    },
+    "num_35": {
+      "text": "पैंतीस",
+      "file": "num_35.wav",
+      "duration_ms": 668,
+      "md5": "699955fdb31b0cd9ce158d0ae16112d8"
+    },
+    "num_37": {
+      "text": "सैंतीस",
+      "file": "num_37.wav",
+      "duration_ms": 769,
+      "md5": "7f1a236de492ec81a30135e9290a0946"
+    },
+    "num_36": {
+      "text": "छत्तीस",
+      "file": "num_36.wav",
+      "duration_ms": 753,
+      "md5": "e4afca87241b9b6e66a934eafdfa9971"
+    },
+    "num_39": {
+      "text": "उनतालीस",
+      "file": "num_39.wav",
+      "duration_ms": 786,
+      "md5": "34c8967178decfbfbbea3d37f0157e00"
+    },
+    "num_40": {
+      "text": "चालीस",
+      "file": "num_40.wav",
+      "duration_ms": 666,
+      "md5": "4d51acdbedcfdbf2dd6a7854f7414edb"
+    },
+    "num_41": {
+      "text": "इकतालीस",
+      "file": "num_41.wav",
+      "duration_ms": 824,
+      "md5": "02fa50cf5a5e44c5305b60def1f3ab11"
+    },
+    "num_42": {
+      "text": "बयालीस",
+      "file": "num_42.wav",
+      "duration_ms": 746,
+      "md5": "11e1ef856901eed8d1157e0eacaacfb0"
+    },
+    "num_46": {
+      "text": "छियालीस",
+      "file": "num_46.wav",
+      "duration_ms": 747,
+      "md5": "776e21f9a6779889582c07183cfdf812"
+    },
+    "num_43": {
+      "text": "तैंतालीस",
+      "file": "num_43.wav",
+      "duration_ms": 777,
+      "md5": "cb54187fbe708d3682fd3c87ef0ece86"
+    },
+    "num_44": {
+      "text": "चवालीस",
+      "file": "num_44.wav",
+      "duration_ms": 694,
+      "md5": "9c284bd00bd27825767530fcbde3caf0"
+    },
+    "num_45": {
+      "text": "पैंतालीस",
+      "file": "num_45.wav",
+      "duration_ms": 821,
+      "md5": "66585df3189e53f5943789541907f02c"
+    },
+    "num_47": {
+      "text": "सैंतालीस",
+      "file": "num_47.wav",
+      "duration_ms": 899,
+      "md5": "9f3562308a62db71d1f853a896064a99"
+    },
+    "num_48": {
+      "text": "अड़तालीस",
+      "file": "num_48.wav",
+      "duration_ms": 767,
+      "md5": "4cc5ea82d59bfc450a72151f1d656cda"
+    },
+    "num_49": {
+      "text": "उनचास",
+      "file": "num_49.wav",
+      "duration_ms": 636,
+      "md5": "5709b74d30f974e1511cfc92050377fd"
+    },
+    "num_50": {
+      "text": "पचास",
+      "file": "num_50.wav",
+      "duration_ms": 578,
+      "md5": "a70e607e3ad50c78b094d0df43c5ec03"
+    },
+    "num_54": {
+      "text": "चौवन",
+      "file": "num_54.wav",
+      "duration_ms": 528,
+      "md5": "0163843e197fbd7f6f42aebe1cc42684"
+    },
+    "num_53": {
+      "text": "तिरेपन",
+      "file": "num_53.wav",
+      "duration_ms": 531,
+      "md5": "036853e8287a703b00fc5008c65556ea"
+    },
+    "num_51": {
+      "text": "इक्यावन",
+      "file": "num_51.wav",
+      "duration_ms": 649,
+      "md5": "419366f2d2590525f170904526efcdf7"
+    },
+    "num_52": {
+      "text": "बावन",
+      "file": "num_52.wav",
+      "duration_ms": 540,
+      "md5": "7751aaf946d8df9a70bf83dfda0f2dc3"
+    },
+    "num_55": {
+      "text": "पचपन",
+      "file": "num_55.wav",
+      "duration_ms": 479,
+      "md5": "b307f69c147ac299def9444a1980a3c5"
+    },
+    "num_56": {
+      "text": "छप्पन",
+      "file": "num_56.wav",
+      "duration_ms": 552,
+      "md5": "5e5ca6dc9a47a6daf1f07979f9a41e34"
+    },
+    "num_58": {
+      "text": "अट्ठावन",
+      "file": "num_58.wav",
+      "duration_ms": 637,
+      "md5": "f258cb9d8cc1555b0e49e8825d7c4234"
+    },
+    "num_61": {
+      "text": "इकसठ",
+      "file": "num_61.wav",
+      "duration_ms": 525,
+      "md5": "67f46bc39efb135c333b20895b480370"
+    },
+    "num_57": {
+      "text": "सत्तावन",
+      "file": "num_57.wav",
+      "duration_ms": 776,
+      "md5": "d9d2a48614e940d187e76ea2175bf2b9"
+    },
+    "num_59": {
+      "text": "उनसठ",
+      "file": "num_59.wav",
+      "duration_ms": 514,
+      "md5": "9bdb3cfc42caf78e38880ca2462e04ca"
+    },
+    "num_62": {
+      "text": "बासठ",
+      "file": "num_62.wav",
+      "duration_ms": 632,
+      "md5": "c188e66420040afe00ce19fe1a117e19"
+    },
+    "num_60": {
+      "text": "साठ",
+      "file": "num_60.wav",
+      "duration_ms": 528,
+      "md5": "031e8a85d392b1e812fcc09e43839070"
+    },
+    "num_63": {
+      "text": "तिरसठ",
+      "file": "num_63.wav",
+      "duration_ms": 548,
+      "md5": "c72f1186eaaffe052e6f26e2c3a81d41"
+    },
+    "num_65": {
+      "text": "पैंसठ",
+      "file": "num_65.wav",
+      "duration_ms": 544,
+      "md5": "19c1028dae92a6563792e6eefa3ddd62"
+    },
+    "num_66": {
+      "text": "छियासठ",
+      "file": "num_66.wav",
+      "duration_ms": 654,
+      "md5": "8fe9ed0033de4fd4ca044905e596af8d"
+    },
+    "num_64": {
+      "text": "चौंसठ",
+      "file": "num_64.wav",
+      "duration_ms": 571,
+      "md5": "c103ec8d9d645c8a5dd49ab8f9f4750e"
+    },
+    "num_69": {
+      "text": "उनहत्तर",
+      "file": "num_69.wav",
+      "duration_ms": 583,
+      "md5": "3fcbf47643d10b7db59b9cc9826dbfa1"
+    },
+    "num_70": {
+      "text": "सत्तर",
+      "file": "num_70.wav",
+      "duration_ms": 564,
+      "md5": "475200cc007365af1b348bf3f0f92028"
+    },
+    "num_68": {
+      "text": "अड़सठ",
+      "file": "num_68.wav",
+      "duration_ms": 521,
+      "md5": "2e05826e4bc4c1cc3c17749748d3de65"
+    },
+    "num_67": {
+      "text": "सरसठ",
+      "file": "num_67.wav",
+      "duration_ms": 612,
+      "md5": "d6ab3e01599601b6615460ff7412c699"
+    },
+    "num_71": {
+      "text": "इकहत्तर",
+      "file": "num_71.wav",
+      "duration_ms": 593,
+      "md5": "a30a5d5275193aa14bb8bc91d0cbae0b"
+    },
+    "num_73": {
+      "text": "तिहत्तर",
+      "file": "num_73.wav",
+      "duration_ms": 535,
+      "md5": "0518ede59c1c32b27550200721aa0205"
+    },
+    "num_74": {
+      "text": "चौहत्तर",
+      "file": "num_74.wav",
+      "duration_ms": 647,
+      "md5": "972f3175b213726dca52f9550fc3b286"
+    },
+    "num_72": {
+      "text": "बहत्तर",
+      "file": "num_72.wav",
+      "duration_ms": 597,
+      "md5": "dcb4d99464678cf8bacaf5e74b6bf3e6"
+    },
+    "num_75": {
+      "text": "पचहत्तर",
+      "file": "num_75.wav",
+      "duration_ms": 616,
+      "md5": "65512e6c34974eb00f531c396267c47d"
+    },
+    "num_76": {
+      "text": "छिहत्तर",
+      "file": "num_76.wav",
+      "duration_ms": 581,
+      "md5": "65e76b5a78dcd57ca2f885dcf2acc7a5"
+    },
+    "num_78": {
+      "text": "अठहत्तर",
+      "file": "num_78.wav",
+      "duration_ms": 656,
+      "md5": "9ffb2eae28cdad13858c3d63c0aaf7f7"
+    },
+    "num_77": {
+      "text": "सतहत्तर",
+      "file": "num_77.wav",
+      "duration_ms": 731,
+      "md5": "6f37c1d2eadb6f8aed9557c7abc46cec"
+    },
+    "num_79": {
+      "text": "उन्नासी",
+      "file": "num_79.wav",
+      "duration_ms": 693,
+      "md5": "bb527a4b44937292becd94048a33a162"
+    },
+    "num_80": {
+      "text": "अस्सी",
+      "file": "num_80.wav",
+      "duration_ms": 517,
+      "md5": "19b3faecdb7e6d0b6c1f659b180916cd"
+    },
+    "num_83": {
+      "text": "तिरासी",
+      "file": "num_83.wav",
+      "duration_ms": 582,
+      "md5": "96e4a12a98bbebcd5fd4d9c05cd761ec"
+    },
+    "num_81": {
+      "text": "इक्यासी",
+      "file": "num_81.wav",
+      "duration_ms": 710,
+      "md5": "c4e8268791e4a9f52dd735161d27a148"
+    },
+    "num_82": {
+      "text": "बयासी",
+      "file": "num_82.wav",
+      "duration_ms": 671,
+      "md5": "5dfba1721762723b5a4579826d249a9e"
+    },
+    "num_84": {
+      "text": "चौरासी",
+      "file": "num_84.wav",
+      "duration_ms": 683,
+      "md5": "42f37f3d67403ed7abbaf7d156e38eba"
+    },
+    "num_85": {
+      "text": "पचासी",
+      "file": "num_85.wav",
+      "duration_ms": 642,
+      "md5": "055aaabf53dd051b548dc256296a3f39"
+    },
+    "num_86": {
+      "text": "छियासी",
+      "file": "num_86.wav",
+      "duration_ms": 618,
+      "md5": "82d23ccea12a91549169a276523c593d"
+    },
+    "num_87": {
+      "text": "सत्तासी",
+      "file": "num_87.wav",
+      "duration_ms": 823,
+      "md5": "9ad2be368575fc28eadeadf700397edd"
+    },
+    "num_88": {
+      "text": "अट्ठासी",
+      "file": "num_88.wav",
+      "duration_ms": 707,
+      "md5": "63beecc9afefb694b5496d7435fa7d0a"
+    },
+    "num_89": {
+      "text": "नवासी",
+      "file": "num_89.wav",
+      "duration_ms": 690,
+      "md5": "abd570ede2cbaf82f8ebb27884810dc0"
+    },
+    "num_91": {
+      "text": "इक्यानवे",
+      "file": "num_91.wav",
+      "duration_ms": 729,
+      "md5": "df638b309044a40d01f4e1c5edf3a5a0"
+    },
+    "num_90": {
+      "text": "नब्बे",
+      "file": "num_90.wav",
+      "duration_ms": 565,
+      "md5": "d729f2e754b3f9be0d7b9105ea14a0a4"
+    },
+    "num_92": {
+      "text": "बानवे",
+      "file": "num_92.wav",
+      "duration_ms": 639,
+      "md5": "15968b739de0ee44e0066ffc3ef7336c"
+    },
+    "num_94": {
+      "text": "चौरानवे",
+      "file": "num_94.wav",
+      "duration_ms": 765,
+      "md5": "c9632125081e59cd48086498b33017cd"
+    },
+    "num_93": {
+      "text": "तिरानवे",
+      "file": "num_93.wav",
+      "duration_ms": 638,
+      "md5": "caac967308dc5bda54467cb7b128ed5e"
+    },
+    "num_95": {
+      "text": "पंचानवे",
+      "file": "num_95.wav",
+      "duration_ms": 721,
+      "md5": "4d7211995d70c772693b1f7f4e9c5b17"
+    },
+    "num_96": {
+      "text": "छियानवे",
+      "file": "num_96.wav",
+      "duration_ms": 661,
+      "md5": "697a35aa61a8c60d1a24d3f3f1299e9c"
+    },
+    "hundred": {
+      "text": "सौ",
+      "file": "hundred.wav",
+      "duration_ms": 513,
+      "md5": "254ca8ba3843309f9c39761afd0a3249"
+    },
+    "num_98": {
+      "text": "अट्ठानवे",
+      "file": "num_98.wav",
+      "duration_ms": 758,
+      "md5": "e51f3bfe7b90a2b5c492aa25b6db622c"
+    },
+    "num_99": {
+      "text": "निन्यानवे",
+      "file": "num_99.wav",
+      "duration_ms": 803,
+      "md5": "b7039620070f1a416e444d0e61deafc5"
+    },
+    "num_97": {
+      "text": "सत्तानवे",
+      "file": "num_97.wav",
+      "duration_ms": 835,
+      "md5": "63e15c56f04e79107c75b115153834ef"
+    },
+    "thousand": {
+      "text": "हज़ार",
+      "file": "thousand.wav",
+      "duration_ms": 517,
+      "md5": "58f02445dffd7c145d131d30d863839f"
+    },
+    "lakh": {
+      "text": "लाख",
+      "file": "lakh.wav",
+      "duration_ms": 497,
+      "md5": "96053a20f1ca0fbc4431f98d6a8f1d39"
+    },
+    "crore": {
+      "text": "करोड़",
+      "file": "crore.wav",
+      "duration_ms": 401,
+      "md5": "aa9f0e30ac66f09d0fdd3f8e67391949"
+    },
+    "rupees": {
+      "text": "रुपये",
+      "file": "rupees.wav",
+      "duration_ms": 500,
+      "md5": "628ed01548e66f948705c08a517a6a7e"
+    },
+    "rupee": {
+      "text": "रुपया",
+      "file": "rupee.wav",
+      "duration_ms": 468,
+      "md5": "2310ff50adea239879387b87a554dc5d"
+    },
+    "and": {
+      "text": "और",
+      "file": "and.wav",
+      "duration_ms": 392,
+      "md5": "02cad3138baed5dedccb6353810f43e1"
+    },
+    "received": {
+      "text": "प्राप्त हुए",
+      "file": "received.wav",
+      "duration_ms": 713,
+      "md5": "1e67eafdfddb3423a849cf803af70653"
+    },
+    "paise": {
+      "text": "पैसे",
+      "file": "paise.wav",
+      "duration_ms": 464,
+      "md5": "accb1ed584aadc154c013ed3c982191d"
+    },
+    "thank_you": {
+      "text": "धन्यवाद",
+      "file": "thank_you.wav",
+      "duration_ms": 776,
+      "md5": "3c80e75f3f1513e4f900f97934e867a8"
+    },
+    "payment_received": {
+      "text": "पेमेंट प्राप्त हुआ",
+      "file": "payment_received.wav",
+      "duration_ms": 1119,
+      "md5": "7f28cb954cf598fe7fd366f331c04d67"
+    }
+  }
+}

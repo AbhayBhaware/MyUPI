@@ -1,0 +1,683 @@
+{
+  "language": "ta-IN",
+  "voice": "ta-IN-PallaviNeural",
+  "sample_rate": 16000,
+  "channels": 1,
+  "format": "pcm_s16le",
+  "clip_count": 112,
+  "source_license": "Microsoft Cognitive Services / Antigravity Voice Pipeline. Pre-rendered offline bundle.",
+  "clips": {
+    "chime": {
+      "text": "[melodic chime]",
+      "file": "chime.wav",
+      "duration_ms": 400,
+      "md5": "efadf287a391fb22acb049d1de67fb62"
+    },
+    "num_6": {
+      "text": "ஆறு",
+      "file": "num_6.wav",
+      "duration_ms": 446,
+      "md5": "8634784707c1ef0a11f3b590c7d6caec"
+    },
+    "num_2": {
+      "text": "இரண்டு",
+      "file": "num_2.wav",
+      "duration_ms": 514,
+      "md5": "8a2c33ae3d0093b4847277fa52f7ab3e"
+    },
+    "num_5": {
+      "text": "ஐந்து",
+      "file": "num_5.wav",
+      "duration_ms": 484,
+      "md5": "f7442752b1c6b6674d245b6c6fc2b7cb"
+    },
+    "num_7": {
+      "text": "ஏழு",
+      "file": "num_7.wav",
+      "duration_ms": 524,
+      "md5": "bc74191b1bb518d20a9ac5f6efcfeb40"
+    },
+    "num_3": {
+      "text": "மூன்று",
+      "file": "num_3.wav",
+      "duration_ms": 620,
+      "md5": "3e724352fc2862a1d5846d1c70182f53"
+    },
+    "num_0": {
+      "text": "பூஜ்ஜியம்",
+      "file": "num_0.wav",
+      "duration_ms": 640,
+      "md5": "a6cf14b429a1f1a8e425d7ec2474c97e"
+    },
+    "num_1": {
+      "text": "ஒன்று",
+      "file": "num_1.wav",
+      "duration_ms": 597,
+      "md5": "6ceef663d90b96de3d7d647dadd84285"
+    },
+    "num_4": {
+      "text": "நான்கு",
+      "file": "num_4.wav",
+      "duration_ms": 585,
+      "md5": "c1364963fab5334d7a09d2dcc799b2ae"
+    },
+    "num_10": {
+      "text": "பத்து",
+      "file": "num_10.wav",
+      "duration_ms": 492,
+      "md5": "434f7de6a34a6369b287619ce4d11986"
+    },
+    "num_14": {
+      "text": "பதினான்கு",
+      "file": "num_14.wav",
+      "duration_ms": 710,
+      "md5": "f38d9c1fbb87f7a7fa97967719071b2a"
+    },
+    "num_9": {
+      "text": "ஒன்பது",
+      "file": "num_9.wav",
+      "duration_ms": 628,
+      "md5": "d61d093bb9293a5b83b99cd96c90d819"
+    },
+    "num_12": {
+      "text": "பன்னிரண்டு",
+      "file": "num_12.wav",
+      "duration_ms": 654,
+      "md5": "f10596e465d473b297f6b6cc22d72c9b"
+    },
+    "num_11": {
+      "text": "பதினொன்று",
+      "file": "num_11.wav",
+      "duration_ms": 717,
+      "md5": "04eaf4de48129fdafc897664d200d635"
+    },
+    "num_15": {
+      "text": "பதினைந்து",
+      "file": "num_15.wav",
+      "duration_ms": 665,
+      "md5": "fd743f13892b3ea139fe607b82724bd6"
+    },
+    "num_8": {
+      "text": "எட்டு",
+      "file": "num_8.wav",
+      "duration_ms": 547,
+      "md5": "14419c51aa72ec3be3725b9a04f40278"
+    },
+    "num_13": {
+      "text": "பதின்மூன்று",
+      "file": "num_13.wav",
+      "duration_ms": 810,
+      "md5": "052b989ca4407b0f985c62e0743e3a0d"
+    },
+    "num_18": {
+      "text": "பதினெட்டு",
+      "file": "num_18.wav",
+      "duration_ms": 663,
+      "md5": "ece52913f5ff05a67a8cbb74988da7b7"
+    },
+    "num_16": {
+      "text": "பதினாறு",
+      "file": "num_16.wav",
+      "duration_ms": 657,
+      "md5": "7aa5300c44b8d9cffc030ed3ad6577ec"
+    },
+    "num_19": {
+      "text": "பத்தொன்பது",
+      "file": "num_19.wav",
+      "duration_ms": 767,
+      "md5": "935aca888ab38d0187815fb08cdd8967"
+    },
+    "num_17": {
+      "text": "பதினேழு",
+      "file": "num_17.wav",
+      "duration_ms": 699,
+      "md5": "57ae8cec6ada0f79a38604a0df46f30e"
+    },
+    "num_20": {
+      "text": "இருபது",
+      "file": "num_20.wav",
+      "duration_ms": 588,
+      "md5": "ddc160aff9acf96e4a7a85b8f66d7972"
+    },
+    "num_22": {
+      "text": "இருபத்திரண்டு",
+      "file": "num_22.wav",
+      "duration_ms": 835,
+      "md5": "61c1ac0de4d58f44e0f815d55c443fbe"
+    },
+    "num_21": {
+      "text": "இருபத்தியொன்று",
+      "file": "num_21.wav",
+      "duration_ms": 960,
+      "md5": "8526f2ff7399273e1c7f499ad2e1e485"
+    },
+    "num_23": {
+      "text": "இருபத்திமூன்று",
+      "file": "num_23.wav",
+      "duration_ms": 1017,
+      "md5": "807e86df180680dff9400d29c840acd6"
+    },
+    "num_30": {
+      "text": "முப்பது",
+      "file": "num_30.wav",
+      "duration_ms": 565,
+      "md5": "b1a560c228128dc331a03720b54a3b91"
+    },
+    "num_24": {
+      "text": "இருபத்திநான்கு",
+      "file": "num_24.wav",
+      "duration_ms": 988,
+      "md5": "723ec4a14bda9baed43b9dd90bd30d37"
+    },
+    "num_26": {
+      "text": "இருபத்தாறு",
+      "file": "num_26.wav",
+      "duration_ms": 832,
+      "md5": "1ea401e298f7aaa6dd60aa3ca0fa4136"
+    },
+    "num_25": {
+      "text": "இருபத்தைந்து",
+      "file": "num_25.wav",
+      "duration_ms": 882,
+      "md5": "051fdaea980e2bc2beb0cb81b40e3d29"
+    },
+    "num_27": {
+      "text": "இருபத்தேழு",
+      "file": "num_27.wav",
+      "duration_ms": 843,
+      "md5": "83526432b5e23d57623b56713ef6fe65"
+    },
+    "num_28": {
+      "text": "இருபத்தெட்டு",
+      "file": "num_28.wav",
+      "duration_ms": 820,
+      "md5": "14abf7018b5adaffded6bcf315715abf"
+    },
+    "num_29": {
+      "text": "இருபத்தொன்பது",
+      "file": "num_29.wav",
+      "duration_ms": 928,
+      "md5": "0ae5df8fa8ddd11d0aeb013aa5a17c69"
+    },
+    "num_31": {
+      "text": "முப்பத்தொன்று",
+      "file": "num_31.wav",
+      "duration_ms": 864,
+      "md5": "77dddc656f2c93affaf62e16b771cf6f"
+    },
+    "num_32": {
+      "text": "முப்பத்திரண்டு",
+      "file": "num_32.wav",
+      "duration_ms": 851,
+      "md5": "c118922f457674e6fa696c849b2c072e"
+    },
+    "num_35": {
+      "text": "முப்பத்தைந்து",
+      "file": "num_35.wav",
+      "duration_ms": 851,
+      "md5": "fe42e169c35a04618684d4e43d0d419d"
+    },
+    "num_34": {
+      "text": "முப்பத்திநான்கு",
+      "file": "num_34.wav",
+      "duration_ms": 953,
+      "md5": "818ae9b3b2236102a79208a2bd64530c"
+    },
+    "num_33": {
+      "text": "முப்பத்திமூன்று",
+      "file": "num_33.wav",
+      "duration_ms": 1027,
+      "md5": "b14cf8eb3e6095aa421e893f148de6fb"
+    },
+    "num_36": {
+      "text": "முப்பத்தாறு",
+      "file": "num_36.wav",
+      "duration_ms": 806,
+      "md5": "7cfb4df206f142555ed9a4d84bbe4260"
+    },
+    "num_37": {
+      "text": "முப்பத்தேழு",
+      "file": "num_37.wav",
+      "duration_ms": 844,
+      "md5": "529da02b28ead66f40d00d05c57415c3"
+    },
+    "num_38": {
+      "text": "முப்பத்தெட்டு",
+      "file": "num_38.wav",
+      "duration_ms": 787,
+      "md5": "ec8836493072e6256e07f26648e9f582"
+    },
+    "num_39": {
+      "text": "முப்பத்தொன்பது",
+      "file": "num_39.wav",
+      "duration_ms": 918,
+      "md5": "31b5d0ff1700ae81b00dd194e302bca2"
+    },
+    "num_40": {
+      "text": "நாற்பது",
+      "file": "num_40.wav",
+      "duration_ms": 674,
+      "md5": "76c8f1c754dc16eb3bae9e063b3fa477"
+    },
+    "num_43": {
+      "text": "நாற்பத்திமூன்று",
+      "file": "num_43.wav",
+      "duration_ms": 1158,
+      "md5": "11858c1875079572fb9edd43a2ed6c53"
+    },
+    "num_41": {
+      "text": "நாற்பத்தொன்று",
+      "file": "num_41.wav",
+      "duration_ms": 1001,
+      "md5": "c9034b9bebc1ab10ec37a07285ebb7bb"
+    },
+    "num_45": {
+      "text": "நாற்பத்தைந்து",
+      "file": "num_45.wav",
+      "duration_ms": 1008,
+      "md5": "df28052e5bae9fe47aec5213cddb4950"
+    },
+    "num_47": {
+      "text": "நாற்பத்தேழு",
+      "file": "num_47.wav",
+      "duration_ms": 981,
+      "md5": "0e8fc2aca4b14663dfa31b104b0fb998"
+    },
+    "num_42": {
+      "text": "நாற்பத்திரண்டு",
+      "file": "num_42.wav",
+      "duration_ms": 959,
+      "md5": "a36b4b0cf4ae1d66aca3ddcf5a55f845"
+    },
+    "num_44": {
+      "text": "நாற்பத்திநான்கு",
+      "file": "num_44.wav",
+      "duration_ms": 1129,
+      "md5": "900ad76766947e895cf542ec2b9bdd5a"
+    },
+    "num_48": {
+      "text": "நாற்பத்தெட்டு",
+      "file": "num_48.wav",
+      "duration_ms": 944,
+      "md5": "7fafd7240ebe131dcce30beea9a07324"
+    },
+    "num_46": {
+      "text": "நாற்பத்தாறு",
+      "file": "num_46.wav",
+      "duration_ms": 942,
+      "md5": "cb310a80865ffa6f9ff7e1b41add9b24"
+    },
+    "num_50": {
+      "text": "ஐம்பது",
+      "file": "num_50.wav",
+      "duration_ms": 586,
+      "md5": "6b3d08a603f6e5264e311a42bf8b6bc2"
+    },
+    "num_51": {
+      "text": "ஐம்பத்தொன்று",
+      "file": "num_51.wav",
+      "duration_ms": 914,
+      "md5": "8a729054ed9a458854ce5053d3d16d0a"
+    },
+    "num_53": {
+      "text": "ஐம்பத்திமூன்று",
+      "file": "num_53.wav",
+      "duration_ms": 1010,
+      "md5": "4b67a84db280f30256f9ded69a47ddb6"
+    },
+    "num_52": {
+      "text": "ஐம்பத்திரண்டு",
+      "file": "num_52.wav",
+      "duration_ms": 816,
+      "md5": "d53094511638d51d93f2b25f79489c7c"
+    },
+    "num_49": {
+      "text": "நாற்பத்தொன்பது",
+      "file": "num_49.wav",
+      "duration_ms": 1088,
+      "md5": "a29db5c4bc1c967e50e3c8243cb9a312"
+    },
+    "num_56": {
+      "text": "ஐம்பத்தாறு",
+      "file": "num_56.wav",
+      "duration_ms": 797,
+      "md5": "647bb15cd6e950b3169efcf36e85fe03"
+    },
+    "num_54": {
+      "text": "ஐம்பத்திநான்கு",
+      "file": "num_54.wav",
+      "duration_ms": 954,
+      "md5": "a91a0344ecc8d7c505cd6f1033a6f58a"
+    },
+    "num_55": {
+      "text": "ஐம்பத்தைந்து",
+      "file": "num_55.wav",
+      "duration_ms": 871,
+      "md5": "0b2b57c0d687fd14d22ebc22a88fcabc"
+    },
+    "num_57": {
+      "text": "ஐம்பத்தேழு",
+      "file": "num_57.wav",
+      "duration_ms": 872,
+      "md5": "10d3ba2fcaad69efb62994bb6a69cbeb"
+    },
+    "num_60": {
+      "text": "அறுபது",
+      "file": "num_60.wav",
+      "duration_ms": 594,
+      "md5": "b20a57312ba1d0d040fca23fc50728ba"
+    },
+    "num_58": {
+      "text": "ஐம்பத்தெட்டு",
+      "file": "num_58.wav",
+      "duration_ms": 799,
+      "md5": "4e9a4fe4b574d045cbcd3760743dd999"
+    },
+    "num_59": {
+      "text": "ஐம்பத்தொன்பது",
+      "file": "num_59.wav",
+      "duration_ms": 953,
+      "md5": "6aa68da6c62463d46b6442af995179a2"
+    },
+    "num_62": {
+      "text": "அறுபத்திரண்டு",
+      "file": "num_62.wav",
+      "duration_ms": 875,
+      "md5": "24c3f2bf6567a0adef20865000accb46"
+    },
+    "num_63": {
+      "text": "அறுபத்திமூன்று",
+      "file": "num_63.wav",
+      "duration_ms": 1027,
+      "md5": "ea0f22f47973454fbbaf2f392880bf1b"
+    },
+    "num_61": {
+      "text": "அறுபத்தொன்று",
+      "file": "num_61.wav",
+      "duration_ms": 906,
+      "md5": "c43f2626aa6c3dfd672687bfe7fdca1b"
+    },
+    "num_64": {
+      "text": "அறுபத்திநான்கு",
+      "file": "num_64.wav",
+      "duration_ms": 1016,
+      "md5": "5d36978e926f57f877f9eb0729aa5e54"
+    },
+    "num_65": {
+      "text": "அறுபத்தைந்து",
+      "file": "num_65.wav",
+      "duration_ms": 910,
+      "md5": "53dd6af465ef8cb263ee70a19df54954"
+    },
+    "num_67": {
+      "text": "அறுபத்தேழு",
+      "file": "num_67.wav",
+      "duration_ms": 879,
+      "md5": "9aea8a148cb4e7a8760decf20ef61af0"
+    },
+    "num_66": {
+      "text": "அறுபத்தாறு",
+      "file": "num_66.wav",
+      "duration_ms": 829,
+      "md5": "4bb8ab1433d47acbf5a8c861865a6400"
+    },
+    "num_70": {
+      "text": "எழுபது",
+      "file": "num_70.wav",
+      "duration_ms": 649,
+      "md5": "54d7d9ca75b29ae770e3bfcda715420c"
+    },
+    "num_68": {
+      "text": "அறுபத்தெட்டு",
+      "file": "num_68.wav",
+      "duration_ms": 847,
+      "md5": "3e11e3909a16dfbaa56b1024a938d3c6"
+    },
+    "num_71": {
+      "text": "எழுபத்தொன்று",
+      "file": "num_71.wav",
+      "duration_ms": 969,
+      "md5": "9558ecf7d8822fd8fab4b045e07b4227"
+    },
+    "num_69": {
+      "text": "அறுபத்தொன்பது",
+      "file": "num_69.wav",
+      "duration_ms": 955,
+      "md5": "6d509981d4c331535e3cb0d6bf05c21f"
+    },
+    "num_72": {
+      "text": "எழுபத்திரண்டு",
+      "file": "num_72.wav",
+      "duration_ms": 897,
+      "md5": "db3f0d9558d85219ca9522e5fab19c0d"
+    },
+    "num_74": {
+      "text": "எழுபத்திநான்கு",
+      "file": "num_74.wav",
+      "duration_ms": 1051,
+      "md5": "ed002cc33b82cabbed3674c36e7d37c2"
+    },
+    "num_73": {
+      "text": "எழுபத்திமூன்று",
+      "file": "num_73.wav",
+      "duration_ms": 1098,
+      "md5": "30dd76d52fce102d1eef103e64c39d20"
+    },
+    "num_75": {
+      "text": "எழுபத்தைந்து",
+      "file": "num_75.wav",
+      "duration_ms": 929,
+      "md5": "711bc3cb67202677f1617ac30389ccf9"
+    },
+    "num_77": {
+      "text": "எழுபத்தேழு",
+      "file": "num_77.wav",
+      "duration_ms": 955,
+      "md5": "99481871807f58e9728c910924242b76"
+    },
+    "num_76": {
+      "text": "எழுபத்தாறு",
+      "file": "num_76.wav",
+      "duration_ms": 905,
+      "md5": "2629bf8d83c0f44aff0b3e0cbf9c97ed"
+    },
+    "num_80": {
+      "text": "எண்பது",
+      "file": "num_80.wav",
+      "duration_ms": 596,
+      "md5": "d2275bf9fba5a04c6ad82725e121b506"
+    },
+    "num_79": {
+      "text": "எழுபத்தொன்பது",
+      "file": "num_79.wav",
+      "duration_ms": 1012,
+      "md5": "b7427f81120c974c9b2982ee612c6ae7"
+    },
+    "num_78": {
+      "text": "எழுபத்தெட்டு",
+      "file": "num_78.wav",
+      "duration_ms": 886,
+      "md5": "d38ed680ece9ddbb6c9afeb4180f5043"
+    },
+    "num_81": {
+      "text": "எண்பத்தொன்று",
+      "file": "num_81.wav",
+      "duration_ms": 888,
+      "md5": "06a5a5859ba0ac692f7377e661f88a24"
+    },
+    "num_82": {
+      "text": "எண்பத்திரண்டு",
+      "file": "num_82.wav",
+      "duration_ms": 874,
+      "md5": "13b75ffb3a49791108cfc2770947761d"
+    },
+    "num_83": {
+      "text": "எண்பத்திமூன்று",
+      "file": "num_83.wav",
+      "duration_ms": 1051,
+      "md5": "c8b349dd87bb6900ab80ea1559decde7"
+    },
+    "num_86": {
+      "text": "எண்பத்தாறு",
+      "file": "num_86.wav",
+      "duration_ms": 840,
+      "md5": "0c0b4770cf7018332a6eea5a8b019544"
+    },
+    "num_85": {
+      "text": "எண்பத்தைந்து",
+      "file": "num_85.wav",
+      "duration_ms": 903,
+      "md5": "a06aac29e235592aff247723555f9973"
+    },
+    "num_84": {
+      "text": "எண்பத்திநான்கு",
+      "file": "num_84.wav",
+      "duration_ms": 991,
+      "md5": "de483ecf7ee57e951185636f05d0f164"
+    },
+    "num_88": {
+      "text": "எண்பத்தெட்டு",
+      "file": "num_88.wav",
+      "duration_ms": 848,
+      "md5": "88c27d09f1df206b941b49ca5d207040"
+    },
+    "num_87": {
+      "text": "எண்பத்தேழு",
+      "file": "num_87.wav",
+      "duration_ms": 882,
+      "md5": "af02ce2218a167c769dcdd59b5dc2ecf"
+    },
+    "num_90": {
+      "text": "தொண்ணூறு",
+      "file": "num_90.wav",
+      "duration_ms": 621,
+      "md5": "54478b9c80a6c4dd7aae8a775d6e64b6"
+    },
+    "num_89": {
+      "text": "எண்பத்தொன்பது",
+      "file": "num_89.wav",
+      "duration_ms": 962,
+      "md5": "f088ded893bc3ccd3d44b521836e9019"
+    },
+    "num_91": {
+      "text": "தொண்ணூற்றொன்று",
+      "file": "num_91.wav",
+      "duration_ms": 861,
+      "md5": "c1a94e2682267613b3ab59566a5374d4"
+    },
+    "num_92": {
+      "text": "தொண்ணூற்றிரண்டு",
+      "file": "num_92.wav",
+      "duration_ms": 866,
+      "md5": "7f6cc89016bfca00bd1eabe322e257da"
+    },
+    "num_93": {
+      "text": "தொண்ணூற்றிமூன்று",
+      "file": "num_93.wav",
+      "duration_ms": 1010,
+      "md5": "3965b6194c8d3fc76a20485d1229ce25"
+    },
+    "num_94": {
+      "text": "தொண்ணூற்றிநான்கு",
+      "file": "num_94.wav",
+      "duration_ms": 973,
+      "md5": "30809aead42ccc9ddc5658adefc7d3e0"
+    },
+    "num_95": {
+      "text": "தொண்ணூற்றைந்து",
+      "file": "num_95.wav",
+      "duration_ms": 825,
+      "md5": "293d8b85e49a7e958c4b7702bdc3f45c"
+    },
+    "num_97": {
+      "text": "தொண்ணூற்றேழு",
+      "file": "num_97.wav",
+      "duration_ms": 836,
+      "md5": "39e4469a7e7c5d527b6db45157d34f2f"
+    },
+    "num_96": {
+      "text": "தொண்ணூற்றாறு",
+      "file": "num_96.wav",
+      "duration_ms": 807,
+      "md5": "ce1462db6254f812a03873086fc1c76f"
+    },
+    "num_98": {
+      "text": "தொண்ணூற்றெட்டு",
+      "file": "num_98.wav",
+      "duration_ms": 845,
+      "md5": "859bd302caa9da32770007a016a6a043"
+    },
+    "hundred": {
+      "text": "நூறு",
+      "file": "hundred.wav",
+      "duration_ms": 507,
+      "md5": "36d748a3f02d1072c89d16d042e5d142"
+    },
+    "thousand": {
+      "text": "ஆயிரம்",
+      "file": "thousand.wav",
+      "duration_ms": 616,
+      "md5": "7d6632994e651e1b4730fd1f93dc4770"
+    },
+    "num_99": {
+      "text": "தொண்ணூற்றொன்பது",
+      "file": "num_99.wav",
+      "duration_ms": 967,
+      "md5": "23c208e58dbf0dd9bc7f46d6d36ec806"
+    },
+    "rupee": {
+      "text": "ரூபாய்",
+      "file": "rupee.wav",
+      "duration_ms": 604,
+      "md5": "15147a030873951c3a02b44ebd97c47f"
+    },
+    "rupees": {
+      "text": "ரூபாய்",
+      "file": "rupees.wav",
+      "duration_ms": 604,
+      "md5": "15147a030873951c3a02b44ebd97c47f"
+    },
+    "crore": {
+      "text": "கோடி",
+      "file": "crore.wav",
+      "duration_ms": 449,
+      "md5": "f7073b7d8cf6cbfc1315c22ff770610f"
+    },
+    "lakh": {
+      "text": "லட்சம்",
+      "file": "lakh.wav",
+      "duration_ms": 605,
+      "md5": "de08ab0b78d32bee46d56f57190c7552"
+    },
+    "payment_received": {
+      "text": "பணம் பெறப்பட்டது",
+      "file": "payment_received.wav",
+      "duration_ms": 1114,
+      "md5": "e1801c6616afb94b8176277109a394fe"
+    },
+    "paise": {
+      "text": "காசுகள்",
+      "file": "paise.wav",
+      "duration_ms": 656,
+      "md5": "3306fa75b8feb2c28465c591aeb66092"
+    },
+    "thank_you": {
+      "text": "நன்றி",
+      "file": "thank_you.wav",
+      "duration_ms": 596,
+      "md5": "a01608525199454aad7ef00b9a0c1439"
+    },
+    "and": {
+      "text": "மற்றும்",
+      "file": "and.wav",
+      "duration_ms": 601,
+      "md5": "9849c412ad4fa55a983e351173d517a8"
+    },
+    "received": {
+      "text": "பெறப்பட்டது",
+      "file": "received.wav",
+      "duration_ms": 782,
+      "md5": "f00f60bd839a792c6cd89c110cce9fe7"
+    }
+  }
+}

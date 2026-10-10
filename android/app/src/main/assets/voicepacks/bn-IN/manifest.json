@@ -1,0 +1,683 @@
+{
+  "language": "bn-IN",
+  "voice": "bn-IN-TanishaaNeural",
+  "sample_rate": 16000,
+  "channels": 1,
+  "format": "pcm_s16le",
+  "clip_count": 112,
+  "source_license": "Microsoft Cognitive Services / Antigravity Voice Pipeline. Pre-rendered offline bundle.",
+  "clips": {
+    "chime": {
+      "text": "[melodic chime]",
+      "file": "chime.wav",
+      "duration_ms": 400,
+      "md5": "efadf287a391fb22acb049d1de67fb62"
+    },
+    "num_6": {
+      "text": "ছয়",
+      "file": "num_6.wav",
+      "duration_ms": 389,
+      "md5": "fa26c09712ef51846c34977bd7362a10"
+    },
+    "num_5": {
+      "text": "পাঁচ",
+      "file": "num_5.wav",
+      "duration_ms": 395,
+      "md5": "cdb8c5777aa383c4cdc61c6b4d97e803"
+    },
+    "num_7": {
+      "text": "সাত",
+      "file": "num_7.wav",
+      "duration_ms": 418,
+      "md5": "70582a7c813cd2a4903b396dc9001385"
+    },
+    "num_2": {
+      "text": "দুই",
+      "file": "num_2.wav",
+      "duration_ms": 348,
+      "md5": "6ecc35fbaa6248b66d1ac02f50dd05e1"
+    },
+    "num_0": {
+      "text": "শূন্য",
+      "file": "num_0.wav",
+      "duration_ms": 545,
+      "md5": "86f5aa2c0b3f9b54f0f92f7a48ad5b42"
+    },
+    "num_4": {
+      "text": "চার",
+      "file": "num_4.wav",
+      "duration_ms": 341,
+      "md5": "d5ed90da14ecca5afc4cd9a2acdf3ff6"
+    },
+    "num_3": {
+      "text": "তিন",
+      "file": "num_3.wav",
+      "duration_ms": 347,
+      "md5": "5816867bfb5de304fa19d0f02fd4e5a1"
+    },
+    "num_1": {
+      "text": "এক",
+      "file": "num_1.wav",
+      "duration_ms": 299,
+      "md5": "1739fb61a1d85af70b3fccb008f72760"
+    },
+    "num_12": {
+      "text": "বারো",
+      "file": "num_12.wav",
+      "duration_ms": 420,
+      "md5": "640dbfedd650c1f4838e87d8e5147a58"
+    },
+    "num_11": {
+      "text": "এগারো",
+      "file": "num_11.wav",
+      "duration_ms": 518,
+      "md5": "9e2cdcb3a1af4c6e786b5b25bc4a4dcf"
+    },
+    "num_9": {
+      "text": "নয়",
+      "file": "num_9.wav",
+      "duration_ms": 425,
+      "md5": "5b5d08f55518706b7a0bd4b15af447be"
+    },
+    "num_10": {
+      "text": "দশ",
+      "file": "num_10.wav",
+      "duration_ms": 430,
+      "md5": "3d26764b21f193aa17a6afbe008ccb54"
+    },
+    "num_15": {
+      "text": "পনেরো",
+      "file": "num_15.wav",
+      "duration_ms": 509,
+      "md5": "23e549f97f9826d59c881350c5f15f9e"
+    },
+    "num_13": {
+      "text": "তেরো",
+      "file": "num_13.wav",
+      "duration_ms": 388,
+      "md5": "0ee1e48e98908c48caee05649f30850f"
+    },
+    "num_8": {
+      "text": "আট",
+      "file": "num_8.wav",
+      "duration_ms": 306,
+      "md5": "e0ec373d3aae39a4438d1a43055901c9"
+    },
+    "num_14": {
+      "text": "চোদ্দ",
+      "file": "num_14.wav",
+      "duration_ms": 535,
+      "md5": "402bd5b333440985a819921cb2542d18"
+    },
+    "num_16": {
+      "text": "ষোলো",
+      "file": "num_16.wav",
+      "duration_ms": 455,
+      "md5": "85b6c04c043a03a69c6f621e4fef7caf"
+    },
+    "num_19": {
+      "text": "উনিশ",
+      "file": "num_19.wav",
+      "duration_ms": 530,
+      "md5": "f5f0f653d0f98225d4169758b1d2acd8"
+    },
+    "num_18": {
+      "text": "আঠারো",
+      "file": "num_18.wav",
+      "duration_ms": 492,
+      "md5": "3d3a22c952f89b4a67e00a84c4461dff"
+    },
+    "num_17": {
+      "text": "সতেরো",
+      "file": "num_17.wav",
+      "duration_ms": 548,
+      "md5": "cf1c350f898133d2085e03e8b8aa2fa7"
+    },
+    "num_21": {
+      "text": "একুশ",
+      "file": "num_21.wav",
+      "duration_ms": 514,
+      "md5": "7c20117a785073b1e0e3d4a4ddb802b0"
+    },
+    "num_20": {
+      "text": "কুড়ি",
+      "file": "num_20.wav",
+      "duration_ms": 395,
+      "md5": "0da556a5be580425ce5bd1e5faf3e43d"
+    },
+    "num_22": {
+      "text": "বাইশ",
+      "file": "num_22.wav",
+      "duration_ms": 523,
+      "md5": "5c4087ae461a4f9f25551d426cba60dd"
+    },
+    "num_23": {
+      "text": "তেইশ",
+      "file": "num_23.wav",
+      "duration_ms": 470,
+      "md5": "36331c3a297aeff3f3312afaecc32f24"
+    },
+    "num_24": {
+      "text": "চব্বিশ",
+      "file": "num_24.wav",
+      "duration_ms": 639,
+      "md5": "fd4e45ac91affea9de32dd4902a02891"
+    },
+    "num_29": {
+      "text": "ঊনত্রিশ",
+      "file": "num_29.wav",
+      "duration_ms": 699,
+      "md5": "3c1691f91853af09d5789c16c5c0ad20"
+    },
+    "num_30": {
+      "text": "ত্রিশ",
+      "file": "num_30.wav",
+      "duration_ms": 439,
+      "md5": "5419b6fb927203e4faf1e8524bfa94e2"
+    },
+    "num_25": {
+      "text": "পঁচিশ",
+      "file": "num_25.wav",
+      "duration_ms": 503,
+      "md5": "a320271b7d1b7477f32035557113b475"
+    },
+    "num_26": {
+      "text": "ছাব্বিশ",
+      "file": "num_26.wav",
+      "duration_ms": 678,
+      "md5": "7ce93b30a1d1e5b3a25c8f58fcb9b0be"
+    },
+    "num_27": {
+      "text": "সাতাশ",
+      "file": "num_27.wav",
+      "duration_ms": 633,
+      "md5": "d791c8213a2ab97b5a0a8d88b47f77f4"
+    },
+    "num_28": {
+      "text": "আঠাশ",
+      "file": "num_28.wav",
+      "duration_ms": 508,
+      "md5": "ed558095159df72ed1d9bfcf62741add"
+    },
+    "num_31": {
+      "text": "একত্রিশ",
+      "file": "num_31.wav",
+      "duration_ms": 699,
+      "md5": "506d364c90ca40396e0d4c3097870d1e"
+    },
+    "num_32": {
+      "text": "বত্রিশ",
+      "file": "num_32.wav",
+      "duration_ms": 641,
+      "md5": "cce5b12490dff37b186f86d4070131a1"
+    },
+    "num_33": {
+      "text": "তেত্রিশ",
+      "file": "num_33.wav",
+      "duration_ms": 620,
+      "md5": "44d281ebb7e540eb966bf0fb78ef8e77"
+    },
+    "num_38": {
+      "text": "আটত্রিশ",
+      "file": "num_38.wav",
+      "duration_ms": 668,
+      "md5": "1b2364cb2ec71cd7d982902451fead2c"
+    },
+    "num_37": {
+      "text": "সাঁইত্রিশ",
+      "file": "num_37.wav",
+      "duration_ms": 822,
+      "md5": "62a89b59be6d0b74476b570c0819bd43"
+    },
+    "num_34": {
+      "text": "চৌত্রিশ",
+      "file": "num_34.wav",
+      "duration_ms": 675,
+      "md5": "25587a94e607e572e7391973c6f003ac"
+    },
+    "num_35": {
+      "text": "পঁয়ত্রিশ",
+      "file": "num_35.wav",
+      "duration_ms": 664,
+      "md5": "c96204694d1f15110e14b8b83684c7fb"
+    },
+    "num_36": {
+      "text": "ছত্রিশ",
+      "file": "num_36.wav",
+      "duration_ms": 643,
+      "md5": "3854aff687561a3a405d1b848f03a57e"
+    },
+    "num_39": {
+      "text": "ঊনচল্লিশ",
+      "file": "num_39.wav",
+      "duration_ms": 852,
+      "md5": "044e1f93607991a9426649b92442f264"
+    },
+    "num_40": {
+      "text": "চল্লিশ",
+      "file": "num_40.wav",
+      "duration_ms": 583,
+      "md5": "a8d0a19884dc4e4bcaf6c7a96d93f4ac"
+    },
+    "num_41": {
+      "text": "একচল্লিশ",
+      "file": "num_41.wav",
+      "duration_ms": 791,
+      "md5": "23c6c15d64022b815e897126f2c3239b"
+    },
+    "num_42": {
+      "text": "বিয়াল্লিশ",
+      "file": "num_42.wav",
+      "duration_ms": 699,
+      "md5": "9085ef1f2f53e406055468d1dc1b70fb"
+    },
+    "num_43": {
+      "text": "তেতাল্লিশ",
+      "file": "num_43.wav",
+      "duration_ms": 773,
+      "md5": "f9ea69262ec437ea685f03dc25192c08"
+    },
+    "num_45": {
+      "text": "পঁয়তাল্লিশ",
+      "file": "num_45.wav",
+      "duration_ms": 796,
+      "md5": "031b6760c4e82f00d638e0a172bbfbb5"
+    },
+    "num_44": {
+      "text": "চুয়াল্লিশ",
+      "file": "num_44.wav",
+      "duration_ms": 723,
+      "md5": "d0cf2cd09316c1941c45f849b85c4620"
+    },
+    "num_47": {
+      "text": "সাতচল্লিশ",
+      "file": "num_47.wav",
+      "duration_ms": 915,
+      "md5": "fa1abb0a5348cb51d5224809f22c423b"
+    },
+    "num_46": {
+      "text": "ছেচল্লিশ",
+      "file": "num_46.wav",
+      "duration_ms": 771,
+      "md5": "334b67d71e7d06bc36dafe6707bc7221"
+    },
+    "num_48": {
+      "text": "আটচল্লিশ",
+      "file": "num_48.wav",
+      "duration_ms": 810,
+      "md5": "c19106f50d19778b595d1e01d0060f63"
+    },
+    "num_49": {
+      "text": "ঊনপঞ্চাশ",
+      "file": "num_49.wav",
+      "duration_ms": 915,
+      "md5": "d4788f3a1e5cf6b1c6eab59b1eef3472"
+    },
+    "num_50": {
+      "text": "পঞ্চাশ",
+      "file": "num_50.wav",
+      "duration_ms": 613,
+      "md5": "f62e9d18e06ccb610f6ca9d8d010e57d"
+    },
+    "num_51": {
+      "text": "একান্ন",
+      "file": "num_51.wav",
+      "duration_ms": 527,
+      "md5": "a5c68aa1196cd467691d4d33ba97f5f5"
+    },
+    "num_55": {
+      "text": "পঞ্চান্ন",
+      "file": "num_55.wav",
+      "duration_ms": 636,
+      "md5": "73de22abe514ef7eba5d0b2cd7e45055"
+    },
+    "num_53": {
+      "text": "তিপ্পান্ন",
+      "file": "num_53.wav",
+      "duration_ms": 672,
+      "md5": "29c46a10aab9ed87fc452fab722e29cb"
+    },
+    "num_54": {
+      "text": "চুয়ান্ন",
+      "file": "num_54.wav",
+      "duration_ms": 533,
+      "md5": "ffbad316089dbe7208d4bab32a6beb4e"
+    },
+    "num_56": {
+      "text": "ছাপ্পান্ন",
+      "file": "num_56.wav",
+      "duration_ms": 720,
+      "md5": "2cb10754f6aa4a3702fc41004cc5db1f"
+    },
+    "num_52": {
+      "text": "বায়ান্ন",
+      "file": "num_52.wav",
+      "duration_ms": 496,
+      "md5": "c8585a36644b6c98f61309b7f2ec528c"
+    },
+    "num_57": {
+      "text": "সাতান্ন",
+      "file": "num_57.wav",
+      "duration_ms": 684,
+      "md5": "4301fe55c253738efdb66a49103ddce7"
+    },
+    "num_58": {
+      "text": "আটান্ন",
+      "file": "num_58.wav",
+      "duration_ms": 462,
+      "md5": "a1b4a08ea5dcdc3d2b4bb1626d4021dc"
+    },
+    "num_61": {
+      "text": "একষট্টি",
+      "file": "num_61.wav",
+      "duration_ms": 626,
+      "md5": "46882075509f45bcbbe4f690377e468c"
+    },
+    "num_60": {
+      "text": "ষাট",
+      "file": "num_60.wav",
+      "duration_ms": 426,
+      "md5": "f31ff47bb38d10ac4c81715f3f334336"
+    },
+    "num_62": {
+      "text": "বাষট্টি",
+      "file": "num_62.wav",
+      "duration_ms": 563,
+      "md5": "83c1535028e2942f6ac3bdf46ce3ce98"
+    },
+    "num_59": {
+      "text": "ঊনষাট",
+      "file": "num_59.wav",
+      "duration_ms": 628,
+      "md5": "1eb1cad38da4d7e25c43656e617c60d0"
+    },
+    "num_63": {
+      "text": "তেষট্টি",
+      "file": "num_63.wav",
+      "duration_ms": 562,
+      "md5": "60183f2880ff7387ec202a48e5e93ace"
+    },
+    "num_65": {
+      "text": "পঁয়ষট্টি",
+      "file": "num_65.wav",
+      "duration_ms": 606,
+      "md5": "d3c5f284eff4ce771e7107e29dc7e7e4"
+    },
+    "num_64": {
+      "text": "চৌষট্টি",
+      "file": "num_64.wav",
+      "duration_ms": 723,
+      "md5": "c01d48be301d08fbb1ace74b7749f0d4"
+    },
+    "num_67": {
+      "text": "সাতষট্টি",
+      "file": "num_67.wav",
+      "duration_ms": 732,
+      "md5": "e73f6aa6c2b9d2eb0c25f8045175e0fc"
+    },
+    "num_66": {
+      "text": "ছেষট্টি",
+      "file": "num_66.wav",
+      "duration_ms": 578,
+      "md5": "07ea6f7a96df7792f6df774a0a787bd6"
+    },
+    "num_68": {
+      "text": "আটষট্টি",
+      "file": "num_68.wav",
+      "duration_ms": 584,
+      "md5": "2786ff7a30dd9ba90b5556a965a71e94"
+    },
+    "num_70": {
+      "text": "সত্তর",
+      "file": "num_70.wav",
+      "duration_ms": 512,
+      "md5": "cb21ca48e8cd0fa15c838a3085517ba9"
+    },
+    "num_69": {
+      "text": "ঊনসত্তর",
+      "file": "num_69.wav",
+      "duration_ms": 696,
+      "md5": "7f1398c1cd4bf300f27e4d3f85c64b1e"
+    },
+    "num_71": {
+      "text": "একাত্তর",
+      "file": "num_71.wav",
+      "duration_ms": 559,
+      "md5": "e48b13b9e14d916bf4d4e5890a00b888"
+    },
+    "num_72": {
+      "text": "বাহাত্তর",
+      "file": "num_72.wav",
+      "duration_ms": 614,
+      "md5": "38f8f2ca969dc256c104769b0d043b4e"
+    },
+    "num_73": {
+      "text": "তিয়াত্তর",
+      "file": "num_73.wav",
+      "duration_ms": 590,
+      "md5": "cd5dfe7aa55ea7de261be1c118cacf27"
+    },
+    "num_74": {
+      "text": "চুয়াত্তর",
+      "file": "num_74.wav",
+      "duration_ms": 636,
+      "md5": "02cf976383e385ec8beb23aa585c38a5"
+    },
+    "num_75": {
+      "text": "পঁচাত্তর",
+      "file": "num_75.wav",
+      "duration_ms": 638,
+      "md5": "ed41be57cf0c4636339c8b37208823fb"
+    },
+    "num_76": {
+      "text": "ছিয়াত্তর",
+      "file": "num_76.wav",
+      "duration_ms": 637,
+      "md5": "e6036e7fdc2166fe63d8335d00d11f3f"
+    },
+    "num_77": {
+      "text": "সাতাত্তর",
+      "file": "num_77.wav",
+      "duration_ms": 706,
+      "md5": "7f80a979a03e6a0a2f82510eee95c259"
+    },
+    "num_78": {
+      "text": "আটাত্তর",
+      "file": "num_78.wav",
+      "duration_ms": 598,
+      "md5": "3ace5c808408eea3982368cd04bcea72"
+    },
+    "num_79": {
+      "text": "ঊনআশি",
+      "file": "num_79.wav",
+      "duration_ms": 614,
+      "md5": "841787cc5492cc1581b2d5c6e2b1ac00"
+    },
+    "num_80": {
+      "text": "আশি",
+      "file": "num_80.wav",
+      "duration_ms": 407,
+      "md5": "476ff4c1f6151c6c263fa525db58e07f"
+    },
+    "num_81": {
+      "text": "একাশি",
+      "file": "num_81.wav",
+      "duration_ms": 529,
+      "md5": "cdd1ee67421892c9bacb1fbc04256841"
+    },
+    "num_82": {
+      "text": "বিরাশি",
+      "file": "num_82.wav",
+      "duration_ms": 584,
+      "md5": "73025fb443f059ba1a60cfb2a0450984"
+    },
+    "num_84": {
+      "text": "চুরাশি",
+      "file": "num_84.wav",
+      "duration_ms": 596,
+      "md5": "842236716de8aa3f46260167aee4bca5"
+    },
+    "num_85": {
+      "text": "পঁচাশি",
+      "file": "num_85.wav",
+      "duration_ms": 578,
+      "md5": "f63b0cc9a731039dc2839ecacf13d81c"
+    },
+    "num_83": {
+      "text": "তিরাশি",
+      "file": "num_83.wav",
+      "duration_ms": 577,
+      "md5": "5a15e13947d009093febec4f75a1ac83"
+    },
+    "num_86": {
+      "text": "ছিয়াশি",
+      "file": "num_86.wav",
+      "duration_ms": 582,
+      "md5": "1e597ce5e40be29235b4566c99685ff6"
+    },
+    "num_87": {
+      "text": "সাতাশি",
+      "file": "num_87.wav",
+      "duration_ms": 653,
+      "md5": "949d765326d2ecbb768a6ad61a9696fb"
+    },
+    "num_88": {
+      "text": "আটাশি",
+      "file": "num_88.wav",
+      "duration_ms": 562,
+      "md5": "ddcf6902adf1e8df5554b66b22c035c9"
+    },
+    "num_93": {
+      "text": "তিরানব্বই",
+      "file": "num_93.wav",
+      "duration_ms": 740,
+      "md5": "bc138341b824cfe3486ea203308878f5"
+    },
+    "num_91": {
+      "text": "একানব্বই",
+      "file": "num_91.wav",
+      "duration_ms": 727,
+      "md5": "d09ca0552451346ab8a5c6f3528b3642"
+    },
+    "num_90": {
+      "text": "নব্বই",
+      "file": "num_90.wav",
+      "duration_ms": 564,
+      "md5": "2f85cf2264aa5f60d4b062b4f15fa142"
+    },
+    "num_94": {
+      "text": "চুরানব্বই",
+      "file": "num_94.wav",
+      "duration_ms": 771,
+      "md5": "b4af3425ef6d9ec0345b7f4cb72a4602"
+    },
+    "num_89": {
+      "text": "ঊননব্বই",
+      "file": "num_89.wav",
+      "duration_ms": 712,
+      "md5": "58cdd14051fd84f98df74b0256ca0bd5"
+    },
+    "num_92": {
+      "text": "বিরানব্বই",
+      "file": "num_92.wav",
+      "duration_ms": 777,
+      "md5": "cede4d5d57f59d6efd779321381a558b"
+    },
+    "num_95": {
+      "text": "পঁচানব্বই",
+      "file": "num_95.wav",
+      "duration_ms": 753,
+      "md5": "f61fe073c553962d76ffac1467b0a684"
+    },
+    "num_96": {
+      "text": "ছিয়ানব্বই",
+      "file": "num_96.wav",
+      "duration_ms": 740,
+      "md5": "ecdaac362db6babc2e4864de8fce742f"
+    },
+    "thousand": {
+      "text": "হাজার",
+      "file": "thousand.wav",
+      "duration_ms": 401,
+      "md5": "c107d8d47200396140d363df3fdf2b5f"
+    },
+    "num_98": {
+      "text": "আটানব্বই",
+      "file": "num_98.wav",
+      "duration_ms": 705,
+      "md5": "8e30c9a7c8784f2ad1098a76e1d3f1fc"
+    },
+    "hundred": {
+      "text": "শত",
+      "file": "hundred.wav",
+      "duration_ms": 453,
+      "md5": "78731418ada6dbfe05ba36123de62df4"
+    },
+    "num_99": {
+      "text": "নিরানব্বই",
+      "file": "num_99.wav",
+      "duration_ms": 771,
+      "md5": "c9c9856685e3dfe60890d839f5e021b9"
+    },
+    "num_97": {
+      "text": "সাতানব্বই",
+      "file": "num_97.wav",
+      "duration_ms": 863,
+      "md5": "58e35b98c646c75dcd067234e1a8df41"
+    },
+    "lakh": {
+      "text": "লাখ",
+      "file": "lakh.wav",
+      "duration_ms": 370,
+      "md5": "413c5a294844b54a2d48cd0fc479c054"
+    },
+    "rupee": {
+      "text": "টাকা",
+      "file": "rupee.wav",
+      "duration_ms": 400,
+      "md5": "627fba4f02f601f0bff73852cc99f3a4"
+    },
+    "crore": {
+      "text": "কোটি",
+      "file": "crore.wav",
+      "duration_ms": 437,
+      "md5": "96c3c2ebbcbe6c009d18cb17855eb123"
+    },
+    "rupees": {
+      "text": "টাকা",
+      "file": "rupees.wav",
+      "duration_ms": 400,
+      "md5": "627fba4f02f601f0bff73852cc99f3a4"
+    },
+    "received": {
+      "text": "পাওয়া গেছে",
+      "file": "received.wav",
+      "duration_ms": 696,
+      "md5": "2f15e049336404cf23074ed138571d5b"
+    },
+    "payment_received": {
+      "text": "পেমেন্ট পাওয়া গেছে",
+      "file": "payment_received.wav",
+      "duration_ms": 1125,
+      "md5": "06d0d283f0b61765ab32aa82db18c4d8"
+    },
+    "and": {
+      "text": "এবং",
+      "file": "and.wav",
+      "duration_ms": 399,
+      "md5": "3de0b687c3bb5d9e000d39f86918e8a9"
+    },
+    "thank_you": {
+      "text": "ধন্যবাদ",
+      "file": "thank_you.wav",
+      "duration_ms": 692,
+      "md5": "b00bf791d6c9043819538a2a23075398"
+    },
+    "paise": {
+      "text": "পয়সা",
+      "file": "paise.wav",
+      "duration_ms": 433,
+      "md5": "b67886c2e113cc460382e95ab4ff7068"
+    }
+  }
+}

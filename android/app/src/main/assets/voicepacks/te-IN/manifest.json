@@ -1,0 +1,683 @@
+{
+  "language": "te-IN",
+  "voice": "te-IN-ShrutiNeural",
+  "sample_rate": 16000,
+  "channels": 1,
+  "format": "pcm_s16le",
+  "clip_count": 112,
+  "source_license": "Microsoft Cognitive Services / Antigravity Voice Pipeline. Pre-rendered offline bundle.",
+  "clips": {
+    "chime": {
+      "text": "[melodic chime]",
+      "file": "chime.wav",
+      "duration_ms": 400,
+      "md5": "efadf287a391fb22acb049d1de67fb62"
+    },
+    "num_5": {
+      "text": "ఐదు",
+      "file": "num_5.wav",
+      "duration_ms": 416,
+      "md5": "a2d7cc43e99af8440947b729ee642be5"
+    },
+    "num_3": {
+      "text": "మూడు",
+      "file": "num_3.wav",
+      "duration_ms": 425,
+      "md5": "4c30ea1173a7ba8bc7cca961b76a6629"
+    },
+    "num_2": {
+      "text": "రెండు",
+      "file": "num_2.wav",
+      "duration_ms": 452,
+      "md5": "7e13668697f9ac52490481ed1691f015"
+    },
+    "num_7": {
+      "text": "ఏడు",
+      "file": "num_7.wav",
+      "duration_ms": 404,
+      "md5": "f6a57e71af1b948e7230af7fbf56a6d3"
+    },
+    "num_4": {
+      "text": "నాలుగు",
+      "file": "num_4.wav",
+      "duration_ms": 587,
+      "md5": "2883fac122ad1c05062642a9bf8be5d3"
+    },
+    "num_6": {
+      "text": "ఆరు",
+      "file": "num_6.wav",
+      "duration_ms": 413,
+      "md5": "f236326c052e0b661180a762fa3c60c5"
+    },
+    "num_0": {
+      "text": "సున్నా",
+      "file": "num_0.wav",
+      "duration_ms": 486,
+      "md5": "97b540c71466bbda0b572c4f79529dfc"
+    },
+    "num_1": {
+      "text": "ఒకటి",
+      "file": "num_1.wav",
+      "duration_ms": 480,
+      "md5": "d465985e0f0719028ceb9638b912a7e4"
+    },
+    "num_10": {
+      "text": "పది",
+      "file": "num_10.wav",
+      "duration_ms": 322,
+      "md5": "0109202f1bd9f72986a730742e30a6e5"
+    },
+    "num_8": {
+      "text": "ఎనిమిది",
+      "file": "num_8.wav",
+      "duration_ms": 572,
+      "md5": "3b07266307cc01bd998d811b95f70e1f"
+    },
+    "num_11": {
+      "text": "పదకొండు",
+      "file": "num_11.wav",
+      "duration_ms": 657,
+      "md5": "7262ec35b4ca4a1b0042b8fbc7043071"
+    },
+    "num_9": {
+      "text": "తొమ్మిది",
+      "file": "num_9.wav",
+      "duration_ms": 508,
+      "md5": "1099304731975f1434a91b7bcf1d16ba"
+    },
+    "num_14": {
+      "text": "పద్నాలుగు",
+      "file": "num_14.wav",
+      "duration_ms": 708,
+      "md5": "53743cf5e017701c0b5513864c8facba"
+    },
+    "num_13": {
+      "text": "పదమూడు",
+      "file": "num_13.wav",
+      "duration_ms": 626,
+      "md5": "730b07489a820afb5b10c733add4055b"
+    },
+    "num_15": {
+      "text": "పదిహేను",
+      "file": "num_15.wav",
+      "duration_ms": 578,
+      "md5": "9a90ed9951bfd9aabe9c2148f69fe3e6"
+    },
+    "num_12": {
+      "text": "పన్నెండు",
+      "file": "num_12.wav",
+      "duration_ms": 555,
+      "md5": "6fecee95853f3edf03a12c4d7e67e8c6"
+    },
+    "num_16": {
+      "text": "పదహారు",
+      "file": "num_16.wav",
+      "duration_ms": 602,
+      "md5": "5c5295c1ec9cfcb337f3b8746ac8ae85"
+    },
+    "num_17": {
+      "text": "పదిహేడు",
+      "file": "num_17.wav",
+      "duration_ms": 625,
+      "md5": "c9da71b18b57642221b8e36c42d8e76f"
+    },
+    "num_18": {
+      "text": "పద్దెనిమిది",
+      "file": "num_18.wav",
+      "duration_ms": 734,
+      "md5": "48bee2557e96c1542124094741df00fc"
+    },
+    "num_20": {
+      "text": "ఇరవై",
+      "file": "num_20.wav",
+      "duration_ms": 547,
+      "md5": "4cb9f2689f78731392cba7b02cc19d1e"
+    },
+    "num_23": {
+      "text": "ఇరవై మూడు",
+      "file": "num_23.wav",
+      "duration_ms": 843,
+      "md5": "7c78b78e0a29dc48f876256194b69407"
+    },
+    "num_21": {
+      "text": "ఇరవై ఒకటి",
+      "file": "num_21.wav",
+      "duration_ms": 893,
+      "md5": "b36973caa126f99cbd0a50095ad4de82"
+    },
+    "num_22": {
+      "text": "ఇరవై రెండు",
+      "file": "num_22.wav",
+      "duration_ms": 888,
+      "md5": "8ba3c3b9a6c8fced51dfc40cb1bb24a0"
+    },
+    "num_25": {
+      "text": "ఇరవై ఐదు",
+      "file": "num_25.wav",
+      "duration_ms": 997,
+      "md5": "520979c077458c6fe57ce197b9e82b98"
+    },
+    "num_19": {
+      "text": "పందొమ్మిది",
+      "file": "num_19.wav",
+      "duration_ms": 696,
+      "md5": "45158dd6781b809378e3e57d58e624c9"
+    },
+    "num_24": {
+      "text": "ఇరవై నాలుగు",
+      "file": "num_24.wav",
+      "duration_ms": 961,
+      "md5": "dc8347aa4eb8b0e396e31672d41cedc6"
+    },
+    "num_26": {
+      "text": "ఇరవై ఆరు",
+      "file": "num_26.wav",
+      "duration_ms": 951,
+      "md5": "c19de4a6ed17e50f3d36c5d0162e90ac"
+    },
+    "num_27": {
+      "text": "ఇరవై ఏడు",
+      "file": "num_27.wav",
+      "duration_ms": 939,
+      "md5": "380b6f5ce72de2e7f7fc644d471bb096"
+    },
+    "num_28": {
+      "text": "ఇరవై ఎనిమిది",
+      "file": "num_28.wav",
+      "duration_ms": 1005,
+      "md5": "b70ee3fc540fdc8965ca0167e2913c5e"
+    },
+    "num_29": {
+      "text": "ఇరవై తొమ్మిది",
+      "file": "num_29.wav",
+      "duration_ms": 948,
+      "md5": "d77fb164e2529b057bbff786d779e611"
+    },
+    "num_30": {
+      "text": "ముప్పై",
+      "file": "num_30.wav",
+      "duration_ms": 544,
+      "md5": "b7e82f30f615b18ee00ee6c263ed8284"
+    },
+    "num_31": {
+      "text": "ముప్పై ఒకటి",
+      "file": "num_31.wav",
+      "duration_ms": 909,
+      "md5": "fa859fbc00ca6e25a221a1c7467b7bd6"
+    },
+    "num_33": {
+      "text": "ముప్పై మూడు",
+      "file": "num_33.wav",
+      "duration_ms": 854,
+      "md5": "1c13db78d27eac1460996823258d3aa4"
+    },
+    "num_35": {
+      "text": "ముప్పై ఐదు",
+      "file": "num_35.wav",
+      "duration_ms": 984,
+      "md5": "13eb6745421cce9fe728ecee9264610b"
+    },
+    "num_32": {
+      "text": "ముప్పై రెండు",
+      "file": "num_32.wav",
+      "duration_ms": 946,
+      "md5": "0e4a366005f7c8daad3edfd3b425d0ba"
+    },
+    "num_34": {
+      "text": "ముప్పై నాలుగు",
+      "file": "num_34.wav",
+      "duration_ms": 997,
+      "md5": "805b425108ef9030d944d3d988d2cb56"
+    },
+    "num_37": {
+      "text": "ముప్పై ఏడు",
+      "file": "num_37.wav",
+      "duration_ms": 926,
+      "md5": "15b80489b96be91dea97ddfdff8d6dfe"
+    },
+    "num_36": {
+      "text": "ముప్పై ఆరు",
+      "file": "num_36.wav",
+      "duration_ms": 916,
+      "md5": "ceb031dd89fde36e55a414bd9fc51367"
+    },
+    "num_41": {
+      "text": "నలభై ఒకటి",
+      "file": "num_41.wav",
+      "duration_ms": 1028,
+      "md5": "81cafd8279c55ae3743c3e3ca56861ec"
+    },
+    "num_40": {
+      "text": "నలభై",
+      "file": "num_40.wav",
+      "duration_ms": 596,
+      "md5": "a3d912fe06f5ef3b1aa0e2654a4a9072"
+    },
+    "num_39": {
+      "text": "ముప్పై తొమ్మిది",
+      "file": "num_39.wav",
+      "duration_ms": 969,
+      "md5": "eea3959c64882e89be7d90b000c52482"
+    },
+    "num_42": {
+      "text": "నలభై రెండు",
+      "file": "num_42.wav",
+      "duration_ms": 1046,
+      "md5": "62e129682c8a88e3864ff31f39307968"
+    },
+    "num_38": {
+      "text": "ముప్పై ఎనిమిది",
+      "file": "num_38.wav",
+      "duration_ms": 1049,
+      "md5": "d7fc6de2bde0f2328a518a5ab2d9cea9"
+    },
+    "num_43": {
+      "text": "నలభై మూడు",
+      "file": "num_43.wav",
+      "duration_ms": 947,
+      "md5": "47ae5669ec7c602155ddf7323bbb88d5"
+    },
+    "num_44": {
+      "text": "నలభై నాలుగు",
+      "file": "num_44.wav",
+      "duration_ms": 1074,
+      "md5": "864c1befe7fd829d9e71d0e308ac8b8e"
+    },
+    "num_50": {
+      "text": "యాభై",
+      "file": "num_50.wav",
+      "duration_ms": 591,
+      "md5": "7d117847174c84bb641fa744fd3acca8"
+    },
+    "num_45": {
+      "text": "నలభై ఐదు",
+      "file": "num_45.wav",
+      "duration_ms": 1131,
+      "md5": "19689b24d8dfeca06008bd1bf5f67bbf"
+    },
+    "num_49": {
+      "text": "నలభై తొమ్మిది",
+      "file": "num_49.wav",
+      "duration_ms": 1059,
+      "md5": "cad5229fcb467d828b3d4cf2fee1dfd0"
+    },
+    "num_46": {
+      "text": "నలభై ఆరు",
+      "file": "num_46.wav",
+      "duration_ms": 1062,
+      "md5": "3f1b33071f72f8f489b923451f9f3a9f"
+    },
+    "num_47": {
+      "text": "నలభై ఏడు",
+      "file": "num_47.wav",
+      "duration_ms": 1049,
+      "md5": "f935d28808226691ce9616f2d06f2e16"
+    },
+    "num_48": {
+      "text": "నలభై ఎనిమిది",
+      "file": "num_48.wav",
+      "duration_ms": 1135,
+      "md5": "6a3200cbe643f590cbc1eca5a2f26b43"
+    },
+    "num_51": {
+      "text": "యాభై ఒకటి",
+      "file": "num_51.wav",
+      "duration_ms": 944,
+      "md5": "88c01269be88c2bc55d76f4efe9dd3c6"
+    },
+    "num_52": {
+      "text": "యాభై రెండు",
+      "file": "num_52.wav",
+      "duration_ms": 958,
+      "md5": "17bba7ba0162c62aeb59d5036ba97248"
+    },
+    "num_53": {
+      "text": "యాభై మూడు",
+      "file": "num_53.wav",
+      "duration_ms": 920,
+      "md5": "76201be8feb09a764860b011f02fc2ae"
+    },
+    "num_54": {
+      "text": "యాభై నాలుగు",
+      "file": "num_54.wav",
+      "duration_ms": 1024,
+      "md5": "314e3c02386c6c9367faa6be75af6b06"
+    },
+    "num_57": {
+      "text": "యాభై ఏడు",
+      "file": "num_57.wav",
+      "duration_ms": 1020,
+      "md5": "e71083b1f7059c7fd71ab7f17993e0ad"
+    },
+    "num_55": {
+      "text": "యాభై ఐదు",
+      "file": "num_55.wav",
+      "duration_ms": 1045,
+      "md5": "0c4fae28e0f18575aa738c14c22ee800"
+    },
+    "num_58": {
+      "text": "యాభై ఎనిమిది",
+      "file": "num_58.wav",
+      "duration_ms": 1050,
+      "md5": "555540369f99e9aa7e09da8935b10ed8"
+    },
+    "num_56": {
+      "text": "యాభై ఆరు",
+      "file": "num_56.wav",
+      "duration_ms": 990,
+      "md5": "faaa688002aa523d88ede11e75dbc56e"
+    },
+    "num_60": {
+      "text": "అరవై",
+      "file": "num_60.wav",
+      "duration_ms": 536,
+      "md5": "fb04df5e5d755da265e761bba33e6d83"
+    },
+    "num_59": {
+      "text": "యాభై తొమ్మిది",
+      "file": "num_59.wav",
+      "duration_ms": 1018,
+      "md5": "e711a2a5cd7ac13bc5b9e98524c17f23"
+    },
+    "num_61": {
+      "text": "అరవై ఒకటి",
+      "file": "num_61.wav",
+      "duration_ms": 862,
+      "md5": "ba7b5a932144d96eb628f542cb65545f"
+    },
+    "num_62": {
+      "text": "అరవై రెండు",
+      "file": "num_62.wav",
+      "duration_ms": 888,
+      "md5": "3ad119542f9fcac09ffebe4990b298d3"
+    },
+    "num_63": {
+      "text": "అరవై మూడు",
+      "file": "num_63.wav",
+      "duration_ms": 845,
+      "md5": "e13c8582fce615974c217964f55c3896"
+    },
+    "num_65": {
+      "text": "అరవై ఐదు",
+      "file": "num_65.wav",
+      "duration_ms": 1031,
+      "md5": "7009929507c2b3bfc9e5c14a266e59c0"
+    },
+    "num_66": {
+      "text": "అరవై ఆరు",
+      "file": "num_66.wav",
+      "duration_ms": 937,
+      "md5": "19aa2363c94f5230cd2a6348e20c56e1"
+    },
+    "num_68": {
+      "text": "అరవై ఎనిమిది",
+      "file": "num_68.wav",
+      "duration_ms": 1010,
+      "md5": "2dd421e8f796b874fd8a29f509d234e7"
+    },
+    "num_64": {
+      "text": "అరవై నాలుగు",
+      "file": "num_64.wav",
+      "duration_ms": 950,
+      "md5": "b9ea5b4f2faed55ab52e103af0e09636"
+    },
+    "num_67": {
+      "text": "అరవై ఏడు",
+      "file": "num_67.wav",
+      "duration_ms": 966,
+      "md5": "85f3245d027c801773fd83c198395929"
+    },
+    "num_69": {
+      "text": "అరవై తొమ్మిది",
+      "file": "num_69.wav",
+      "duration_ms": 954,
+      "md5": "e29f9d7ac3bdcc7f0836f0120a421320"
+    },
+    "num_70": {
+      "text": "డెబ్బై",
+      "file": "num_70.wav",
+      "duration_ms": 568,
+      "md5": "32d62dbb819724fc65917d58770bc244"
+    },
+    "num_71": {
+      "text": "డెబ్బై ఒకటి",
+      "file": "num_71.wav",
+      "duration_ms": 949,
+      "md5": "00b313a8f2efd3dd886bd08fdf7ef474"
+    },
+    "num_73": {
+      "text": "డెబ్బై మూడు",
+      "file": "num_73.wav",
+      "duration_ms": 900,
+      "md5": "c324f4efc03b68c02d89a6dd94bb056c"
+    },
+    "num_74": {
+      "text": "డెబ్బై నాలుగు",
+      "file": "num_74.wav",
+      "duration_ms": 1042,
+      "md5": "0fcb66a7afd45f40b2ecc5dc885fc2a4"
+    },
+    "num_72": {
+      "text": "డెబ్బై రెండు",
+      "file": "num_72.wav",
+      "duration_ms": 989,
+      "md5": "07ef6e710390ebb174b322abeace6c4f"
+    },
+    "num_75": {
+      "text": "డెబ్బై ఐదు",
+      "file": "num_75.wav",
+      "duration_ms": 1037,
+      "md5": "9b19729515c6b7d718702441c0d9753a"
+    },
+    "num_76": {
+      "text": "డెబ్బై ఆరు",
+      "file": "num_76.wav",
+      "duration_ms": 988,
+      "md5": "b6aa4311c650000d8627dff9dea9b0e7"
+    },
+    "num_77": {
+      "text": "డెబ్బై ఏడు",
+      "file": "num_77.wav",
+      "duration_ms": 961,
+      "md5": "eb7d0deca59f33cb682fa3352698d5b4"
+    },
+    "num_78": {
+      "text": "డెబ్బై ఎనిమిది",
+      "file": "num_78.wav",
+      "duration_ms": 1058,
+      "md5": "fd40a5e50aa6385bb1e57289d8b4025e"
+    },
+    "num_81": {
+      "text": "ఎనభై ఒకటి",
+      "file": "num_81.wav",
+      "duration_ms": 983,
+      "md5": "ec5c30a92918b844de601d04a330dab3"
+    },
+    "num_82": {
+      "text": "ఎనభై రెండు",
+      "file": "num_82.wav",
+      "duration_ms": 1013,
+      "md5": "5420683d9bde2e414cea90adbc278a98"
+    },
+    "num_80": {
+      "text": "ఎనభై",
+      "file": "num_80.wav",
+      "duration_ms": 562,
+      "md5": "6e7a784e6fa364039167a18e212ece80"
+    },
+    "num_83": {
+      "text": "ఎనభై మూడు",
+      "file": "num_83.wav",
+      "duration_ms": 914,
+      "md5": "c53ace49c5055fd1c43ae8d674a998cf"
+    },
+    "num_79": {
+      "text": "డెబ్బై తొమ్మిది",
+      "file": "num_79.wav",
+      "duration_ms": 986,
+      "md5": "f1fcc1a535098ca3d47e80da7704ea21"
+    },
+    "num_85": {
+      "text": "ఎనభై ఐదు",
+      "file": "num_85.wav",
+      "duration_ms": 1071,
+      "md5": "8fc96b985d9684a15d5135049b7d9cef"
+    },
+    "num_84": {
+      "text": "ఎనభై నాలుగు",
+      "file": "num_84.wav",
+      "duration_ms": 1058,
+      "md5": "d3be341882e977918f8c8a61300ffbe6"
+    },
+    "num_86": {
+      "text": "ఎనభై ఆరు",
+      "file": "num_86.wav",
+      "duration_ms": 1012,
+      "md5": "6b878fc1ce725a695c106136000fb592"
+    },
+    "num_89": {
+      "text": "ఎనభై తొమ్మిది",
+      "file": "num_89.wav",
+      "duration_ms": 1053,
+      "md5": "a7fe980aa33be23a28e1b645c43f3e6b"
+    },
+    "num_88": {
+      "text": "ఎనభై ఎనిమిది",
+      "file": "num_88.wav",
+      "duration_ms": 1088,
+      "md5": "f5a52e80dbeb92019e7b160027fc569c"
+    },
+    "num_87": {
+      "text": "ఎనభై ఏడు",
+      "file": "num_87.wav",
+      "duration_ms": 1033,
+      "md5": "9a0eb8cca2e06acb927054fe891b7d10"
+    },
+    "num_90": {
+      "text": "తొంభై",
+      "file": "num_90.wav",
+      "duration_ms": 479,
+      "md5": "87bb60150ff06b450c4e9a70e39e5063"
+    },
+    "num_92": {
+      "text": "తొంభై రెండు",
+      "file": "num_92.wav",
+      "duration_ms": 897,
+      "md5": "744526c186b6bef9ab1b08276ea4ae55"
+    },
+    "num_91": {
+      "text": "తొంభై ఒకటి",
+      "file": "num_91.wav",
+      "duration_ms": 864,
+      "md5": "1bc12a731a311dca3fa472dcfd717942"
+    },
+    "num_93": {
+      "text": "తొంభై మూడు",
+      "file": "num_93.wav",
+      "duration_ms": 834,
+      "md5": "86d3092915cea2439a9e04f7cbf842c1"
+    },
+    "num_94": {
+      "text": "తొంభై నాలుగు",
+      "file": "num_94.wav",
+      "duration_ms": 934,
+      "md5": "0491e44ac59f055f9bb487d33a06abb5"
+    },
+    "hundred": {
+      "text": "వంద",
+      "file": "hundred.wav",
+      "duration_ms": 440,
+      "md5": "89c59b516907b4a8615f911725382f37"
+    },
+    "num_95": {
+      "text": "తొంభై ఐదు",
+      "file": "num_95.wav",
+      "duration_ms": 933,
+      "md5": "b3f8f7d05381749bd5e3fc00a919262b"
+    },
+    "num_96": {
+      "text": "తొంభై ఆరు",
+      "file": "num_96.wav",
+      "duration_ms": 851,
+      "md5": "f6353a0d5b913e9445629878cc8578a6"
+    },
+    "num_97": {
+      "text": "తొంభై ఏడు",
+      "file": "num_97.wav",
+      "duration_ms": 882,
+      "md5": "66cc0569084496d30c73a9150f029155"
+    },
+    "num_98": {
+      "text": "తొంభై ఎనిమిది",
+      "file": "num_98.wav",
+      "duration_ms": 980,
+      "md5": "c38c9d38b22d9c3c238a982c8c09e5df"
+    },
+    "num_99": {
+      "text": "తొంభై తొమ్మిది",
+      "file": "num_99.wav",
+      "duration_ms": 947,
+      "md5": "93648b05c7ead97bdd15c7857570a9d3"
+    },
+    "lakh": {
+      "text": "లక్ష",
+      "file": "lakh.wav",
+      "duration_ms": 514,
+      "md5": "551928c1593bacd218d259a99fe8ebde"
+    },
+    "thousand": {
+      "text": "వేలు",
+      "file": "thousand.wav",
+      "duration_ms": 464,
+      "md5": "f3989fd15b4aba31e0a3ab793c048c7a"
+    },
+    "crore": {
+      "text": "కోటి",
+      "file": "crore.wav",
+      "duration_ms": 430,
+      "md5": "542d8e8b38c824b80821bafb73a3a2ed"
+    },
+    "rupees": {
+      "text": "రూపాయలు",
+      "file": "rupees.wav",
+      "duration_ms": 735,
+      "md5": "e4cde20e0cba49a72d28cfb7db10e093"
+    },
+    "rupee": {
+      "text": "రూపాయి",
+      "file": "rupee.wav",
+      "duration_ms": 603,
+      "md5": "0e93e69e3e5d3e40c8e7824fb1967680"
+    },
+    "and": {
+      "text": "మరియు",
+      "file": "and.wav",
+      "duration_ms": 508,
+      "md5": "4bfe27fbace1d752d58ee70d46fbbe22"
+    },
+    "paise": {
+      "text": "పైసలు",
+      "file": "paise.wav",
+      "duration_ms": 556,
+      "md5": "cf234e0f989df00088fe7ebcc69ab45b"
+    },
+    "thank_you": {
+      "text": "ధన్యవాదాలు",
+      "file": "thank_you.wav",
+      "duration_ms": 921,
+      "md5": "f04ca3cfe9beb32f9a4c415fa4003d8b"
+    },
+    "received": {
+      "text": "అందాయి",
+      "file": "received.wav",
+      "duration_ms": 525,
+      "md5": "18f5af9b7629306eb9e9ee657bb20580"
+    },
+    "payment_received": {
+      "text": "చెల్లింపు అందింది",
+      "file": "payment_received.wav",
+      "duration_ms": 1058,
+      "md5": "65199490981f6f75b6cedaf1300f9d9a"
+    }
+  }
+}
