@@ -29,6 +29,10 @@ import '../widgets/section_header.dart';
 import '../widgets/stat_card.dart';
 import 'paywall_screen.dart';
 import 'reliability_checklist_screen.dart';
+import '../services/counter_kiosk_service.dart';
+import '../utils/currency_formatter.dart';
+import '../widgets/volume_indicator_pill.dart';
+import '../widgets/transaction_detail_bottom_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
   final void Function(int tabIndex)? onNavigateToTab;
@@ -79,6 +83,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (mounted) setState(() {});
     };
     TtsService.instance.initialize();
+    CounterKioskService.instance.initialize();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refresh();
       _startEventChannel();
@@ -192,6 +197,53 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
                 keyboardType: TextInputType.emailAddress,
                 autofocus: true,
+              ),
+              const SizedBox(height: 8),
+              InkWell(
+                onTap: () async {
+                  final data = await Clipboard.getData(Clipboard.kTextPlain);
+                  final text = data?.text?.trim().toLowerCase();
+                  if (!ctx.mounted) return;
+                  if (text != null && text.contains('@')) {
+                    controller.text = text;
+                    HapticFeedback.lightImpact();
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(
+                        content: Text('Pasted from clipboard: $text'),
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: AppColors.success,
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      const SnackBar(
+                        content: Text('Clipboard text is not a valid UPI ID (must contain @)'),
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: AppColors.warning,
+                      ),
+                    );
+                  }
+                },
+                borderRadius: BorderRadius.circular(4),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.content_paste_rounded, size: 14, color: AppColors.primaryBlue),
+                      SizedBox(width: 4),
+                      Text(
+                        'Paste from clipboard',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primaryBlue,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -312,14 +364,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   double get _todayTotal => _todayRecs.fold(0, (s, r) =>
       s + (double.tryParse(r.amount.replaceAll(',', '')) ?? 0));
 
-  String get _todayTotalFmt {
-    final t = _todayTotal;
-    if (t == t.truncateToDouble()) {
-      return '₹${t.toInt().toString().replaceAllMapped(
-        RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}';
-    }
-    return '₹${t.toStringAsFixed(2)}';
-  }
+  String get _todayTotalFmt => CurrencyFormatter.format(_todayTotal);
 
   PaymentRecord? get _lastPayment => _history.isNotEmpty ? _history.first : null;
 
@@ -398,6 +443,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           ],
                         ),
                       ),
+                      const VolumeIndicatorPill(),
+                      const SizedBox(width: 8),
                       InkWell(
                         onTap: () => _toggleSoundbox(!_soundboxEnabled),
                         borderRadius: AppRadius.smRadius,
@@ -763,7 +810,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     return PaymentCard(
       record: last,
-      onTap: () => widget.onNavigateToTab?.call(1),
+      onTap: () => TransactionDetailBottomSheet.show(context, last),
+      onRespeak: () {
+        TtsService.instance.speakPayment(last.amount);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Re-announcing ₹${last.amount}...'),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
     );
   }
 

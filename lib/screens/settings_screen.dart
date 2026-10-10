@@ -28,6 +28,7 @@ import 'help_support_screen.dart';
 import 'paywall_screen.dart';
 import 'reliability_checklist_screen.dart';
 import '../services/auth_service.dart';
+import '../services/counter_kiosk_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -441,6 +442,33 @@ class _SettingsScreenState extends State<SettingsScreen>
                       'Uses phone media volume. Adjust via your device volume buttons.',
                       style: AppTypography.caption,
                     ),
+                  ),
+                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+                  SwitchListTile(
+                    activeThumbColor: AppColors.primaryBlue,
+                    title: const Text('Keep Screen Awake on Counter', style: AppTypography.titleSmall),
+                    subtitle: const Text(
+                      'Keeps screen on for storefront display. Automatically releases on exit. (Increases battery drain; keep device plugged into charger).',
+                      style: AppTypography.caption,
+                    ),
+                    secondary: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: CounterKioskService.instance.isKeepAwake ? AppColors.lightBlue : AppColors.background,
+                        borderRadius: AppRadius.smRadius,
+                      ),
+                      child: Icon(
+                        Icons.screen_lock_portrait_rounded,
+                        color: CounterKioskService.instance.isKeepAwake ? AppColors.primaryBlue : AppColors.textTertiary,
+                        size: 20,
+                      ),
+                    ),
+                    value: CounterKioskService.instance.isKeepAwake,
+                    onChanged: (v) async {
+                      await CounterKioskService.instance.setKeepAwake(v);
+                      setState(() {});
+                    },
                   ),
                 ],
               ),

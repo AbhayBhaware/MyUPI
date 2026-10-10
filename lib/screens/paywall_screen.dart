@@ -187,6 +187,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 ),
                 const SizedBox(height: AppSpacing.lg),
 
+                // ── Trust Badges (Offline, No Bank Link, Cancel via Play) ────────
+                _buildTrustBadges(),
+                const SizedBox(height: AppSpacing.lg),
+
                 // ── Active Subscription Status Banner (if already subscribed) ────
                 if (isAlreadyPremium) ...[
                   _buildAlreadySubscribedBanner(subInfo),
@@ -200,10 +204,6 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 // ── Value Proposition / Feature Checklist ─────────────────────────
                 _buildBenefitsCard(),
                 const SizedBox(height: AppSpacing.base),
-
-                // ── Transparent System Boundaries Notice ──────────────────────────
-                _buildTransparentNoticeCard(),
-                const SizedBox(height: AppSpacing.lg),
 
                 // ── Primary Action CTA (Live Google Play Purchase) ─────────────────
                 PrimaryButton(
@@ -250,7 +250,19 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
+                const SizedBox(height: AppSpacing.lg),
+
+                // ── Side-by-Side Comparison Table (Correction 1.5 math) ───────────
+                _buildComparisonTable(billing),
                 const SizedBox(height: AppSpacing.base),
+
+                // ── Frequently Asked Questions (FAQ Accordions) ───────────────────
+                _buildFaqSection(),
+                const SizedBox(height: AppSpacing.base),
+
+                // ── Transparent System Boundaries Notice ──────────────────────────
+                _buildTransparentNoticeCard(),
+                const SizedBox(height: AppSpacing.lg),
               ],
             ),
           ),
@@ -480,6 +492,313 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Trust Badges (Only True Claims: Offline, Zero Bank Link, Play Store Cancel) ──
+
+  Widget _buildTrustBadges() {
+    return Row(
+      children: [
+        _buildTrustBadgeItem(
+          icon: Icons.wifi_off_rounded,
+          title: 'Works Offline',
+          subtitle: 'On-device voice',
+        ),
+        const SizedBox(width: 8),
+        _buildTrustBadgeItem(
+          icon: Icons.lock_outline_rounded,
+          title: 'Zero Bank Link',
+          subtitle: 'No PIN or login',
+        ),
+        const SizedBox(width: 8),
+        _buildTrustBadgeItem(
+          icon: Icons.play_arrow_rounded,
+          title: 'Google Play',
+          subtitle: 'Cancel anytime',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTrustBadgeItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: AppRadius.mdRadius,
+          border: Border.all(color: AppColors.cardBorder),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.lightBlue,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 18, color: AppColors.primaryBlue),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                fontSize: 10,
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Comparison Table (Hardware Soundbox vs MyUPI) ─────────────────────────
+
+  Widget _buildComparisonTable(BillingService billing) {
+    return PremiumCard(
+      padding: const EdgeInsets.all(AppSpacing.base),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Icon(Icons.compare_arrows_rounded, size: 20, color: AppColors.primaryBlue),
+              SizedBox(width: 8),
+              Text(
+                'Hardware Soundbox vs MyUPI',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Table Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              children: const [
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    'Feature',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    'Hardware Box',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Expanded(
+                  flex: 4,
+                  child: Text(
+                    'MyUPI App',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primaryBlue),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          // Rows
+          _buildComparisonRow(
+            feature: 'Year 1 Cost',
+            hardware: 'Up to ₹1,500 – ₹1,800/yr\n(₹125–₹150/mo)',
+            myupi: '₹540 in Year 1\n(${billing.introPriceDisplay} 1st mo + 11 × ${billing.recurringPriceDisplay})',
+            highlight: true,
+          ),
+          _buildComparisonRow(
+            feature: 'Year 2+ Cost',
+            hardware: 'Up to ₹1,500 – ₹1,800/yr',
+            myupi: '₹588/yr\n(12 × ${billing.recurringPriceDisplay})',
+          ),
+          _buildComparisonRow(
+            feature: 'Hardware',
+            hardware: 'Bulky rental machine',
+            myupi: 'Your existing phone',
+          ),
+          _buildComparisonRow(
+            feature: 'Charging',
+            hardware: 'Separate charger & battery',
+            myupi: 'No extra device to charge',
+          ),
+          _buildComparisonRow(
+            feature: 'UPI Apps',
+            hardware: 'Single QR brand only',
+            myupi: 'All UPI Apps (GPay, PhonePe, Paytm, etc.)',
+          ),
+          _buildComparisonRow(
+            feature: 'Cancellation',
+            hardware: 'Device return & fees',
+            myupi: '1-tap cancel via Google Play',
+            isLast: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildComparisonRow({
+    required String feature,
+    required String hardware,
+    required String myupi,
+    bool highlight = false,
+    bool isLast = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: highlight ? AppColors.lightBlue.withAlpha(80) : Colors.transparent,
+        border: isLast ? null : const Border(bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 3,
+            child: Text(
+              feature,
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              hardware,
+              style: const TextStyle(fontSize: 10, color: Color(0xFF64748B), height: 1.25),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          Expanded(
+            flex: 4,
+            child: Text(
+              myupi,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: highlight ? FontWeight.w700 : FontWeight.w600,
+                color: highlight ? AppColors.primaryBlue : const Color(0xFF0F172A),
+                height: 1.25,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── FAQ Accordion Section ─────────────────────────────────────────────────
+
+  Widget _buildFaqSection() {
+    return PremiumCard(
+      padding: const EdgeInsets.all(AppSpacing.base),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Icon(Icons.help_outline_rounded, size: 20, color: AppColors.primaryBlue),
+              SizedBox(width: 8),
+              Text(
+                'Frequently Asked Questions',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _buildFaqItem(
+            question: 'How is MyUPI cheaper than a physical soundbox?',
+            answer:
+                'Physical soundboxes charge ₹125–₹150 every month in rental fees (up to ₹1,500–₹1,800/yr) plus security deposits. MyUPI uses the loudspeaker already in your smartphone for just ₹1 for your first month and ₹49/month after, saving you over ₹1,200 every year.',
+          ),
+          const Divider(height: 1, color: AppColors.borderLight),
+          _buildFaqItem(
+            question: 'Do I need to link my bank account or enter UPI PIN?',
+            answer:
+                'No! MyUPI never asks for your bank account details, netbanking passwords, or UPI PINs. It works locally by detecting legitimate incoming transaction notifications and SMS alerts directly on your device.',
+          ),
+          const Divider(height: 1, color: AppColors.borderLight),
+          _buildFaqItem(
+            question: 'Can I cancel my subscription anytime?',
+            answer:
+                'Yes. You have full control. You can cancel with a single tap in Google Play Store under "Payments & subscriptions" at any time with no cancellation penalties.',
+          ),
+          const Divider(height: 1, color: AppColors.borderLight),
+          _buildFaqItem(
+            question: 'Does voice announcement work offline?',
+            answer:
+                'Yes! The Text-to-Speech voice engine is downloaded directly on your smartphone. When SMS or notification alerts arrive, MyUPI speaks the payment amount aloud immediately even if internet connectivity drops.',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFaqItem({
+    required String question,
+    required String answer,
+  }) {
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: const EdgeInsets.only(bottom: 12),
+        title: Text(
+          question,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        iconColor: AppColors.primaryBlue,
+        collapsedIconColor: AppColors.textSecondary,
+        children: [
+          Text(
+            answer,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+              height: 1.4,
             ),
           ),
         ],

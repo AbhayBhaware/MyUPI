@@ -8,9 +8,21 @@ import 'app_colors.dart';
 abstract class AppTypography {
   static const String fontFamily = 'Roboto';
 
+  /// Noto font fallbacks for regional Indian languages (Devanagari, Tamil, Telugu, etc.)
+  static const List<String> fontFallbacks = [
+    'Noto Sans Devanagari',
+    'Noto Sans Tamil',
+    'Noto Sans Telugu',
+    'Noto Sans Bengali',
+    'Noto Sans Kannada',
+    'Noto Sans Gujarati',
+    'sans-serif',
+  ];
+
   /// Page titles (Dashboard header, Onboarding welcome, etc.)
   static const TextStyle displayLarge = TextStyle(
     fontFamily: fontFamily,
+    fontFamilyFallback: fontFallbacks,
     fontSize: 28.0,
     fontWeight: FontWeight.w800,
     color: AppColors.textPrimary,

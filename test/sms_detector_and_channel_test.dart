@@ -47,7 +47,7 @@ void main() {
         source: PaymentSource.both,
         trustLevel: TrustLevel.high,
       );
-      expect(bothEvent.channelLabel, 'Dual Confirmed');
+      expect(bothEvent.channelLabel, 'Seen in notification + SMS');
       expect(bothEvent.isDualConfirmed, isTrue);
       expect(bothEvent.isSmsOnly, isFalse);
       expect(bothEvent.isNotificationOnly, isFalse);

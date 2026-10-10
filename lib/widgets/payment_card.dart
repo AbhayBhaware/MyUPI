@@ -16,11 +16,13 @@ import 'premium_card.dart';
 class PaymentCard extends StatelessWidget {
   final PaymentRecord record;
   final VoidCallback? onTap;
+  final VoidCallback? onRespeak;
 
   const PaymentCard({
     super.key,
     required this.record,
     this.onTap,
+    this.onRespeak,
   });
 
   String _formatTime(DateTime dt) {
@@ -56,10 +58,10 @@ class PaymentCard extends StatelessWidget {
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.verified_user_rounded, size: 10, color: AppColors.success),
+              Icon(Icons.mark_chat_read_rounded, size: 10, color: AppColors.success),
               SizedBox(width: 3),
               Text(
-                'Dual Confirmed',
+                'Seen in notif + SMS',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
@@ -151,7 +153,7 @@ class PaymentCard extends StatelessWidget {
           border: Border.all(color: const Color(0xFFFEE2E2), width: 0.8),
         ),
         child: const Text(
-          'Verify in Bank',
+          'Check in Bank',
           style: TextStyle(
             fontSize: 9,
             fontWeight: FontWeight.w600,
@@ -173,7 +175,7 @@ class PaymentCard extends StatelessWidget {
     final isSms = record.source == PaymentSource.sms;
 
     final IconData leadingIcon = isDual
-        ? Icons.verified_rounded
+        ? Icons.currency_rupee_rounded
         : (isSms ? Icons.mark_chat_read_rounded : Icons.currency_rupee_rounded);
 
     final Color leadingBg = isDual
@@ -271,13 +273,43 @@ class PaymentCard extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                isDual ? 'Dual-Check' : (isSms ? 'SMS Alert' : 'Active'),
+                isDual ? 'Notif + SMS' : (isSms ? 'SMS Alert' : 'Notification'),
                 style: const TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textMuted,
                 ),
               ),
+              if (onRespeak != null) ...[
+                const SizedBox(height: 5),
+                InkWell(
+                  onTap: onRespeak,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.lightBlue,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.softBlueBorder, width: 0.8),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.volume_up_rounded, size: 11, color: AppColors.primaryBlue),
+                        SizedBox(width: 3),
+                        Text(
+                          'Repeat',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryBlue,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ],

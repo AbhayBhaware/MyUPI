@@ -14,6 +14,7 @@ import '../../theme/app_spacing.dart';
 import '../../theme/app_typography.dart';
 import '../../widgets/premium_buttons.dart';
 import '../../widgets/premium_card.dart';
+import '../../tts_service.dart';
 
 class StepShopProfileScreen extends StatefulWidget {
   final VoidCallback onContinue;
@@ -204,6 +205,34 @@ class _StepShopProfileScreenState extends State<StepShopProfileScreen> {
                               ),
                             ),
                           ],
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+
+                        // Hear Sample Voice Announcement Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 44,
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: AppColors.primaryBlue),
+                              shape: const RoundedRectangleBorder(borderRadius: AppRadius.mdRadius),
+                            ),
+                            onPressed: () {
+                              TtsService.instance.speakPayment('100');
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Playing sample soundbox announcement...'),
+                                  duration: Duration(seconds: 2),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.volume_up_rounded, size: 18, color: AppColors.primaryBlue),
+                            label: const Text(
+                              'Hear Sample Announcement',
+                              style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.primaryBlue),
+                            ),
+                          ),
                         ),
                       ],
                       const SizedBox(height: AppSpacing.xl),

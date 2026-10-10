@@ -109,3 +109,16 @@ abstract class AppColors {
     ],
   );
 }
+
+/// Outdoor High-Contrast Variant Palette (Phase 3)
+/// Maximizes sunlight legibility on street stalls and outdoor counters.
+abstract class OutdoorColors {
+  static const Color background    = Color(0xFFFFFFFF);
+  static const Color surface       = Color(0xFFFFFFFF);
+  static const Color primaryBlue   = Color(0xFF003CB3); // Deeper blue for direct glare
+  static const Color textPrimary   = Color(0xFF000000); // 100% black
+  static const Color textSecondary = Color(0xFF1E293B); // High-contrast charcoal
+  static const Color cardBorder    = Color(0xFF334155); // Prominent dark border
+  static const Color success       = Color(0xFF15803D);
+  static const Color successBg     = Color(0xFFDCFCE7);
+}

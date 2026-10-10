@@ -66,8 +66,8 @@ class PaymentEvent {
   String get channelLabel => switch (source) {
     PaymentSource.notification => 'Notification',
     PaymentSource.sms => 'SMS',
-    PaymentSource.both => 'Dual Confirmed',
-    PaymentSource.paymentProvider => 'Bank Verified',
+    PaymentSource.both => 'Seen in notification + SMS',
+    PaymentSource.paymentProvider => 'Bank App',
     PaymentSource.unknown => 'Unknown',
   };
 
