@@ -13,6 +13,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 import 'firebase_options.dart';
 import 'services/billing_service.dart';
@@ -21,7 +22,14 @@ import 'theme/app_theme.dart';
 import 'widgets/auth_gate.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  // Safety hard timeout (2s) to ensure splash is never stuck
+  Future.delayed(const Duration(milliseconds: 2000), () {
+    FlutterNativeSplash.remove();
+  });
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );

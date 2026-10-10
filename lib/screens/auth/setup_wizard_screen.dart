@@ -1,14 +1,11 @@
 // lib/screens/auth/setup_wizard_screen.dart
 //
-// Setup Wizard — One-time post-auth merchant configuration.
+// Setup Wizard — Polished 2-Step Onboarding per Section 5.
 // -----------------------------------------------------------
-// Guardrails:
-// 1. Single scrolling form (no step indicators or progress bar).
-// 2. Hardware/gesture back-button blocked via PopScope(canPop: false).
-// 3. Zero redundancy: skips/locks already known auth fields.
-// 4. Shop name writes to existing Settings field (native setMerchantName).
-// 5. Writes setupComplete: true to Firestore users/{uid} using kFieldSetupComplete.
-// 6. Detects duplicate phone/email across different auth methods.
+// Step 1: Shop Details (Shop name is the ONLY required field; owner & category optional).
+// Step 2: UPI ID setup with handle-suggestion chips & Soundbox Sample Announcement.
+// Hardware/gesture back-button blocked via PopScope(canPop: false).
+// Sets native setMerchantName and Firestore setupComplete: true.
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +18,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_typography.dart';
+import '../../tts_service.dart';
 
 class SetupWizardScreen extends StatefulWidget {
   final User user;
@@ -37,39 +35,33 @@ class SetupWizardScreen extends StatefulWidget {
 }
 
 class _SetupWizardScreenState extends State<SetupWizardScreen> {
-  final _formKey = GlobalKey<FormState>();
+  int _currentStep = 1;
 
-  final _ownerController = TextEditingController();
+  final _step1FormKey = GlobalKey<FormState>();
+  final _step2FormKey = GlobalKey<FormState>();
+
   final _shopNameController = TextEditingController();
+  final _ownerController = TextEditingController();
   final _categoryOtherController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _emailController = TextEditingController();
   final _upiIdController = TextEditingController();
 
   String? _selectedCategory;
   bool _isLoading = false;
   String? _duplicateAccountWarning;
 
-  late final bool _authenticatedViaPhone;
-  late final bool _authenticatedViaEmailOrGoogle;
+  final List<String> _upiHandles = const [
+    '@okhdfcbank',
+    '@okaxis',
+    '@oksbi',
+    '@okicici',
+    '@ybl',
+    '@paytm',
+  ];
 
   @override
   void initState() {
     super.initState();
-
     final user = widget.user;
-    final hasPhone = user.phoneNumber != null && user.phoneNumber!.isNotEmpty;
-    final hasEmail = user.email != null && user.email!.isNotEmpty;
-
-    _authenticatedViaPhone = hasPhone;
-    _authenticatedViaEmailOrGoogle = hasEmail;
-
-    if (hasPhone) {
-      _phoneController.text = user.phoneNumber!;
-    }
-    if (hasEmail) {
-      _emailController.text = user.email!;
-    }
     if (user.displayName != null && user.displayName!.isNotEmpty) {
       _ownerController.text = user.displayName!;
     }
@@ -77,30 +69,48 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
 
   @override
   void dispose() {
-    _ownerController.dispose();
     _shopNameController.dispose();
+    _ownerController.dispose();
     _categoryOtherController.dispose();
-    _phoneController.dispose();
-    _emailController.dispose();
     _upiIdController.dispose();
     super.dispose();
   }
 
-  bool get _isFormValid {
-    if (_ownerController.text.trim().isEmpty) return false;
-    if (_shopNameController.text.trim().isEmpty) return false;
-    if (_selectedCategory == null || _selectedCategory!.isEmpty) return false;
-    if (_selectedCategory == 'Other' && _categoryOtherController.text.trim().isEmpty) {
-      return false;
+  bool get _isStep1Valid => _shopNameController.text.trim().isNotEmpty;
+
+  void _applyHandle(String handle) {
+    HapticFeedback.selectionClick();
+    final text = _upiIdController.text.trim();
+    if (text.isEmpty) {
+      _upiIdController.text = handle;
+    } else if (text.contains('@')) {
+      final prefix = text.split('@').first;
+      _upiIdController.text = '$prefix$handle';
+    } else {
+      _upiIdController.text = '$text$handle';
     }
-    if (!_authenticatedViaPhone && _phoneController.text.trim().length < 10) {
-      return false;
+    setState(() {});
+  }
+
+  void _playSampleAnnouncement() {
+    final shop = _shopNameController.text.trim();
+    final name = shop.isEmpty ? 'MyUPI' : shop;
+    try {
+      kMethodChannel.invokeMethod('speakTest');
+    } catch (_) {
+      TtsService.instance.speakPayment('500');
     }
-    return true;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Playing sample announcement for "$name"...'),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   Future<void> _handleCompleteSetup() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_currentStep == 2 && !_step2FormKey.currentState!.validate()) return;
 
     setState(() {
       _isLoading = true;
@@ -112,8 +122,8 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     final shopName = _shopNameController.text.trim();
     final category = _selectedCategory ?? '';
     final categoryOther = category == 'Other' ? _categoryOtherController.text.trim() : null;
-    final phone = _phoneController.text.trim();
-    final email = _emailController.text.trim();
+    final phone = widget.user.phoneNumber ?? '';
+    final email = widget.user.email ?? '';
     final upiId = _upiIdController.text.trim().toLowerCase();
 
     String authMethod = 'phone';
@@ -123,22 +133,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       authMethod = 'email';
     }
 
-    // ── Duplicate Account Check across methods ──────────────────────────────
-    final duplicateMsg = await FirestoreService.instance.findDuplicateAccount(
-      currentUid: uid,
-      phone: phone.isNotEmpty ? phone : null,
-      email: email.isNotEmpty ? email : null,
-    );
-
-    if (duplicateMsg != null && mounted) {
-      setState(() {
-        _isLoading = false;
-        _duplicateAccountWarning = duplicateMsg;
-      });
-      return;
-    }
-
-    // ── 1. Synchronize to native Soundbox engine (Settings parity) ─────────
+    // ── 1. Synchronize to native Soundbox engine ─────────────────────────────
     try {
       await kMethodChannel.invokeMethod('setMerchantName', {'name': shopName});
       await kMethodChannel.invokeMethod('setIncludeShopName', {'enabled': true});
@@ -167,7 +162,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         setState(() {
           _isLoading = false;
           _duplicateAccountWarning =
-              'Could not save shop setup to database. Please check your internet connection or database security rules.';
+              'Could not save shop setup to database. Please check your internet connection.';
         });
         return;
       }
@@ -179,7 +174,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      // Hardware & gesture back-button blocked while setup is incomplete
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
@@ -196,7 +190,13 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         appBar: AppBar(
           backgroundColor: AppColors.surface,
           elevation: 0,
-          automaticallyImplyLeading: false, // No back arrow affordance
+          automaticallyImplyLeading: false,
+          leading: _currentStep == 2
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+                  onPressed: () => setState(() => _currentStep = 1),
+                )
+              : null,
           title: const Text(
             'Shop Setup',
             style: TextStyle(
@@ -209,350 +209,425 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           centerTitle: true,
         ),
         body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xl,
-              vertical: AppSpacing.md,
-            ),
-            child: Form(
-              key: _formKey,
-              onChanged: () => setState(() {}), // Refresh button state
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Hero Header ─────────────────────────────────────────────
-                  Row(
-                    children: [
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: AppColors.lightBlue,
-                          borderRadius: AppRadius.mdRadius,
-                          border: Border.all(color: AppColors.softBlueBorder, width: 1.0),
-                        ),
-                        child: const Icon(
-                          Icons.storefront_rounded,
-                          size: 30,
-                          color: AppColors.primaryBlue,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Setup Your Soundbox',
-                              style: TextStyle(
-                                fontFamily: AppTypography.fontFamily,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Takes 30 seconds · One-time setup',
-                              style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // ── Duplicate Account Alert ─────────────────────────────────
-                  if (_duplicateAccountWarning != null) ...[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.warningBg,
-                        borderRadius: AppRadius.mdRadius,
-                        border: Border.all(color: AppColors.warningBorder, width: 1.0),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 20),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              _duplicateAccountWarning!,
-                              style: const TextStyle(
-                                fontFamily: AppTypography.fontFamily,
-                                fontSize: 13,
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+          child: Column(
+            children: [
+              // ── 2-Step Progress Indicator ──────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.xs),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _currentStep == 1 ? 'Step 1 of 2: Shop Details' : 'Step 2 of 2: QR & Soundbox',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryBlue,
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                  ],
-
-                  // ── 1. Owner / Business Person Name (Required) ──────────────
-                  const Text('Owner / Merchant Name *', style: AppTypography.titleSmall),
-                  const SizedBox(height: AppSpacing.xs),
-                  TextFormField(
-                    controller: _ownerController,
-                    textCapitalization: TextCapitalization.words,
-                    style: const TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 15),
-                    decoration: const InputDecoration(
-                      hintText: 'e.g. Ramesh Kumar',
-                      prefixIcon: Icon(Icons.person_outline_rounded, color: AppColors.primaryBlue),
-                    ),
-                    validator: (val) {
-                      if (val == null || val.trim().isEmpty) {
-                        return 'Owner name is required.';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // ── 2. Shop / Business Name (Required) ──────────────────────
-                  const Text('Shop / Business Name *', style: AppTypography.titleSmall),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Announced aloud on every payment receipt',
-                    style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  TextFormField(
-                    controller: _shopNameController,
-                    textCapitalization: TextCapitalization.words,
-                    maxLength: 40,
-                    style: const TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 15),
-                    decoration: const InputDecoration(
-                      hintText: 'e.g. Ramesh Kirana Store',
-                      prefixIcon: Icon(Icons.store_rounded, color: AppColors.primaryBlue),
-                      counterText: '',
-                    ),
-                    validator: (val) {
-                      if (val == null || val.trim().isEmpty) {
-                        return 'Shop name is required for voice announcements.';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // ── 3. Shop Category Dropdown (Required) ────────────────────
-                  const Text('Shop Category *', style: AppTypography.titleSmall),
-                  const SizedBox(height: AppSpacing.xs),
-                  DropdownButtonFormField<String>(
-                    initialValue: _selectedCategory,
-                    icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textSecondary),
-                    style: const TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 15,
-                      color: AppColors.textPrimary,
-                    ),
-                    decoration: const InputDecoration(
-                      hintText: 'Select category',
-                      prefixIcon: Icon(Icons.category_outlined, color: AppColors.primaryBlue),
-                    ),
-                    items: kShopCategories.map((cat) {
-                      return DropdownMenuItem(value: cat, child: Text(cat));
-                    }).toList(),
-                    onChanged: (val) {
-                      setState(() => _selectedCategory = val);
-                    },
-                    validator: (val) {
-                      if (val == null || val.isEmpty) {
-                        return 'Please select your shop category.';
-                      }
-                      return null;
-                    },
-                  ),
-
-                  // Free-text field if "Other" is chosen
-                  if (_selectedCategory == 'Other') ...[
-                    const SizedBox(height: AppSpacing.md),
-                    TextFormField(
-                      controller: _categoryOtherController,
-                      textCapitalization: TextCapitalization.words,
-                      style: const TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 15),
-                      decoration: const InputDecoration(
-                        hintText: 'Specify your shop type (e.g. Dairy, Gift Shop)',
-                        prefixIcon: Icon(Icons.edit_note_rounded, color: AppColors.primaryBlue),
-                      ),
-                      validator: (val) {
-                        if (_selectedCategory == 'Other' && (val == null || val.trim().isEmpty)) {
-                          return 'Please specify your business type.';
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // ── 4. Phone Number (Conditional) ───────────────────────────
-                  if (_authenticatedViaPhone) ...[
-                    const Text('Mobile Number', style: AppTypography.titleSmall),
-                    const SizedBox(height: AppSpacing.xs),
-                    TextFormField(
-                      controller: _phoneController,
-                      readOnly: true,
-                      style: const TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 15,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      decoration: const InputDecoration(
-                        prefixIcon: Icon(Icons.phone_android_rounded, color: AppColors.textTertiary),
-                        suffixIcon: Icon(Icons.verified_rounded, color: AppColors.success, size: 20),
-                        filled: true,
-                        fillColor: AppColors.background,
-                      ),
-                    ),
-                  ] else ...[
-                    const Text('Mobile Number *', style: AppTypography.titleSmall),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Used for SMS payment detection & soundbox alerts',
-                      style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    TextFormField(
-                      controller: _phoneController,
-                      keyboardType: TextInputType.phone,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(10),
+                        ),
+                        Text(
+                          _currentStep == 1 ? '50%' : '100%',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                       ],
-                      style: const TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 15),
-                      decoration: const InputDecoration(
-                        hintText: '98765 43210',
-                        prefixIcon: Icon(Icons.phone_android_rounded, color: AppColors.primaryBlue),
+                    ),
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: _currentStep == 1 ? 0.5 : 1.0,
+                        minHeight: 6,
+                        backgroundColor: AppColors.borderLight,
+                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryBlue),
                       ),
-                      validator: (val) {
-                        if (val == null || val.trim().length < 10) {
-                          return 'Please enter a valid 10-digit mobile number.';
-                        }
-                        return null;
-                      },
                     ),
                   ],
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // ── 5. Email (Conditional) ──────────────────────────────────
-                  if (_authenticatedViaEmailOrGoogle) ...[
-                    const Text('Email Address', style: AppTypography.titleSmall),
-                    const SizedBox(height: AppSpacing.xs),
-                    TextFormField(
-                      controller: _emailController,
-                      readOnly: true,
-                      style: const TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 15,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      decoration: const InputDecoration(
-                        prefixIcon: Icon(Icons.email_outlined, color: AppColors.textTertiary),
-                        suffixIcon: Icon(Icons.verified_rounded, color: AppColors.success, size: 20),
-                        filled: true,
-                        fillColor: AppColors.background,
-                      ),
-                    ),
-                  ] else ...[
-                    const Text('Email Address (Optional)', style: AppTypography.titleSmall),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Optional — for monthly summaries & receipts',
-                      style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      style: const TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 15),
-                      decoration: const InputDecoration(
-                        hintText: 'merchant@example.com',
-                        prefixIcon: Icon(Icons.email_outlined, color: AppColors.primaryBlue),
-                      ),
-                      validator: (val) {
-                        if (val != null && val.trim().isNotEmpty) {
-                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(val.trim())) {
-                            return 'Please enter a valid email format.';
-                          }
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // ── 6. UPI ID (Optional) ─────────────────────────────────
-                  const Text('UPI ID (Optional)', style: AppTypography.titleSmall),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Your payment address for QR code generation (e.g. shop@upi)',
-                    style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  TextFormField(
-                    controller: _upiIdController,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.done,
-                    style: const TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 15),
-                    decoration: const InputDecoration(
-                      hintText: 'yourname@upi / 9876543210@ybl',
-                      prefixIcon: Icon(Icons.qr_code_rounded, color: AppColors.primaryBlue),
-                    ),
-                    validator: (val) {
-                      if (val != null && val.trim().isNotEmpty) {
-                        if (!val.trim().contains('@')) {
-                          return 'UPI ID must contain @ (e.g. name@upi).';
-                        }
-                      }
-                      return null;
-                    },
-                  ),
-
-                  const SizedBox(height: AppSpacing.xxl),
-
-                  // ── Submit Button ───────────────────────────────────────────
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: FilledButton(
-                      onPressed: (_isLoading || !_isFormValid) ? null : _handleCompleteSetup,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primaryBlue,
-                        disabledBackgroundColor: AppColors.cardBorder,
-                        shape: const RoundedRectangleBorder(borderRadius: AppRadius.mdRadius),
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
-                            )
-                          : const Text(
-                              'Get Started',
-                              style: TextStyle(
-                                fontFamily: AppTypography.fontFamily,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                              ),
-                            ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(height: AppSpacing.sm),
+
+              // ── Step Content ────────────────────────────────────────────────
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xl,
+                    vertical: AppSpacing.md,
+                  ),
+                  child: _currentStep == 1 ? _buildStep1() : _buildStep2(),
+                ),
+              ),
+
+              // ── Bottom Action Bar ───────────────────────────────────────────
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.base),
+                decoration: const BoxDecoration(
+                  color: AppColors.surface,
+                  border: Border(top: BorderSide(color: AppColors.borderLight)),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_currentStep == 1 && !_isStep1Valid) ...[
+                      const Text(
+                        'Enter your shop name to continue',
+                        style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
+                      ),
+                      const SizedBox(height: 6),
+                    ],
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: FilledButton(
+                        onPressed: _isLoading
+                            ? null
+                            : (_currentStep == 1
+                                ? (_isStep1Valid ? () => setState(() => _currentStep = 2) : null)
+                                : _handleCompleteSetup),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primaryBlue,
+                          disabledBackgroundColor: AppColors.cardBorder,
+                          shape: const RoundedRectangleBorder(borderRadius: AppRadius.mdRadius),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : Text(
+                                _currentStep == 1 ? 'Continue to Step 2' : 'Complete Setup & Open Soundbox',
+                                style: const TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+
+  // ── Step 1: Shop Profile ───────────────────────────────────────────────────
+
+  Widget _buildStep1() {
+    return Form(
+      key: _step1FormKey,
+      onChanged: () => setState(() {}),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.lightBlue,
+                  borderRadius: AppRadius.mdRadius,
+                  border: Border.all(color: AppColors.softBlueBorder, width: 1.0),
+                ),
+                child: const Icon(
+                  Icons.storefront_rounded,
+                  size: 26,
+                  color: AppColors.primaryBlue,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Your Business Name',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'The only required field to get started',
+                      style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xl),
+
+          // ── Shop Name (ONLY Required Field) ───────────────────────────────
+          const Text('Shop / Business Name *', style: AppTypography.titleSmall),
+          const SizedBox(height: 2),
+          Text(
+            'Announced aloud on every payment receipt',
+            style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          TextFormField(
+            controller: _shopNameController,
+            textCapitalization: TextCapitalization.words,
+            maxLength: 40,
+            autofocus: true,
+            style: const TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 15),
+            decoration: const InputDecoration(
+              hintText: 'e.g. Ramesh Kirana Store / Chai Point',
+              prefixIcon: Icon(Icons.store_rounded, color: AppColors.primaryBlue),
+              counterText: '',
+            ),
+            validator: (val) {
+              if (val == null || val.trim().isEmpty) {
+                return 'Shop name is required.';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // ── Owner Name (Optional) ─────────────────────────────────────────
+          const Text('Owner Name (Optional)', style: AppTypography.titleSmall),
+          const SizedBox(height: AppSpacing.xs),
+          TextFormField(
+            controller: _ownerController,
+            textCapitalization: TextCapitalization.words,
+            style: const TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 15),
+            decoration: const InputDecoration(
+              hintText: 'e.g. Ramesh Kumar',
+              prefixIcon: Icon(Icons.person_outline_rounded, color: AppColors.primaryBlue),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // ── Category (Optional) ───────────────────────────────────────────
+          const Text('Category (Optional)', style: AppTypography.titleSmall),
+          const SizedBox(height: AppSpacing.xs),
+          DropdownButtonFormField<String>(
+            initialValue: _selectedCategory,
+            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textSecondary),
+            style: const TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 15,
+              color: AppColors.textPrimary,
+            ),
+            decoration: const InputDecoration(
+              hintText: 'Select category (Grocery, Restaurant, etc.)',
+              prefixIcon: Icon(Icons.category_outlined, color: AppColors.primaryBlue),
+            ),
+            items: kShopCategories.map((cat) {
+              return DropdownMenuItem(value: cat, child: Text(cat));
+            }).toList(),
+            onChanged: (val) {
+              setState(() => _selectedCategory = val);
+            },
+          ),
+
+          if (_selectedCategory == 'Other') ...[
+            const SizedBox(height: AppSpacing.md),
+            TextFormField(
+              controller: _categoryOtherController,
+              textCapitalization: TextCapitalization.words,
+              style: const TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 15),
+              decoration: const InputDecoration(
+                hintText: 'Specify business type (e.g. Dairy, Gift Shop)',
+                prefixIcon: Icon(Icons.edit_note_rounded, color: AppColors.primaryBlue),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ── Step 2: UPI ID & Soundbox Preview ──────────────────────────────────────
+
+  Widget _buildStep2() {
+    final shop = _shopNameController.text.trim();
+    final displayName = shop.isEmpty ? 'MyUPI' : shop;
+
+    return Form(
+      key: _step2FormKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.lightBlue,
+                  borderRadius: AppRadius.mdRadius,
+                  border: Border.all(color: AppColors.softBlueBorder, width: 1.0),
+                ),
+                child: const Icon(
+                  Icons.qr_code_2_rounded,
+                  size: 26,
+                  color: AppColors.primaryBlue,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'QR Code & Soundbox Check',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Add your UPI ID and test speaker announcement',
+                      style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xl),
+
+          // ── UPI ID Field ──────────────────────────────────────────────────
+          const Text('UPI ID (Optional)', style: AppTypography.titleSmall),
+          const SizedBox(height: 2),
+          Text(
+            'Generates your payment QR card on the Home dashboard',
+            style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          TextFormField(
+            controller: _upiIdController,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.done,
+            style: const TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 15),
+            decoration: const InputDecoration(
+              hintText: 'e.g. shopname@okhdfcbank',
+              prefixIcon: Icon(Icons.qr_code_rounded, color: AppColors.primaryBlue),
+            ),
+            validator: (val) {
+              if (val != null && val.trim().isNotEmpty && !val.trim().contains('@')) {
+                return 'UPI ID must contain @ (e.g. name@okhdfcbank).';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 8),
+
+          // ── Handle suggestion chips ───────────────────────────────────────
+          const Text(
+            'Popular handle suggestions:',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: _upiHandles.map((handle) {
+              return ActionChip(
+                label: Text(
+                  handle,
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primaryBlue),
+                ),
+                backgroundColor: AppColors.lightBlue,
+                side: const BorderSide(color: AppColors.softBlueBorder),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                visualDensity: VisualDensity.compact,
+                onPressed: () => _applyHandle(handle),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+
+          // ── Audio Soundbox Preview Card ───────────────────────────────────
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.base),
+            decoration: BoxDecoration(
+              color: AppColors.lightBlue,
+              borderRadius: AppRadius.mdRadius,
+              border: Border.all(color: AppColors.softBlueBorder),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.volume_up_rounded, color: AppColors.primaryBlue, size: 20),
+                    const SizedBox(width: 8),
+                    const Text('Hear Your Soundbox', style: AppTypography.titleSmall),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Sample payment announcement:',
+                  style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: AppColors.cardBorder),
+                  ),
+                  child: Text(
+                    'Preview: "₹500 received on My U P I for $displayName."',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 42,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+                    ),
+                    onPressed: _playSampleAnnouncement,
+                    icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                    label: const Text('Play Sample Announcement', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          if (_duplicateAccountWarning != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              _duplicateAccountWarning!,
+              style: const TextStyle(fontSize: 12, color: AppColors.error, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ],
       ),
     );
   }

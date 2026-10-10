@@ -31,6 +31,9 @@ import 'paywall_screen.dart';
 import 'reliability_checklist_screen.dart';
 import '../services/auth_service.dart';
 import '../services/counter_kiosk_service.dart';
+import '../widgets/selection_bottom_sheet.dart';
+import '../widgets/settings_rows.dart';
+import '../widgets/volume_indicator_pill.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -53,6 +56,8 @@ class _SettingsScreenState extends State<SettingsScreen>
   bool _humanVoice = false;
   bool _chimeEnabled = true;
   bool? _notifAccess;
+  bool _batteryIgnored = false;
+  bool _testSoundPlayed = false;
   bool _isRestoring = false;
 
   @override
@@ -70,11 +75,63 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _checkAccess();
+    if (state == AppLifecycleState.resumed) {
+      _checkAccess();
+      _checkBattery();
+    }
   }
 
   Future<void> _loadAll() async {
-    await Future.wait([_loadSettings(), _checkAccess()]);
+    await Future.wait([
+      _loadSettings(),
+      _checkAccess(),
+      _checkBattery(),
+      _loadTestSoundPlayed(),
+    ]);
+  }
+
+  Future<void> _checkBattery() async {
+    try {
+      final ignored = await kMethodChannel.invokeMethod<bool>('isBatteryOptimizationIgnored') ?? false;
+      final prefs = await SharedPreferences.getInstance();
+      final checklistDone = prefs.getBool('battery_checklist_completed') ?? false;
+      if (mounted) setState(() => _batteryIgnored = ignored || checklistDone);
+    } catch (_) {}
+  }
+
+  Future<void> _loadTestSoundPlayed() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final played = prefs.getBool('test_sound_played') ?? false;
+      if (mounted) setState(() => _testSoundPlayed = played);
+    } catch (_) {}
+  }
+
+  Future<void> _playSample() async {
+    try {
+      await kMethodChannel.invokeMethod('speakTest');
+    } on PlatformException catch (_) {
+      TtsService.instance.speakTest();
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('test_sound_played', true);
+    if (mounted) setState(() => _testSoundPlayed = true);
+  }
+
+  Future<void> _launchWhatsAppSupport() async {
+    const whatsappUrl = 'https://wa.me/919999999999?text=Hi%20MyUPI%20Support%2C%20I%20need%20help%20with%20my%20Soundbox';
+    try {
+      await kMethodChannel.invokeMethod('openUrl', {'url': whatsappUrl});
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not open WhatsApp. Please check if WhatsApp is installed.'),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   Future<void> _loadSettings() async {
@@ -218,6 +275,8 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   // ── Build ──────────────────────────────────────────────────────────────────
 
+  // ── Build ──────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -238,767 +297,87 @@ class _SettingsScreenState extends State<SettingsScreen>
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         children: [
           // ════════════════════════════════════════════════════════════════════
-          // 1. SOUNDBOX & VOICE SECTION
+          // 1. SETUP HEALTH CARD (TOP — "NOBODY GETS STUCK")
+          // ════════════════════════════════════════════════════════════════════
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
+            child: _buildSetupHealthCard(),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // ════════════════════════════════════════════════════════════════════
+          // 2. VOICE (ONE CARD)
           // ════════════════════════════════════════════════════════════════════
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: SectionHeader(title: 'SOUNDBOX'),
+            child: SectionHeader(title: 'VOICE'),
           ),
           const SizedBox(height: AppSpacing.xs),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: PremiumCard(
-              padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  SwitchListTile(
-                    activeThumbColor: AppColors.primaryBlue,
-                    title: const Text('Soundbox', style: AppTypography.titleSmall),
-                    subtitle: Text(
-                      _soundboxEnabled
-                          ? 'Payment announcements are on'
-                          : 'Payment announcements are paused',
-                      style: AppTypography.caption.copyWith(
-                        color: _soundboxEnabled ? AppColors.success : AppColors.textTertiary,
-                      ),
-                    ),
-                    secondary: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: _soundboxEnabled ? AppColors.lightBlue : AppColors.background,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: Icon(
-                        _soundboxEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
-                        color: _soundboxEnabled ? AppColors.primaryBlue : AppColors.textTertiary,
-                        size: 20,
-                      ),
-                    ),
-                    value: _soundboxEnabled,
-                    onChanged: _setSoundbox,
-                  ),
-                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
-                  ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppColors.lightBlue,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: const Icon(Icons.language_rounded, color: AppColors.primaryBlue, size: 20),
-                    ),
-                    title: const Text('Announcement Language', style: AppTypography.titleSmall),
-                    subtitle: Text(_getLanguageLabel(_language), style: AppTypography.caption),
-                    trailing: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: AppRadius.smRadius,
-                        border: Border.all(color: AppColors.cardBorder),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _language,
-                          icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.textSecondary),
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                          items: const [
-                            DropdownMenuItem(value: 'en-IN', child: Text('English')),
-                            DropdownMenuItem(value: 'hi-IN', child: Text('Hindi (हिन्दी)')),
-                            DropdownMenuItem(value: 'mr-IN', child: Text('Marathi (मराठी)')),
-                            DropdownMenuItem(value: 'gu-IN', child: Text('Gujarati (ગુજરાતી)')),
-                            DropdownMenuItem(value: 'ta-IN', child: Text('Tamil (தமிழ்)')),
-                            DropdownMenuItem(value: 'te-IN', child: Text('Telugu (తెలుగు)')),
-                            DropdownMenuItem(value: 'bn-IN', child: Text('Bengali (বাংলা)')),
-                            DropdownMenuItem(value: 'kn-IN', child: Text('Kannada (ಕನ್ನಡ)')),
-                          ],
-                          onChanged: (v) {
-                            if (v != null) _setLanguage(v);
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
-                  ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppColors.lightBlue,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: const Icon(Icons.record_voice_over_rounded, color: AppColors.primaryBlue, size: 20),
-                    ),
-                    title: Row(
-                      children: [
-                        const Text('Announcement Voice', style: AppTypography.titleSmall),
-                        const SizedBox(width: 6),
-                        if (_humanVoice)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.success.withAlpha(25),
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: AppColors.success.withAlpha(60)),
-                            ),
-                            child: const Text(
-                              'HUMAN',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.success,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    subtitle: Text(
-                      _humanVoice
-                          ? (_includeShopName
-                              ? 'Human voice active • Note: Shop name uses standard TTS'
-                              : 'Natural human voice (offline pack)')
-                          : 'Standard voice (device system TTS)',
-                      style: AppTypography.caption,
-                    ),
-                    trailing: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: AppRadius.smRadius,
-                        border: Border.all(color: AppColors.cardBorder),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<bool>(
-                          value: _humanVoice,
-                          icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.textSecondary),
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: _humanVoice ? AppColors.success : AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                          items: const [
-                            DropdownMenuItem(value: false, child: Text('Standard')),
-                            DropdownMenuItem(value: true, child: Text('Human Voice')),
-                          ],
-                          onChanged: (v) {
-                            if (v != null) _setHumanVoice(v);
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
-                  SwitchListTile(
-                    activeThumbColor: AppColors.primaryBlue,
-                    title: const Text('Payment Attention Chime', style: AppTypography.titleSmall),
-                    subtitle: const Text('Play melodic chime before speech', style: AppTypography.caption),
-                    secondary: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: _chimeEnabled ? AppColors.lightBlue : AppColors.background,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: Icon(
-                        _chimeEnabled ? Icons.notifications_active_rounded : Icons.notifications_off_outlined,
-                        color: _chimeEnabled ? AppColors.primaryBlue : AppColors.textTertiary,
-                        size: 20,
-                      ),
-                    ),
-                    value: _chimeEnabled,
-                    onChanged: _setChime,
-                  ),
-                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
-                  // Tidy, non-wrapping Announcement Format with preview bubble
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: const BoxDecoration(
-                                color: AppColors.lightBlue,
-                                borderRadius: AppRadius.smRadius,
-                              ),
-                              child: const Icon(Icons.record_voice_over_rounded, color: AppColors.primaryBlue, size: 20),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: const [
-                                  Text('Announcement Style', style: AppTypography.titleSmall),
-                                  SizedBox(height: 2),
-                                  Text('Format spoken on payment', style: AppTypography.caption),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                              decoration: BoxDecoration(
-                                color: AppColors.background,
-                                borderRadius: AppRadius.smRadius,
-                                border: Border.all(color: AppColors.cardBorder),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _announceFormat,
-                                  icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.textSecondary),
-                                  style: AppTypography.bodyMedium.copyWith(
-                                    color: AppColors.primaryBlue,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
-                                  ),
-                                  items: const [
-                                    DropdownMenuItem(value: 'A', child: Text('Standard')),
-                                    DropdownMenuItem(value: 'B', child: Text('Short')),
-                                    DropdownMenuItem(value: 'C', child: Text('With shop name')),
-                                  ],
-                                  onChanged: (v) {
-                                    if (v != null) _setAnnounceFormat(v);
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: AppColors.background,
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: AppColors.cardBorder.withAlpha(120)),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.volume_up_outlined, size: 14, color: AppColors.primaryBlue),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  _getFormatPreviewText(_announceFormat),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
-                                    color: AppColors.textSecondary,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
-                  ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppColors.lightBlue,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: const Icon(Icons.speed_rounded, color: AppColors.primaryBlue, size: 20),
-                    ),
-                    title: const Text('Speech Speed', style: AppTypography.titleSmall),
-                    subtitle: const Text('Pacing of voice announcements', style: AppTypography.caption),
-                    trailing: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: AppRadius.smRadius,
-                        border: Border.all(color: AppColors.cardBorder),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _speechSpeed,
-                          icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.textSecondary),
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                          items: const [
-                            DropdownMenuItem(value: 'slow', child: Text('Slow')),
-                            DropdownMenuItem(value: 'normal', child: Text('Normal')),
-                            DropdownMenuItem(value: 'fast', child: Text('Fast')),
-                          ],
-                          onChanged: (v) {
-                            if (v != null) _setSpeed(v);
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
-                  ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppColors.lightBlue,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: const Icon(Icons.volume_up_rounded, color: AppColors.primaryBlue, size: 20),
-                    ),
-                    title: const Text('Announcement Volume', style: AppTypography.titleSmall),
-                    subtitle: const Text(
-                      'Uses phone media volume. Adjust via your device volume buttons.',
-                      style: AppTypography.caption,
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
-                  SwitchListTile(
-                    activeThumbColor: AppColors.primaryBlue,
-                    title: const Text('Keep Screen Awake on Counter', style: AppTypography.titleSmall),
-                    subtitle: const Text(
-                      'Keeps screen on for storefront display. Automatically releases on exit. (Increases battery drain; keep device plugged into charger).',
-                      style: AppTypography.caption,
-                    ),
-                    secondary: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: CounterKioskService.instance.isKeepAwake ? AppColors.lightBlue : AppColors.background,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: Icon(
-                        Icons.screen_lock_portrait_rounded,
-                        color: CounterKioskService.instance.isKeepAwake ? AppColors.primaryBlue : AppColors.textTertiary,
-                        size: 20,
-                      ),
-                    ),
-                    value: CounterKioskService.instance.isKeepAwake,
-                    onChanged: (v) async {
-                      await CounterKioskService.instance.setKeepAwake(v);
-                      setState(() {});
-                    },
-                  ),
-                ],
-              ),
-            ),
+            child: _buildVoiceCard(),
           ),
-
-          const SizedBox(height: AppSpacing.md),
-
-          // ── Test Soundbox (moved from Home Screen) ───────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: PremiumCard(
-              padding: const EdgeInsets.all(AppSpacing.base),
-              color: AppColors.lightBlue,
-              borderColor: AppColors.softBlueBorder,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryBlue.withAlpha(20),
-                          borderRadius: AppRadius.smRadius,
-                        ),
-                        child: const Icon(Icons.volume_up_rounded, color: AppColors.primaryBlue, size: 22),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Test Soundbox', style: AppTypography.titleSmall),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Hear a sample payment announcement',
-                              style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: AppColors.cardBorder.withAlpha(120)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.volume_up_outlined, size: 14, color: AppColors.primaryBlue),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _getFormatPreviewText(_announceFormat),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 44,
-                    child: FilledButton.icon(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primaryBlue,
-                        shape: const RoundedRectangleBorder(borderRadius: AppRadius.mdRadius),
-                      ),
-                      onPressed: () async {
-                        try {
-                          await kMethodChannel.invokeMethod('speakTest');
-                        } on PlatformException catch (_) {
-                          TtsService.instance.speakTest();
-                        }
-                      },
-                      icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                      label: const Text('Play Test Announcement', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
           const SizedBox(height: AppSpacing.lg),
 
           // ════════════════════════════════════════════════════════════════════
-          // 2. SHOP / MERCHANT PROFILE SECTION
+          // 3. SHOP
           // ════════════════════════════════════════════════════════════════════
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: SectionHeader(title: 'MERCHANT PROFILE'),
+            child: SectionHeader(title: 'SHOP'),
           ),
           const SizedBox(height: AppSpacing.xs),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: PremiumCard(
-              padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppColors.lightBlue,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: const Icon(Icons.storefront_rounded, color: AppColors.primaryBlue, size: 20),
-                    ),
-                    title: const Text('Shop / Business Name', style: AppTypography.titleSmall),
-                    subtitle: Text('$_merchantName • Long names are shortened when spoken', style: AppTypography.caption),
-                    trailing: const Icon(Icons.edit_rounded, size: 18, color: AppColors.textSecondary),
-                    onTap: _showEditMerchantNameDialog,
-                  ),
-                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
-                  SwitchListTile(
-                    activeThumbColor: AppColors.primaryBlue,
-                    secondary: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppColors.lightBlue,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: const Icon(Icons.store_rounded, color: AppColors.primaryBlue, size: 20),
-                    ),
-                    title: const Text('Include Shop Name', style: AppTypography.titleSmall),
-                    subtitle: Text(
-                      _includeShopName
-                          ? 'Shop name included in announcement'
-                          : 'Standard announcement without shop name',
-                      style: AppTypography.caption,
-                    ),
-                    value: _includeShopName,
-                    onChanged: _setIncludeShopName,
-                  ),
-                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
-                  ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppColors.lightBlue,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: const Icon(Icons.qr_code_2_rounded, color: AppColors.primaryBlue, size: 20),
-                    ),
-                    title: const Text('UPI ID', style: AppTypography.titleSmall),
-                    subtitle: Text(
-                      _getUpiIdDisplay(),
-                      style: AppTypography.caption.copyWith(
-                        color: _getUpiIdDisplay() == 'Not set' ? AppColors.textMuted : AppColors.textSecondary,
-                      ),
-                    ),
-                    trailing: const Icon(Icons.edit_rounded, size: 18, color: AppColors.textSecondary),
-                    onTap: _showEditUpiIdDialog,
-                  ),
-                ],
-              ),
-            ),
+            child: _buildShopCard(),
           ),
-
           const SizedBox(height: AppSpacing.lg),
 
           // ════════════════════════════════════════════════════════════════════
-          // 2. SUBSCRIPTION SECTION
+          // 4. COUNTER MODE
           // ════════════════════════════════════════════════════════════════════
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: SectionHeader(title: 'SUBSCRIPTION'),
+            child: SectionHeader(title: 'COUNTER MODE'),
           ),
           const SizedBox(height: AppSpacing.xs),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: ValueListenableBuilder<SubscriptionInfo>(
-              valueListenable: SubscriptionManager.instance.subscriptionInfoNotifier,
-              builder: (context, subInfo, _) {
-                final isEntitled = subInfo.state.hasPremiumEntitlement;
-                return PremiumCard(
-                  padding: const EdgeInsets.all(AppSpacing.base),
-                  color: isEntitled ? AppColors.surface : AppColors.lightBlue,
-                  borderColor: isEntitled ? AppColors.successBorder : AppColors.primaryBlue.withAlpha(50),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Row(
-                              children: const [
-                                Icon(
-                                  Icons.workspace_premium_rounded,
-                                  size: 22,
-                                  color: AppColors.primaryBlue,
-                                ),
-                                SizedBox(width: AppSpacing.sm),
-                                Flexible(
-                                  child: Text(
-                                    'MyUPI Premium',
-                                    style: AppTypography.titleSmall,
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          StatusBadge(
-                            label: subInfo.state.label.toUpperCase(),
-                            type: isEntitled ? StatusBadgeType.active : StatusBadgeType.info,
-                            showDot: true,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        isEntitled
-                            ? 'All 8 Indian languages, custom shop branding, and priority announcements active.'
-                            : 'Introductory Offer: ₹1 for first month, then ₹49/month. Cancel anytime via Play Store.',
-                        style: AppTypography.bodySmall,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Wrap(
-                        spacing: AppSpacing.sm,
-                        runSpacing: AppSpacing.xs,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          SecondaryButton(
-                            label: isEntitled ? 'Manage Subscription' : 'View Premium Plans',
-                            icon: Icons.star_rounded,
-                            height: 42,
-                            isFullWidth: false,
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (ctx) => const PaywallScreen(sourceEntry: 'settings'),
-                                ),
-                              );
-                            },
-                          ),
-                          TextButton.icon(
-                            onPressed: _isRestoring ? null : _handleRestorePurchases,
-                            style: TextButton.styleFrom(
-                              visualDensity: VisualDensity.compact,
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            ),
-                            icon: _isRestoring
-                                ? const SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryBlue),
-                                  )
-                                : const Icon(Icons.restore_rounded, size: 16, color: AppColors.primaryBlue),
-                            label: const Text(
-                              'Restore',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primaryBlue,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+            child: _buildCounterModeCard(),
           ),
-
           const SizedBox(height: AppSpacing.lg),
 
           // ════════════════════════════════════════════════════════════════════
-          // 3. APP SECTION
+          // 5. PLAN
           // ════════════════════════════════════════════════════════════════════
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: SectionHeader(title: 'APP'),
+            child: SectionHeader(title: 'PLAN'),
           ),
           const SizedBox(height: AppSpacing.xs),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: PremiumCard(
-              padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppColors.lightBlue,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: const Icon(Icons.shield_rounded, color: AppColors.primaryBlue, size: 20),
-                    ),
-                    title: const Text('Reliability & Protection Setup', style: AppTypography.titleSmall),
-                    subtitle: const Text('Battery exemption, SMS backup & autostart checklist', style: AppTypography.caption),
-                    trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (ctx) => const ReliabilityChecklistScreen()),
-                      );
-                    },
-                  ),
-                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
-                  ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: _notifAccess == true ? AppColors.successBg : AppColors.warningBg,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: Icon(
-                        _notifAccess == true ? Icons.check_circle_rounded : Icons.error_outline_rounded,
-                        color: _notifAccess == true ? AppColors.success : AppColors.warning,
-                        size: 20,
-                      ),
-                    ),
-                    title: const Text('Notification Access', style: AppTypography.titleSmall),
-                    subtitle: Text(
-                      _notifAccess == null
-                          ? 'Checking…'
-                          : _notifAccess!
-                              ? 'Enabled — MyUPI can hear payment notifications'
-                              : 'Disabled — payments cannot be announced',
-                      style: AppTypography.caption.copyWith(
-                        color: _notifAccess == true ? AppColors.success : AppColors.warning,
-                      ),
-                    ),
-                    trailing: _notifAccess == false
-                        ? OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: AppColors.warning),
-                              foregroundColor: AppColors.warning,
-                              shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
-                            ),
-                            onPressed: _openAccessSettings,
-                            child: const Text('Enable', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                          )
-                        : null,
-                  ),
-                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
-                  ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppColors.lightBlue,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: const Icon(Icons.help_outline_rounded, color: AppColors.primaryBlue, size: 20),
-                    ),
-                    title: const Text('Help & Support', style: AppTypography.titleSmall),
-                    subtitle: const Text('FAQs, setup guides, and troubleshooting', style: AppTypography.caption),
-                    trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (ctx) => const HelpSupportScreen()),
-                      );
-                    },
-                  ),
-                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
-                  ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppColors.lightBlue,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: const Icon(Icons.info_outline_rounded, color: AppColors.primaryBlue, size: 20),
-                    ),
-                    title: const Text('About MyUPI', style: AppTypography.titleSmall),
-                    subtitle: const Text('Version 1.0.0, privacy policy, and terms', style: AppTypography.caption),
-                    trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (ctx) => const AboutScreen()),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
+            child: _buildPlanCard(),
           ),
+          const SizedBox(height: AppSpacing.lg),
 
           // ════════════════════════════════════════════════════════════════════
-          // 4. ACCOUNT & SESSION
+          // 6. HELP & RELIABILITY
           // ════════════════════════════════════════════════════════════════════
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
+            child: SectionHeader(title: 'HELP & RELIABILITY'),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
+            child: _buildHelpAndReliabilityCard(),
+          ),
           const SizedBox(height: AppSpacing.lg),
+
+          // ════════════════════════════════════════════════════════════════════
+          // 7. ACCOUNT
+          // ════════════════════════════════════════════════════════════════════
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
             child: SectionHeader(title: 'ACCOUNT'),
@@ -1006,69 +385,691 @@ class _SettingsScreenState extends State<SettingsScreen>
           const SizedBox(height: AppSpacing.xs),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: PremiumCard(
-              padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppColors.lightBlue,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: const Icon(Icons.person_outline_rounded, color: AppColors.primaryBlue, size: 20),
-                    ),
-                    title: Text(
-                      AuthService.instance.currentUser?.displayName ??
-                          FirestoreService.instance.cachedProfile?.ownerName ??
-                          'Merchant Profile',
-                      style: AppTypography.titleSmall,
-                    ),
-                    subtitle: Text(
-                      AuthService.instance.currentUser?.email ??
-                          AuthService.instance.currentUser?.phoneNumber ??
-                          FirestoreService.instance.cachedProfile?.phone ??
-                          'Signed in',
-                      style: AppTypography.caption,
+            child: _buildAccountCard(),
+          ),
+          const SizedBox(height: AppSpacing.xxl),
+        ],
+      ),
+    );
+  }
+
+  // ── 1. Setup Health Card ───────────────────────────────────────────────────
+
+  Widget _buildSetupHealthCard() {
+    final notifOk = _notifAccess == true;
+    final batteryOk = _batteryIgnored;
+    final upiOk = _getUpiIdDisplay() != 'Not set';
+    final soundOk = _testSoundPlayed;
+
+    final completedCount = (notifOk ? 1 : 0) +
+        (batteryOk ? 1 : 0) +
+        (upiOk ? 1 : 0) +
+        (soundOk ? 1 : 0);
+
+    final isAllSet = completedCount == 4;
+
+    if (isAllSet) {
+      return PremiumCard(
+        color: AppColors.successBg,
+        borderColor: AppColors.successBorder,
+        padding: const EdgeInsets.all(AppSpacing.base),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 20),
+                const SizedBox(width: AppSpacing.sm),
+                const Expanded(
+                  child: Text(
+                    'All Set • Soundbox Ready',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.success,
                     ),
                   ),
-                  const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
-                  ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppColors.errorBg,
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: const Icon(Icons.logout_rounded, color: AppColors.error, size: 20),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    '4/4 ✓',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.success,
                     ),
-                    title: const Text(
-                      'Sign Out',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Notification access, battery optimization, UPI ID, and sound preview are verified.',
+              style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return PremiumCard(
+      color: AppColors.warningBg,
+      borderColor: AppColors.warningBorder,
+      padding: const EdgeInsets.all(AppSpacing.base),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 20),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  'Setup Health • $completedCount of 4 complete',
+                  style: const TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$completedCount/4',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.warning,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Complete setup to prevent missed payment announcements.',
+            style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          _buildHealthCheckRow(
+            title: 'Notification Access',
+            isDone: notifOk,
+            actionLabel: 'Enable',
+            onAction: _openAccessSettings,
+          ),
+          const SizedBox(height: 8),
+          _buildHealthCheckRow(
+            title: 'Battery & Autostart',
+            isDone: batteryOk,
+            actionLabel: 'Review',
+            onAction: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (ctx) => const ReliabilityChecklistScreen()),
+              );
+              _checkBattery();
+            },
+          ),
+          const SizedBox(height: 8),
+          _buildHealthCheckRow(
+            title: 'UPI ID Added',
+            isDone: upiOk,
+            actionLabel: 'Add',
+            onAction: _showEditUpiIdDialog,
+          ),
+          const SizedBox(height: 8),
+          _buildHealthCheckRow(
+            title: 'Test Sound Played',
+            isDone: soundOk,
+            actionLabel: 'Play',
+            onAction: _playSample,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHealthCheckRow({
+    required String title,
+    required bool isDone,
+    required String actionLabel,
+    required VoidCallback onAction,
+  }) {
+    return Row(
+      children: [
+        Icon(
+          isDone ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+          size: 16,
+          color: isDone ? AppColors.success : AppColors.textTertiary,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: isDone ? FontWeight.w500 : FontWeight.w600,
+              color: isDone ? AppColors.textSecondary : AppColors.textPrimary,
+              decoration: isDone ? TextDecoration.lineThrough : null,
+            ),
+          ),
+        ),
+        if (!isDone) ...[
+          const SizedBox(width: 8),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: SizedBox(
+                height: 28,
+                child: FilledButton(
+                  onPressed: onAction,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  child: Text(actionLabel, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  // ── 2. Voice Card ──────────────────────────────────────────────────────────
+
+  Widget _buildVoiceCard() {
+    return PremiumCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          // Master Soundbox switch
+          SwitchRow(
+            iconData: _soundboxEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+            title: 'Soundbox',
+            subtitle: _soundboxEnabled
+                ? 'Payment announcements are on'
+                : 'Payment announcements are paused',
+            value: _soundboxEnabled,
+            onChanged: _setSoundbox,
+            iconColor: _soundboxEnabled ? AppColors.success : AppColors.textTertiary,
+            iconBgColor: _soundboxEnabled ? AppColors.successBg : AppColors.background,
+            showDivider: true,
+          ),
+
+          // Language NavRow
+          NavRow(
+            iconData: Icons.language_rounded,
+            title: 'Announcement Language',
+            subtitle: 'Spoken language for payments',
+            value: _getLanguageLabel(_language),
+            onTap: _showLanguagePicker,
+            showDivider: true,
+          ),
+
+          // Voice Type NavRow (with HUMAN tag)
+          NavRow(
+            iconData: Icons.record_voice_over_rounded,
+            title: 'Announcement Voice',
+            subtitle: _humanVoice
+                ? (_includeShopName
+                    ? 'Human voice active • Shop name uses system TTS'
+                    : 'Natural human voice (offline pack)')
+                : 'Standard voice (device system TTS)',
+            value: _humanVoice ? 'Human Voice' : 'Standard',
+            badge: _humanVoice
+                ? Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: AppColors.success.withValues(alpha: 0.4)),
+                    ),
+                    child: const Text(
+                      'HUMAN',
                       style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 14,
+                        fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.error,
+                        color: AppColors.success,
                       ),
                     ),
-                    subtitle: const Text(
-                      'Sign out and switch merchant accounts',
-                      style: AppTypography.caption,
+                  )
+                : null,
+            onTap: _showVoicePicker,
+            showDivider: true,
+          ),
+
+          // Announcement Style NavRow
+          NavRow(
+            iconData: Icons.style_rounded,
+            title: 'Announcement Style',
+            subtitle: 'Format spoken on payment',
+            value: _getFormatName(_announceFormat),
+            onTap: _showAnnounceFormatPicker,
+            showDivider: true,
+          ),
+
+          // Melodic Attention Chime SwitchRow
+          SwitchRow(
+            iconData: _chimeEnabled ? Icons.notifications_active_rounded : Icons.notifications_off_outlined,
+            title: 'Payment Attention Chime',
+            subtitle: 'Play melodic chime before speech',
+            value: _chimeEnabled,
+            onChanged: _setChime,
+            showDivider: true,
+          ),
+
+          // Single Play Sample Box with exact sentence preview
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.base),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.lightBlue,
+                borderRadius: AppRadius.mdRadius,
+                border: Border.all(color: AppColors.softBlueBorder),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.hearing_rounded, size: 16, color: AppColors.primaryBlue),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Sample Announcement',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.titleSmall.copyWith(fontSize: 13, color: AppColors.primaryBlue),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _getFormatPreviewText(_announceFormat),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
                     ),
-                    trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary),
-                    onTap: _showSignOutDialog,
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 40,
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.primaryBlue,
+                        shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+                      ),
+                      onPressed: _playSample,
+                      icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                      label: const Text('Play Sample', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                    ),
                   ),
                 ],
               ),
             ),
           ),
 
-          const SizedBox(height: AppSpacing.xxl),
+          // Advanced ▸ Speech speed
+          NavRow(
+            iconData: Icons.speed_rounded,
+            title: 'Speech Speed (Advanced)',
+            subtitle: 'Pacing of voice announcements',
+            value: _speechSpeed.toUpperCase(),
+            onTap: _showSpeedPicker,
+            showDivider: false,
+          ),
         ],
       ),
+    );
+  }
+
+  // ── 3. Shop Card ───────────────────────────────────────────────────────────
+
+  Widget _buildShopCard() {
+    return PremiumCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          NavRow(
+            iconData: Icons.storefront_rounded,
+            title: 'Shop / Business Name',
+            subtitle: 'Spoken in announcement and displayed on QR',
+            value: _merchantName,
+            onTap: _showEditMerchantNameDialog,
+            showDivider: true,
+          ),
+          SwitchRow(
+            iconData: Icons.store_rounded,
+            title: 'Include Shop Name',
+            subtitle: _includeShopName
+                ? 'Shop name included in announcement'
+                : 'Standard announcement without shop name',
+            value: _includeShopName,
+            onChanged: _setIncludeShopName,
+            showDivider: true,
+          ),
+          NavRow(
+            iconData: Icons.qr_code_2_rounded,
+            title: 'UPI ID',
+            subtitle: 'Payment address for QR code generation',
+            value: _getUpiIdDisplay(),
+            onTap: _showEditUpiIdDialog,
+            showDivider: false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── 4. Counter Mode Card ───────────────────────────────────────────────────
+
+  Widget _buildCounterModeCard() {
+    return PremiumCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          SwitchRow(
+            iconData: Icons.screen_lock_portrait_rounded,
+            title: 'Keep Screen Awake on Counter',
+            subtitle: 'Storefront counter display (increases battery drain)',
+            value: CounterKioskService.instance.isKeepAwake,
+            onChanged: (v) async {
+              await CounterKioskService.instance.setKeepAwake(v);
+              setState(() {});
+            },
+            showDivider: true,
+          ),
+          NavRow(
+            iconData: Icons.volume_up_rounded,
+            title: 'Announcement Volume',
+            subtitle: 'Adjust phone media volume',
+            value: 'Media Volume',
+            onTap: () => VolumeIndicatorPill.showVolumeSheet(context),
+            showDivider: false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── 5. Plan Card ───────────────────────────────────────────────────────────
+
+  Widget _buildPlanCard() {
+    return ValueListenableBuilder<SubscriptionInfo>(
+      valueListenable: SubscriptionManager.instance.subscriptionInfoNotifier,
+      builder: (context, subInfo, _) {
+        final isEntitled = subInfo.state.hasPremiumEntitlement;
+        return PremiumCard(
+          padding: EdgeInsets.zero,
+          color: isEntitled ? AppColors.surface : AppColors.lightBlue,
+          borderColor: isEntitled ? AppColors.successBorder : AppColors.primaryBlue.withValues(alpha: 0.2),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.base),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: const [
+                              Icon(
+                                Icons.workspace_premium_rounded,
+                                size: 22,
+                                color: AppColors.primaryBlue,
+                              ),
+                              SizedBox(width: AppSpacing.sm),
+                              Flexible(
+                                child: Text(
+                                  'MyUPI Premium',
+                                  style: AppTypography.titleSmall,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: StatusBadge(
+                              label: subInfo.state.label.toUpperCase(),
+                              type: isEntitled ? StatusBadgeType.active : StatusBadgeType.info,
+                              showDot: true,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      isEntitled
+                          ? 'All 8 Indian languages, custom shop branding, and priority announcements active.'
+                          : 'Introductory Offer: ₹1 for first month, then ₹49/month. Cancel anytime via Play Store.',
+                      style: AppTypography.bodySmall,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    SecondaryButton(
+                      label: isEntitled ? 'Manage Subscription' : 'View Premium Plans',
+                      icon: Icons.star_rounded,
+                      height: 42,
+                      isFullWidth: true,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (ctx) => const PaywallScreen(sourceEntry: 'settings'),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: AppColors.borderLight),
+              // Restore Purchases as a clean NavRow INSIDE the card per spec
+              NavRow(
+                iconData: Icons.restore_rounded,
+                title: 'Restore Purchases',
+                subtitle: 'Restore active Play Store subscription',
+                value: _isRestoring ? 'Restoring…' : 'Restore',
+                onTap: _isRestoring ? null : _handleRestorePurchases,
+                showDivider: false,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ── 6. Help & Reliability Card ─────────────────────────────────────────────
+
+  Widget _buildHelpAndReliabilityCard() {
+    return PremiumCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          NavRow(
+            iconData: Icons.shield_rounded,
+            title: 'Reliability Checklist',
+            subtitle: 'Battery exemption, SMS backup & autostart',
+            value: _batteryIgnored ? 'Optimal' : 'Needs Review',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (ctx) => const ReliabilityChecklistScreen()),
+              );
+            },
+            showDivider: true,
+          ),
+          NavRow(
+            iconData: _notifAccess == true ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+            title: 'Notification Access',
+            subtitle: _notifAccess == true
+                ? 'Enabled — MyUPI hears payment notifications'
+                : 'Disabled — payments cannot be announced',
+            value: _notifAccess == true ? 'Active' : 'Enable',
+            iconColor: _notifAccess == true ? AppColors.success : AppColors.warning,
+            iconBgColor: _notifAccess == true ? AppColors.successBg : AppColors.warningBg,
+            onTap: _openAccessSettings,
+            showDivider: true,
+          ),
+          NavRow(
+            iconData: Icons.help_outline_rounded,
+            title: 'Help & Support',
+            subtitle: 'FAQs, setup guides, and troubleshooting',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (ctx) => const HelpSupportScreen()),
+              );
+            },
+            showDivider: true,
+          ),
+          NavRow(
+            iconData: Icons.chat_rounded,
+            title: 'Chat on WhatsApp',
+            subtitle: 'Instant support for merchants via WhatsApp',
+            value: 'Chat',
+            iconColor: const Color(0xFF25D366),
+            iconBgColor: const Color(0xFFE8F8EE),
+            onTap: _launchWhatsAppSupport,
+            showDivider: true,
+          ),
+          NavRow(
+            iconData: Icons.info_outline_rounded,
+            title: 'About MyUPI',
+            subtitle: 'Version 1.0.0, privacy policy, and terms',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (ctx) => const AboutScreen()),
+              );
+            },
+            showDivider: false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── 7. Account Card ────────────────────────────────────────────────────────
+
+  Widget _buildAccountCard() {
+    return PremiumCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          NavRow(
+            iconData: Icons.person_outline_rounded,
+            title: AuthService.instance.currentUser?.displayName ??
+                FirestoreService.instance.cachedProfile?.ownerName ??
+                'Merchant Profile',
+            subtitle: AuthService.instance.currentUser?.email ??
+                AuthService.instance.currentUser?.phoneNumber ??
+                FirestoreService.instance.cachedProfile?.phone ??
+                'Signed in',
+            showDivider: true,
+          ),
+          NavRow(
+            iconData: Icons.logout_rounded,
+            title: 'Sign Out',
+            subtitle: 'Sign out and switch merchant accounts',
+            iconColor: AppColors.error,
+            iconBgColor: AppColors.errorBg,
+            onTap: _showSignOutDialog,
+            showDivider: true,
+          ),
+          NavRow(
+            iconData: Icons.delete_forever_rounded,
+            title: 'Delete Account & Data',
+            subtitle: 'Permanently remove your merchant data',
+            iconColor: AppColors.error,
+            iconBgColor: AppColors.errorBg,
+            onTap: _showDeleteAccountDialog,
+            showDivider: false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteAccountDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.lgRadius),
+          title: const Text('Delete Account & Data', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold)),
+          content: const Text(
+            'This will permanently delete your merchant profile and clear local transaction history. This action cannot be undone.',
+            style: AppTypography.bodySmall,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('CANCEL', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.error,
+                shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+              ),
+              onPressed: () async {
+                Navigator.pop(ctx);
+                try {
+                  final user = FirebaseAuth.instance.currentUser;
+                  if (user != null) {
+                    await FirestoreService.instance.deleteUserProfile(user.uid);
+                    await user.delete();
+                  }
+                  await kMethodChannel.invokeMethod('clearPaymentHistory');
+                  await AuthService.instance.signOut();
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to delete account: $e. You may need to sign in again first.'),
+                      backgroundColor: AppColors.error,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+              child: const Text('DELETE PERMANENTLY', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -1120,21 +1121,156 @@ class _SettingsScreenState extends State<SettingsScreen>
   String _getLanguageLabel(String langCode) {
     switch (langCode) {
       case 'hi-IN':
-        return 'Hindi';
+        return 'Hindi (हिन्दी)';
       case 'mr-IN':
-        return 'Marathi';
+        return 'Marathi (मराठी)';
       case 'gu-IN':
-        return 'Gujarati';
+        return 'Gujarati (ગુજરાતી)';
       case 'ta-IN':
-        return 'Tamil';
+        return 'Tamil (தமிழ்)';
       case 'te-IN':
-        return 'Telugu';
+        return 'Telugu (తెలుగు)';
       case 'bn-IN':
-        return 'Bengali';
+        return 'Bengali (বাংলা)';
       case 'kn-IN':
-        return 'Kannada';
+        return 'Kannada (ಕನ್ನಡ)';
       default:
-        return 'English (India)';
+        return 'English';
+    }
+  }
+
+  String _getFormatName(String f) {
+    switch (f) {
+      case 'B':
+        return 'Short';
+      case 'C':
+        return 'With shop name';
+      default:
+        return 'Standard';
+    }
+  }
+
+  Future<void> _showLanguagePicker() async {
+    HapticFeedback.selectionClick();
+    final items = [
+      const SelectionItem(value: 'en-IN', title: 'English', subtitle: 'English (India)'),
+      const SelectionItem(value: 'hi-IN', title: 'हिन्दी', subtitle: 'Hindi'),
+      const SelectionItem(value: 'mr-IN', title: 'मराठी', subtitle: 'Marathi'),
+      const SelectionItem(value: 'gu-IN', title: 'ગુજરાતી', subtitle: 'Gujarati'),
+      const SelectionItem(value: 'ta-IN', title: 'தமிழ்', subtitle: 'Tamil'),
+      const SelectionItem(value: 'te-IN', title: 'తెలుగు', subtitle: 'Telugu'),
+      const SelectionItem(value: 'bn-IN', title: 'বাংলা', subtitle: 'Bengali'),
+      const SelectionItem(value: 'kn-IN', title: 'ಕನ್ನಡ', subtitle: 'Kannada'),
+    ];
+    final selected = await showSelectionBottomSheet<String>(
+      context: context,
+      title: 'Announcement Language',
+      subtitle: 'Select the language spoken for payments',
+      items: items,
+      selectedValue: _language,
+    );
+    if (selected != null && selected != _language) {
+      await _setLanguage(selected);
+    }
+  }
+
+  Future<void> _showVoicePicker() async {
+    HapticFeedback.selectionClick();
+    final items = [
+      const SelectionItem<bool>(
+        value: false,
+        title: 'Standard Voice',
+        subtitle: 'Device system TTS engine',
+      ),
+      SelectionItem<bool>(
+        value: true,
+        title: 'Human Voice',
+        subtitle: 'Natural human voice (offline pack)',
+        trailingBadge: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: AppColors.success.withAlpha(25),
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: AppColors.success.withAlpha(60)),
+          ),
+          child: const Text(
+            'HUMAN',
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.success),
+          ),
+        ),
+      ),
+    ];
+    final selected = await showSelectionBottomSheet<bool>(
+      context: context,
+      title: 'Announcement Voice',
+      subtitle: 'Choose your soundbox voice type',
+      items: items,
+      selectedValue: _humanVoice,
+    );
+    if (selected != null && selected != _humanVoice) {
+      await _setHumanVoice(selected);
+    }
+  }
+
+  Future<void> _showAnnounceFormatPicker() async {
+    HapticFeedback.selectionClick();
+    final items = [
+      const SelectionItem<String>(
+        value: 'A',
+        title: 'Standard',
+        subtitle: 'Amount first + My U P I',
+      ),
+      const SelectionItem<String>(
+        value: 'B',
+        title: 'Short',
+        subtitle: 'Amount received only',
+      ),
+      const SelectionItem<String>(
+        value: 'C',
+        title: 'With shop name',
+        subtitle: 'Amount first + My U P I + Shop name',
+      ),
+    ];
+    final selected = await showSelectionBottomSheet<String>(
+      context: context,
+      title: 'Announcement Style',
+      subtitle: 'Format spoken when payment is received',
+      items: items,
+      selectedValue: _announceFormat,
+    );
+    if (selected != null && selected != _announceFormat) {
+      await _setAnnounceFormat(selected);
+    }
+  }
+
+  Future<void> _showSpeedPicker() async {
+    HapticFeedback.selectionClick();
+    final items = [
+      const SelectionItem<String>(
+        value: 'slow',
+        title: 'Slow',
+        subtitle: 'Clear, slower pacing for noisy shops',
+      ),
+      const SelectionItem<String>(
+        value: 'normal',
+        title: 'Normal',
+        subtitle: 'Standard conversational speed',
+      ),
+      const SelectionItem<String>(
+        value: 'fast',
+        title: 'Fast',
+        subtitle: 'Brisk, fast pacing',
+      ),
+    ];
+    final selected = await showSelectionBottomSheet<String>(
+      context: context,
+      title: 'Speech Speed',
+      subtitle: 'Pacing of voice announcements',
+      items: items,
+      selectedValue: _speechSpeed,
+    );
+    if (selected != null && selected != _speechSpeed) {
+      await _setSpeed(selected);
     }
   }
 

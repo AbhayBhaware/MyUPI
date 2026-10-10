@@ -357,6 +357,24 @@ class MainActivity : FlutterActivity() {
                         result.success(diagnostics)
                     }
 
+                    // ── Open external URL (e.g. WhatsApp support) ─────────────
+                    "openUrl" -> {
+                        val url = call.argument<String>("url")
+                        if (url != null) {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                startActivity(intent)
+                                result.success(true)
+                            } catch (e: Exception) {
+                                result.error("INTENT_FAILED", e.message, null)
+                            }
+                        } else {
+                            result.error("INVALID_URL", "URL cannot be null", null)
+                        }
+                    }
+
                     else -> result.notImplemented()
                 }
             }

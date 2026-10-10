@@ -202,6 +202,25 @@ class FirestoreService {
     }
   }
 
+  /// Permanently deletes the merchant profile from database
+  Future<void> deleteUserProfile(String uid) async {
+    try {
+      final user = _currentUser;
+      final token = await user?.getIdToken();
+      final authParam = (token != null && token.isNotEmpty) ? '?auth=$token' : '';
+      final url = '$rtdbUrl/$kCollectionUsers/$uid.json$authParam';
+      final uri = Uri.parse(url);
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      };
+      await _client.delete(uri, headers: headers);
+      clearLocalCache();
+    } catch (e) {
+      debugPrint('[DatabaseService] Error deleting user profile: $e');
+    }
+  }
+
   /// Clears in-memory profile cache on sign out.
   void clearLocalCache() {
     _cachedProfile = null;

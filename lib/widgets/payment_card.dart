@@ -11,6 +11,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import '../utils/currency_formatter.dart';
 import 'premium_card.dart';
 
 class PaymentCard extends StatelessWidget {
@@ -49,115 +50,109 @@ class PaymentCard extends StatelessWidget {
     switch (record.source) {
       case PaymentSource.both:
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
           decoration: BoxDecoration(
             color: AppColors.successBg,
             borderRadius: BorderRadius.circular(4),
             border: Border.all(color: AppColors.successBorder, width: 0.8),
           ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.mark_chat_read_rounded, size: 10, color: AppColors.success),
-              SizedBox(width: 3),
-              Text(
-                'Seen in notif + SMS',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.success,
+          child: const FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.mark_chat_read_rounded, size: 10, color: AppColors.success),
+                SizedBox(width: 3),
+                Text(
+                  'Notif + SMS',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.success,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
 
       case PaymentSource.sms:
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
           decoration: BoxDecoration(
             color: const Color(0xFFF1F5F9),
             borderRadius: BorderRadius.circular(4),
             border: Border.all(color: const Color(0xFFCBD5E1), width: 0.8),
           ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.sms_rounded, size: 10, color: Color(0xFF475569)),
-              SizedBox(width: 3),
-              Text(
-                'SMS',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF334155),
+          child: const FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.sms_rounded, size: 10, color: Color(0xFF475569)),
+                SizedBox(width: 3),
+                Text(
+                  'SMS',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF334155),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
 
       case PaymentSource.notification:
       default:
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
           decoration: BoxDecoration(
             color: AppColors.lightBlue,
             borderRadius: BorderRadius.circular(4),
             border: Border.all(color: AppColors.softBlueBorder, width: 0.8),
           ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.notifications_active_rounded, size: 10, color: AppColors.primaryBlue),
-              SizedBox(width: 3),
-              Text(
-                'Notification',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primaryBlue,
+          child: const FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.notifications_active_rounded, size: 10, color: AppColors.primaryBlue),
+                SizedBox(width: 3),
+                Text(
+                  'Notif',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primaryBlue,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
     }
   }
 
   Widget? _buildTrustBadge() {
-    if (record.trustLevel == TrustLevel.medium) {
+    if (record.source == PaymentSource.sms && record.trustLevel == TrustLevel.low) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF7ED),
+          color: const Color(0xFFFFFBEB),
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: const Color(0xFFFFEDD5), width: 0.8),
+          border: Border.all(color: const Color(0xFFFDE68A), width: 0.8),
         ),
-        child: const Text(
-          'Medium Trust',
-          style: TextStyle(
-            fontSize: 9,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFFC2410C),
-          ),
-        ),
-      );
-    }
-    if (record.trustLevel == TrustLevel.low) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFEF2F2),
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: const Color(0xFFFEE2E2), width: 0.8),
-        ),
-        child: const Text(
-          'Check in Bank',
-          style: TextStyle(
-            fontSize: 9,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFFDC2626),
+        child: const FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            'Verify in bank',
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFFB45309),
+            ),
           ),
         ),
       );
@@ -219,13 +214,17 @@ class PaymentCard extends StatelessWidget {
                   spacing: 6,
                   runSpacing: 2,
                   children: [
-                    // Dominant Amount
-                    Text(
-                      record.displayAmount,
-                      style: AppTypography.currencyMedium.copyWith(
-                        fontSize: 19,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.4,
+                    // Dominant Amount with Indian grouping
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        CurrencyFormatter.format(record.amount),
+                        style: AppTypography.currencyMedium.copyWith(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.4,
+                        ),
                       ),
                     ),
                     _buildChannelBadge(),
@@ -233,19 +232,22 @@ class PaymentCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: appColor,
-                        shape: BoxShape.circle,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: appColor,
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 5),
-                    Expanded(
-                      child: Text(
+                      const SizedBox(width: 5),
+                      Text(
                         record.appName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -254,63 +256,63 @@ class PaymentCard extends StatelessWidget {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-          // Timestamp & Status
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                _formatTime(record.timestamp),
-                style: AppTypography.caption.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                isDual ? 'Notif + SMS' : (isSms ? 'SMS Alert' : 'Notification'),
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textMuted,
-                ),
-              ),
-              if (onRespeak != null) ...[
-                const SizedBox(height: 5),
-                InkWell(
-                  onTap: onRespeak,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppColors.lightBlue,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.softBlueBorder, width: 0.8),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.volume_up_rounded, size: 11, color: AppColors.primaryBlue),
-                        SizedBox(width: 3),
-                        Text(
-                          'Repeat',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primaryBlue,
-                          ),
-                        ),
-                      ],
+          const SizedBox(width: AppSpacing.xs),
+          // Timestamp & Action (single source badge is already on the card)
+          Flexible(
+            flex: 0,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _formatTime(record.timestamp),
+                    style: AppTypography.caption.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
                     ),
                   ),
-                ),
-              ],
-            ],
+                  if (onRespeak != null) ...[
+                    const SizedBox(height: 5),
+                    InkWell(
+                      onTap: onRespeak,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.lightBlue,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.softBlueBorder, width: 0.8),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.volume_up_rounded, size: 11, color: AppColors.primaryBlue),
+                            SizedBox(width: 3),
+                            Text(
+                              'Repeat',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primaryBlue,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ),
         ],
       ),

@@ -21,18 +21,12 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../tts_service.dart';
 import '../upi_detector.dart';
-import '../widgets/payment_card.dart';
-import '../widgets/premium_buttons.dart';
 import '../widgets/premium_card.dart';
 import '../widgets/qr_code_card.dart';
-import '../widgets/section_header.dart';
-import '../widgets/stat_card.dart';
 import 'paywall_screen.dart';
-import 'reliability_checklist_screen.dart';
 import '../services/counter_kiosk_service.dart';
 import '../utils/currency_formatter.dart';
 import '../widgets/volume_indicator_pill.dart';
-import '../widgets/transaction_detail_bottom_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
   final void Function(int tabIndex)? onNavigateToTab;
@@ -375,6 +369,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return 'Good evening,';
   }
 
+  String _formatTime(DateTime dt) {
+    final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final m = dt.minute.toString().padLeft(2, '0');
+    final ampm = dt.hour < 12 ? 'AM' : 'PM';
+    return '$h:$m $ampm';
+  }
+
   // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
@@ -444,57 +445,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         ),
                       ),
                       const VolumeIndicatorPill(),
-                      const SizedBox(width: 8),
-                      InkWell(
-                        onTap: () => _toggleSoundbox(!_soundboxEnabled),
-                        borderRadius: AppRadius.smRadius,
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                          decoration: BoxDecoration(
-                            color: _soundboxEnabled ? AppColors.successBg : AppColors.surface,
-                            borderRadius: AppRadius.smRadius,
-                            border: Border.all(
-                              color: _soundboxEnabled ? AppColors.successBorder : AppColors.cardBorder,
-                              width: 1.0,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                _soundboxEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
-                                size: 16,
-                                color: _soundboxEnabled ? AppColors.success : AppColors.textMuted,
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                _soundboxEnabled ? 'ACTIVE' : 'OFF',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: _soundboxEnabled ? AppColors.success : AppColors.textMuted,
-                                  letterSpacing: 0.3,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: AppRadius.smRadius,
-                          border: Border.all(color: AppColors.cardBorder, width: 1.0),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.settings_outlined, size: 20, color: AppColors.textPrimary),
-                          tooltip: 'Settings',
-                          onPressed: () => widget.onNavigateToTab?.call(2),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -507,175 +457,43 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const SizedBox(height: AppSpacing.sm),
+
+                      // ── ONE Full-Width Soundbox Status Card (Wireframe 4.1) ─
+                      _buildSoundboxStatusCard(notifOk: notifOk, checking: checking),
                       const SizedBox(height: AppSpacing.md),
 
                       // ── Live Payment Banner (When in-app payment occurs) ─────
                       if (_livePayment != null) ...[
                         _buildLivePaymentOverlay(_livePayment!),
-                        const SizedBox(height: AppSpacing.base),
+                        const SizedBox(height: AppSpacing.md),
                       ],
 
-                      // ── Notification Access Warning (if disabled) ───────────
-                      if (!checking && !notifOk) ...[
-                        _buildAccessWarningCard(),
-                        const SizedBox(height: AppSpacing.base),
-                      ],
+                      // ── Hero: Last Payment & Combined Stats ──────────────────
+                      _buildLastPaymentHeroCard(),
+                      const SizedBox(height: AppSpacing.md),
 
-                      // ── Big Payment QR Code Card (Top of Dashboard) ────────
+                      // ── Compact Payment QR Code Card ─────────────────────────
                       QrCodeCard(
                         upiId: _upiId,
                         merchantName: _merchantName,
                         soundboxActive: _soundboxEnabled && notifOk,
                         onEdit: _showEditUpiIdDialog,
                       ),
-                      const SizedBox(height: AppSpacing.lg),
-
-                      // ── Today's Performance ─────────────────────────────────
-                      const SectionHeader(
-                        title: "Today's Collection",
-                        padding: EdgeInsets.only(bottom: AppSpacing.sm),
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: StatCard(
-                              title: "Today's Earnings",
-                              value: _todayRecs.isEmpty ? '₹0' : _todayTotalFmt,
-                              subtitle: _todayRecs.isEmpty ? 'Waiting for 1st payment' : 'Total received today',
-                              icon: Icons.currency_rupee_rounded,
-                              iconColor: AppColors.primaryBlue,
-                              iconBgColor: AppColors.lightBlue,
-                              onTap: () => widget.onNavigateToTab?.call(1),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: StatCard(
-                              title: 'Payments',
-                              value: '${_todayRecs.length}',
-                              subtitle: _todayRecs.length == 1 ? '1 transaction' : '${_todayRecs.length} transactions',
-                              icon: Icons.receipt_long_outlined,
-                              iconColor: AppColors.success,
-                              iconBgColor: AppColors.successBg,
-                              onTap: () => widget.onNavigateToTab?.call(1),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-
-                      // ── Most Recent Payment ─────────────────────────────────
-                      SectionHeader(
-                        title: 'Most Recent Payment',
-                        actionLabel: 'View History',
-                        onAction: () => widget.onNavigateToTab?.call(1),
-                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                      ),
-                      _buildRecentPaymentSection(),
-                      const SizedBox(height: AppSpacing.lg),
-
-                      // ── MyUPI Premium Banner Card ───────────────────────────
-                      _buildSubscriptionBannerCard(),
-                      const SizedBox(height: AppSpacing.lg),
-
-                      // ── Quick Actions Grid ──────────────────────────────────
-                      const SectionHeader(
-                        title: 'Quick Actions',
-                        padding: EdgeInsets.only(bottom: AppSpacing.sm),
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: CustomOutlineButton(
-                              label: 'History',
-                              icon: Icons.receipt_long_rounded,
-                              height: 48,
-                              onPressed: () => widget.onNavigateToTab?.call(1),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: CustomOutlineButton(
-                              label: 'Settings',
-                              icon: Icons.tune_rounded,
-                              height: 48,
-                              onPressed: () => widget.onNavigateToTab?.call(2),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: CustomOutlineButton(
-                              label: 'Premium',
-                              icon: Icons.workspace_premium_rounded,
-                              height: 48,
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const PaywallScreen(sourceEntry: 'dashboard'),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
                       const SizedBox(height: AppSpacing.md),
-                      InkWell(
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const ReliabilityChecklistScreen()),
-                        ),
-                        borderRadius: AppRadius.mdRadius,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base, vertical: 13),
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: AppRadius.mdRadius,
-                            border: Border.all(color: AppColors.cardBorder),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(Icons.checklist_rounded, color: AppColors.primaryBlue, size: 20),
-                              SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  'Reliability & Protection Checklist',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                              Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textMuted),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
 
-                      // ── Merchant Anti-Fraud Disclaimer Footnote ─────────────
-                      Container(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: AppRadius.mdRadius,
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: const Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.info_outline_rounded, size: 16, color: AppColors.textMuted),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Convenience alert only. For large payments, always verify in your banking app before releasing goods.',
-                                style: TextStyle(fontSize: 11, color: AppColors.textSecondary, height: 1.3),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      // ── Alert Strip (Only if needed, most urgent first) ─────
+                      if (!checking && !notifOk) ...[
+                        _buildAccessWarningCard(),
+                        const SizedBox(height: AppSpacing.md),
+                      ],
+
+                      // ── Offer Banner (Only if not subscribed) ───────────────
+                      _buildSubscriptionBannerCard(),
+                      const SizedBox(height: AppSpacing.md),
+
+                      // ── Anti-Fraud Footnote Notice ──────────────────────────
+                      _buildAntiFraudNotice(),
                       const SizedBox(height: AppSpacing.xxl),
                     ],
                   ),
@@ -684,6 +502,119 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // ── One Full-Width Soundbox Status Card (Wireframe 4.1) ───────────────────
+
+  Widget _buildSoundboxStatusCard({required bool notifOk, required bool checking}) {
+    if (!_soundboxEnabled) {
+      // OFF = prominent Amber card: "Soundbox is OFF — payments won't be spoken" + [Turn on]
+      return Container(
+        constraints: const BoxConstraints(minHeight: 56),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.warningBg,
+          borderRadius: AppRadius.mdRadius,
+          border: Border.all(color: AppColors.warningBorder, width: 1.2),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.volume_off_rounded, color: AppColors.warning, size: 24),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Soundbox is OFF',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF92400E),
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    "Payments won't be spoken",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFFB45309),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.warning,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+                minimumSize: const Size(0, 36),
+              ),
+              onPressed: () => _toggleSoundbox(true),
+              child: const Text('Turn on', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ON = Calm healthy card: "● Soundbox is ON [ ON ▮] / Listening for payments"
+    return Container(
+      constraints: const BoxConstraints(minHeight: 56),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.mdRadius,
+        border: Border.all(color: AppColors.cardBorder),
+        boxShadow: AppShadows.card,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.success,
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Soundbox is ON',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.deepNavy,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  'Listening for payments',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: true,
+            activeTrackColor: AppColors.primaryBlue,
+            onChanged: (v) => _toggleSoundbox(v),
+          ),
+        ],
       ),
     );
   }
@@ -741,86 +672,181 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  // ── Recent Payment Section ─────────────────────────────────────────────────
+  // ── Last Payment Hero & Combined Stats Card (Section 4.1) ─────────────────
 
-  Widget _buildRecentPaymentSection() {
+  Widget _buildLastPaymentHeroCard() {
     final last = _lastPayment;
-
-    if (last == null) {
-      return PremiumCard(
-        padding: const EdgeInsets.all(AppSpacing.base),
-        color: AppColors.surface,
-        borderColor: AppColors.borderLight,
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppColors.lightBlue,
-                borderRadius: AppRadius.mdRadius,
-                border: Border.all(color: AppColors.softBlueBorder, width: 1),
-              ),
-              child: const Icon(Icons.wifi_tethering_rounded, color: AppColors.primaryBlue, size: 24),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          'Ready & Waiting for Payments',
-                          style: AppTypography.titleSmall.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: AppColors.success,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ],
+    return PremiumCard(
+      padding: const EdgeInsets.all(AppSpacing.base),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Last payment',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    'When customers scan your QR code to pay, the payment will appear here and speak aloud.',
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.textSecondary,
-                      height: 1.35,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (last != null) ...[
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: () {
+                    TtsService.instance.speakPayment(last.amount);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Re-announcing ${CurrencyFormatter.format(last.amount)}...'),
+                        duration: const Duration(seconds: 2),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.lightBlue,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.softBlueBorder, width: 0.8),
+                    ),
+                    child: const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.volume_up_rounded, size: 13, color: AppColors.primaryBlue),
+                          SizedBox(width: 4),
+                          Text(
+                            'Repeat',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primaryBlue,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (last != null) ...[
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 10,
+              runSpacing: 4,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    CurrencyFormatter.format(last.amount),
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.8,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${last.appName} · ${_formatTime(last.timestamp)}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            const Row(
+              children: [
+                Icon(Icons.wifi_tethering_rounded, color: AppColors.primaryBlue, size: 22),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Waiting for payments... Soundbox is ready.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 14),
+          const Divider(height: 1, color: AppColors.borderLight),
+          const SizedBox(height: 12),
+          // Combined stats row (→ History)
+          InkWell(
+            onTap: () => widget.onNavigateToTab?.call(1),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Today ${_todayRecs.isEmpty ? '₹0' : _todayTotalFmt} · ${_todayRecs.length} ${_todayRecs.length == 1 ? "payment" : "payments"}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const Icon(Icons.arrow_forward_ios_rounded, size: 13, color: AppColors.textSecondary),
                 ],
               ),
             ),
-          ],
-        ),
-      );
-    }
-
-    return PaymentCard(
-      record: last,
-      onTap: () => TransactionDetailBottomSheet.show(context, last),
-      onRespeak: () {
-        TtsService.instance.speakPayment(last.amount);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Re-announcing ₹${last.amount}...'),
-            duration: const Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
           ),
-        );
-      },
+        ],
+      ),
+    );
+  }
+
+  // ── Anti-Fraud Footnote Notice ─────────────────────────────────────────────
+
+  Widget _buildAntiFraudNotice() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.mdRadius,
+        border: Border.all(color: AppColors.borderLight),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline_rounded, size: 16, color: AppColors.textSecondary),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Confirm large payments in your bank app.',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

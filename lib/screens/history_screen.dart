@@ -314,7 +314,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                           icon: Icons.receipt_long_rounded,
                           badgeText: 'SOUNDBOX READY',
                           title: 'No payment history yet',
-                          subtitle: 'Incoming UPI payments will appear here in real-time as they are announced.',
+                          subtitle: 'Tip: Scan your QR code on Home and make a ₹1 payment to test your soundbox in action.',
                           actionLabel: 'Play Test Announcement',
                           onAction: () {
                             TtsService.instance.speakTest();
@@ -397,7 +397,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                             ),
                           )
                         else
-                          // ── Grouped History sections ──────────────────────
+                          // ── Grouped History sections with per-day total ──────────────────────
                           for (final entry in grouped.entries) ...[
                             SliverToBoxAdapter(
                               child: Padding(
@@ -407,9 +407,18 @@ class _HistoryScreenState extends State<HistoryScreen>
                                   AppSpacing.base,
                                   AppSpacing.xs,
                                 ),
-                                child: SectionHeader(
-                                  title: entry.key,
-                                  badgeText: '${entry.value.length}',
+                                child: Builder(
+                                  builder: (context) {
+                                    final dayTotal = entry.value.fold<double>(
+                                      0.0,
+                                      (sum, rec) => sum + (double.tryParse(rec.amount.replaceAll(',', '')) ?? 0.0),
+                                    );
+                                    final dayTotalFmt = CurrencyFormatter.format(dayTotal);
+                                    return SectionHeader(
+                                      title: entry.key,
+                                      badgeText: '$dayTotalFmt (${entry.value.length})',
+                                    );
+                                  },
                                 ),
                               ),
                             ),
@@ -529,7 +538,7 @@ class _HistoryScreenState extends State<HistoryScreen>
   Widget _buildSummaryBar() {
     final today = _todayRecs;
     return PremiumCard(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 16),
+      padding: const EdgeInsets.all(AppSpacing.base),
       child: Row(
         children: [
           Expanded(
@@ -547,12 +556,16 @@ class _HistoryScreenState extends State<HistoryScreen>
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
-                    const Text(
-                      "Today's Collection",
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
+                    const Expanded(
+                      child: Text(
+                        "Today's Collection",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
                   ],
@@ -574,29 +587,32 @@ class _HistoryScreenState extends State<HistoryScreen>
               ],
             ),
           ),
-          InkWell(
-            onTap: _shareDailySummary,
-            borderRadius: AppRadius.mdRadius,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.lightBlue,
+          const SizedBox(width: AppSpacing.sm),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 110),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: InkWell(
+                onTap: _shareDailySummary,
                 borderRadius: AppRadius.mdRadius,
-                border: Border.all(color: AppColors.softBlueBorder, width: 1.0),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.lightBlue,
+                    borderRadius: AppRadius.mdRadius,
+                    border: Border.all(color: AppColors.softBlueBorder, width: 1.0),
+                  ),
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.share_rounded, size: 12, color: AppColors.primaryBlue),
-                      const SizedBox(width: 4),
+                      const Icon(Icons.share_rounded, size: 13, color: AppColors.primaryBlue),
+                      const SizedBox(width: 5),
                       Text(
-                        '${today.length} ${today.length == 1 ? "Payment" : "Payments"}',
+                        '${today.length} ${today.length == 1 ? "payment" : "payments"}',
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -605,16 +621,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 2),
-                  const Text(
-                    'Share Summary',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

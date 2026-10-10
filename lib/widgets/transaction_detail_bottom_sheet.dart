@@ -69,11 +69,22 @@ class TransactionDetailBottomSheet extends StatelessWidget {
   String _getTrustLevelLabel() {
     switch (record.trustLevel) {
       case TrustLevel.high:
-        return 'High Confidence';
+        return 'High';
       case TrustLevel.medium:
-        return 'Medium Confidence';
+        return 'Medium';
       case TrustLevel.low:
-        return 'Check in Bank';
+        return 'Low';
+    }
+  }
+
+  String _getTrustLevelDescription() {
+    switch (record.trustLevel) {
+      case TrustLevel.high:
+        return 'Direct notification from trusted UPI app';
+      case TrustLevel.medium:
+        return 'Notification details parsed successfully';
+      case TrustLevel.low:
+        return 'SMS alert only — please verify in bank app';
     }
   }
 
@@ -141,28 +152,28 @@ class TransactionDetailBottomSheet extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
 
-            // Dominant Amount Center Box
+            // Dominant Amount Center Box (Neutral badge without green check mark)
             Center(
               child: Column(
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.successBg,
+                      color: AppColors.background,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.successBorder, width: 0.8),
+                      border: Border.all(color: AppColors.borderLight, width: 0.8),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.check_circle_rounded, size: 14, color: AppColors.success),
+                        Icon(Icons.payments_outlined, size: 14, color: AppColors.textSecondary),
                         SizedBox(width: 5),
                         Text(
-                          'Payment Detected',
+                          'Payment detected',
                           style: TextStyle(
                             fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.success,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -221,18 +232,59 @@ class TransactionDetailBottomSheet extends StatelessWidget {
                     value: _getTrustLevelLabel(),
                     valueColor: record.trustLevel == TrustLevel.high
                         ? AppColors.success
-                        : (record.trustLevel == TrustLevel.medium ? const Color(0xFFC2410C) : const Color(0xFFDC2626)),
+                        : (record.trustLevel == TrustLevel.medium ? const Color(0xFFC2410C) : const Color(0xFFB45309)),
+                  ),
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      _getTrustLevelDescription(),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: AppSpacing.md),
 
+            // Amber "Verify in bank" hint shown only for SMS-only detections per spec
+            if (record.source == PaymentSource.sms) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFBEB),
+                  borderRadius: AppRadius.smRadius,
+                  border: Border.all(color: const Color(0xFFFDE68A)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFFB45309)),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Verify in bank • SMS-only detection without push notification.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFB45309),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+            ],
+
             // Calm Bank Verification Footnote
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: const Color(0xFFFEF9C3).withAlpha(120),
+                color: const Color(0xFFFEF9C3).withValues(alpha: 0.5),
                 borderRadius: AppRadius.smRadius,
                 border: Border.all(color: const Color(0xFFFEF08A)),
               ),

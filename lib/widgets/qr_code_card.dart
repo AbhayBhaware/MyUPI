@@ -253,22 +253,14 @@ class _QrCodeCardState extends State<QrCodeCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              widget.merchantName.isEmpty ? 'MyUPI Merchant' : widget.merchantName,
-                              style: AppTypography.titleMedium.copyWith(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.check_circle_rounded, size: 15, color: AppColors.success),
-                        ],
+                      Text(
+                        widget.merchantName.isEmpty ? 'MyUPI Merchant' : widget.merchantName,
+                        style: AppTypography.titleMedium.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                       const Text(
@@ -282,41 +274,7 @@ class _QrCodeCardState extends State<QrCodeCard> {
                     ],
                   ),
                 ),
-                // Soundbox Status indicator
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: widget.soundboxActive ? AppColors.successBg : const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: widget.soundboxActive ? AppColors.successBorder : AppColors.cardBorder,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: widget.soundboxActive ? AppColors.success : AppColors.textMuted,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        widget.soundboxActive ? 'Soundbox Live' : 'Soundbox Off',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: widget.soundboxActive ? AppColors.success : AppColors.textMuted,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 6),
+
                 if (widget.onEdit != null)
                   InkWell(
                     onTap: widget.onEdit,
@@ -398,7 +356,7 @@ class _QrCodeCardState extends State<QrCodeCard> {
               child: QrImageView(
                 data: _upiUri,
                 version: QrVersions.auto,
-                size: 205,
+                size: 170,
                 eyeStyle: const QrEyeStyle(
                   eyeShape: QrEyeShape.square,
                   color: AppColors.deepNavy,
@@ -412,43 +370,49 @@ class _QrCodeCardState extends State<QrCodeCard> {
             ),
             const SizedBox(height: AppSpacing.sm),
 
-            // ── Tap to enlarge hint & Set amount actions ──
+            // ── Show QR & Set Amount action buttons (Bounded, responsive) ──
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.fullscreen_rounded, size: 16, color: AppColors.primaryBlue),
-                const SizedBox(width: 4),
-                Text(
-                  'Tap to enlarge for customers',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: AppColors.primaryBlue.withAlpha(220),
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showFullScreenQr(context),
+                    icon: const Icon(Icons.fullscreen_rounded, size: 16),
+                    label: const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text('Show QR to customer', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primaryBlue,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      side: const BorderSide(color: AppColors.softBlueBorder),
+                      shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+                      minimumSize: const Size(0, 40),
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                InkWell(
-                  onTap: () => _showSetAmountDialog(context),
-                  borderRadius: BorderRadius.circular(4),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    child: Row(
-                      children: [
-                        Icon(
-                          _fixedAmount != null ? Icons.edit_rounded : Icons.add_circle_outline_rounded,
-                          size: 13,
-                          color: AppColors.primaryBlue,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          _fixedAmount != null ? 'Edit Bill' : 'Set Bill Amount',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primaryBlue,
-                          ),
-                        ),
-                      ],
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showSetAmountDialog(context),
+                    icon: Icon(
+                      _fixedAmount != null ? Icons.edit_rounded : Icons.add_circle_outline_rounded,
+                      size: 16,
+                    ),
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        _fixedAmount != null ? 'Edit Bill (₹$_fixedAmount)' : 'Set Amount',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primaryBlue,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      side: BorderSide(
+                        color: _fixedAmount != null ? AppColors.primaryBlue : AppColors.softBlueBorder,
+                      ),
+                      shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+                      minimumSize: const Size(0, 40),
                     ),
                   ),
                 ),
@@ -456,7 +420,7 @@ class _QrCodeCardState extends State<QrCodeCard> {
             ),
             const SizedBox(height: AppSpacing.sm),
 
-            // ── UPI ID + Copy Pill ──
+            // ── UPI ID + Copy Pill (Flexible + FittedBox bounded) ──
             InkWell(
               onTap: () => _copyUpiId(context),
               borderRadius: AppRadius.mdRadius,
@@ -474,20 +438,23 @@ class _QrCodeCardState extends State<QrCodeCard> {
                     const Icon(Icons.qr_code_2_rounded, size: 16, color: AppColors.primaryBlue),
                     const SizedBox(width: 8),
                     Flexible(
-                      child: Text(
-                        widget.upiId,
-                        style: const TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.deepNavy,
-                          letterSpacing: 0.4,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          widget.upiId,
+                          style: const TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.deepNavy,
+                            letterSpacing: 0.4,
+                          ),
+                          maxLines: 1,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
@@ -516,8 +483,9 @@ class _QrCodeCardState extends State<QrCodeCard> {
             ),
             const SizedBox(height: AppSpacing.md),
 
-            // ── Supported UPI Apps Banner (Correction 1.8) ──
+            // ── Short Centered UPI Banner (Rule 5: "Scan with any UPI app") ──
             Container(
+              width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
               decoration: BoxDecoration(
                 color: const Color(0xFFF8FAFC),
@@ -529,12 +497,17 @@ class _QrCodeCardState extends State<QrCodeCard> {
                 children: [
                   Icon(Icons.shield_outlined, size: 14, color: AppColors.primaryBlue),
                   SizedBox(width: 6),
-                  Text(
-                    'Accepts GPay, PhonePe, Paytm, BHIM & all UPI apps',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Scan with any UPI app',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                     ),
                   ),
                 ],

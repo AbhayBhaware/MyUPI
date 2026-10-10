@@ -144,21 +144,24 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       borderRadius: AppRadius.pillRadius,
                       border: Border.all(color: AppColors.primaryBlue.withAlpha(50)),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.star_rounded, size: 16, color: AppColors.primaryBlue),
-                        SizedBox(width: 6),
-                        Text(
-                          'SMART SOUNDBOX UPGRADE',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.primaryBlue,
-                            letterSpacing: 0.8,
+                    child: const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.star_rounded, size: 16, color: AppColors.primaryBlue),
+                          SizedBox(width: 6),
+                          Text(
+                            'SMART SOUNDBOX UPGRADE',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primaryBlue,
+                              letterSpacing: 0.8,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -295,13 +298,16 @@ class _PaywallScreenState extends State<PaywallScreen> {
               color: Colors.amber.shade300,
               borderRadius: AppRadius.pillRadius,
             ),
-            child: const Text(
-              'SPECIAL INTRODUCTORY OFFER',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                color: Color(0xFF78350F),
-                letterSpacing: 0.5,
+            child: const FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                'SPECIAL INTRODUCTORY OFFER',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF78350F),
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
           ),
@@ -312,20 +318,26 @@ class _PaywallScreenState extends State<PaywallScreen> {
             spacing: AppSpacing.xs,
             runSpacing: 2,
             children: [
-              Text(
-                billing.introPriceDisplay,
-                style: const TextStyle(
-                  fontSize: 44,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  billing.introPriceDisplay,
+                  style: const TextStyle(
+                    fontSize: 44,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-              const Text(
-                'for your first month',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFFD6E4FF),
+              const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'for your first month',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFD6E4FF),
+                  ),
                 ),
               ),
             ],
@@ -337,13 +349,16 @@ class _PaywallScreenState extends State<PaywallScreen> {
               color: Colors.white.withAlpha(40),
               borderRadius: AppRadius.smRadius,
             ),
-            child: Text(
-              'THEN ${billing.recurringPriceDisplay.toUpperCase()}',
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-                letterSpacing: 0.8,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                'THEN ${billing.recurringPriceDisplay.toUpperCase()}',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: 0.8,
+                ),
               ),
             ),
           ),
@@ -550,25 +565,31 @@ class _PaywallScreenState extends State<PaywallScreen> {
               child: Icon(icon, size: 18, color: AppColors.primaryBlue),
             ),
             const SizedBox(height: 6),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
             ),
             const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                fontSize: 10,
-                color: AppColors.textSecondary,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
             ),
           ],
         ),
@@ -588,12 +609,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
             children: const [
               Icon(Icons.compare_arrows_rounded, size: 20, color: AppColors.primaryBlue),
               SizedBox(width: 8),
-              Text(
-                'Hardware Soundbox vs MyUPI',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+              Expanded(
+                child: Text(
+                  'Hardware Soundbox vs MyUPI',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
             ],
@@ -734,12 +757,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
             children: const [
               Icon(Icons.help_outline_rounded, size: 20, color: AppColors.primaryBlue),
               SizedBox(width: 8),
-              Text(
-                'Frequently Asked Questions',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+              Expanded(
+                child: Text(
+                  'Frequently Asked Questions',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
             ],

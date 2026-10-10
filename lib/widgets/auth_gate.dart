@@ -18,6 +18,7 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 import '../models/user_profile.dart';
 import '../screens/auth/setup_wizard_screen.dart';
@@ -26,7 +27,6 @@ import '../screens/shell_page.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_radius.dart';
 import '../theme/app_typography.dart';
 
 class AuthGate extends StatefulWidget {
@@ -44,13 +44,16 @@ class _AuthGateState extends State<AuthGate> {
       builder: (context, authSnapshot) {
         // ── 1. Auth state loading ─────────────────────────────────────────────
         if (authSnapshot.connectionState == ConnectionState.waiting) {
-          return const _AuthLoadingSplash();
+          return const _HomeSkeletonPlaceholder();
         }
 
         final user = authSnapshot.data;
 
         // ── 2. Not logged in -> Welcome Screen ────────────────────────────────
         if (user == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            FlutterNativeSplash.remove();
+          });
           return const WelcomeScreen();
         }
 
@@ -127,8 +130,13 @@ class _FirestoreProfileGateState extends State<_FirestoreProfileGate> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const _AuthLoadingSplash();
+      return const _HomeSkeletonPlaceholder();
     }
+
+    // Dismiss splash screen once destination screen is ready
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FlutterNativeSplash.remove();
+    });
 
     if (_errorMessage != null) {
       return Scaffold(
@@ -201,66 +209,89 @@ class _FirestoreProfileGateState extends State<_FirestoreProfileGate> {
   }
 }
 
-class _AuthLoadingSplash extends StatelessWidget {
-  const _AuthLoadingSplash();
+/// Home layout placeholder skeleton displayed while auth/profile is loading.
+/// Prevents blank flash and avoids isolated spinners per Android launch guidelines.
+class _HomeSkeletonPlaceholder extends StatelessWidget {
+  const _HomeSkeletonPlaceholder();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: AppRadius.xlRadius,
-                border: Border.all(color: AppColors.softBlueBorder, width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryBlue.withAlpha(25),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Skeleton: Logo + Shop Name + Volume Pill
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        width: 120,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    width: 76,
+                    height: 32,
+                    decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                 ],
               ),
-              child: ClipRRect(
-                borderRadius: AppRadius.xlRadius,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Image.asset(
-                    'assets/icon/icon_foreground.png',
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.speaker,
-                      size: 48,
-                      color: AppColors.primaryBlue,
-                    ),
+              const SizedBox(height: 16),
+              // Status Card Skeleton
+              Container(
+                width: double.infinity,
+                height: 58,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Last Payment Hero Card Skeleton
+              Container(
+                width: double.infinity,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // QR Card Skeleton
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'MyUPI',
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.2,
-                color: AppColors.primaryBlue,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const SizedBox(
-              width: 26,
-              height: 26,
-              child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.primaryBlue),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

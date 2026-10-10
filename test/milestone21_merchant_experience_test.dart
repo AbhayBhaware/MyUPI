@@ -245,16 +245,17 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      // Section headers
-      expect(find.text('SOUNDBOX'), findsOneWidget);
-      expect(find.text('SUBSCRIPTION'), findsOneWidget);
-      expect(find.text('APP'), findsOneWidget);
+      // Pro Redesign Section headers (Section 4.2 IA)
+      expect(find.text('VOICE'), findsOneWidget);
+      expect(find.text('SHOP'), findsOneWidget);
+      expect(find.text('PLAN'), findsOneWidget);
+      expect(find.text('HELP & RELIABILITY'), findsOneWidget);
 
-      // Soundbox items
+      // Soundbox/Voice items
       expect(find.text('Soundbox'), findsOneWidget);
-      expect(find.text('Shop / Business Name'), findsOneWidget);
-      expect(find.text('Include Shop Name'), findsOneWidget);
       expect(find.text('Announcement Language'), findsOneWidget);
+      expect(find.text('Shop Name'), findsOneWidget);
+      expect(find.text('Include Shop Name'), findsOneWidget);
 
       // Developer diagnostics is REMOVED from the list view
       expect(find.text('Developer Diagnostics'), findsNothing);
@@ -380,11 +381,11 @@ void main() {
       // Merchant shop name
       expect(find.text('Abhay General Store'), findsOneWidget);
 
-      // Soundbox status pill
-      expect(find.text('ACTIVE'), findsOneWidget);
+      // Pro Redesign Soundbox Status Card (Section 4.1)
+      expect(find.text('Soundbox is ON'), findsOneWidget);
 
-      // Recent payment card displays cleanly
-      expect(find.text('Most Recent Payment'), findsOneWidget);
+      // Last payment hero card
+      expect(find.text('Last payment'), findsOneWidget);
       expect(find.text('₹500'), findsWidgets);
       expect(find.text('PhonePe'), findsWidgets);
     });

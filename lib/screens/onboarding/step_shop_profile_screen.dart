@@ -211,7 +211,7 @@ class _StepShopProfileScreenState extends State<StepShopProfileScreen> {
                         // Hear Sample Voice Announcement Button
                         SizedBox(
                           width: double.infinity,
-                          height: 44,
+                          height: 48,
                           child: OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
                               side: const BorderSide(color: AppColors.primaryBlue),
@@ -228,9 +228,12 @@ class _StepShopProfileScreenState extends State<StepShopProfileScreen> {
                               );
                             },
                             icon: const Icon(Icons.volume_up_rounded, size: 18, color: AppColors.primaryBlue),
-                            label: const Text(
-                              'Hear Sample Announcement',
-                              style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.primaryBlue),
+                            label: const FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'Hear Sample Announcement',
+                                style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.primaryBlue),
+                              ),
                             ),
                           ),
                         ),
@@ -281,9 +284,15 @@ class _StepIndicator extends StatelessWidget {
           if (i < total) const SizedBox(width: 5),
         ],
         const SizedBox(width: AppSpacing.md),
-        Text(
-          'Step $current of $total',
-          style: AppTypography.caption.copyWith(fontWeight: FontWeight.w600),
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Step $current of $total',
+              style: AppTypography.caption.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
         ),
       ],
     );

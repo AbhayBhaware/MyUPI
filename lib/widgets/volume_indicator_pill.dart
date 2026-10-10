@@ -19,6 +19,24 @@ import '../tts_service.dart';
 class VolumeIndicatorPill extends StatefulWidget {
   const VolumeIndicatorPill({super.key});
 
+  static Future<void> showVolumeSheet(BuildContext context, {double initialVolume = 1.0, ValueChanged<double>? onVolumeChanged}) async {
+    HapticFeedback.lightImpact();
+    double currentVol = initialVolume;
+    try {
+      currentVol = await VolumeController.instance.getVolume();
+    } catch (_) {}
+    if (!context.mounted) return;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => _VolumeControlSheet(
+        initialVolume: currentVol,
+        onVolumeChanged: onVolumeChanged ?? (_) {},
+      ),
+    );
+  }
+
   @override
   State<VolumeIndicatorPill> createState() => _VolumeIndicatorPillState();
 }
@@ -111,22 +129,25 @@ class _VolumeIndicatorPillState extends State<VolumeIndicatorPill> {
           borderRadius: AppRadius.smRadius,
           border: Border.all(color: borderColor, width: 1.0),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: textColor),
-            const SizedBox(width: 4),
-            Text(
-              isMuted ? 'MUTED' : '$pct%',
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: textColor,
-                letterSpacing: 0.2,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: textColor),
+              const SizedBox(width: 4),
+              Text(
+                isMuted ? 'MUTED' : '$pct%',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: textColor,
+                  letterSpacing: 0.2,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
