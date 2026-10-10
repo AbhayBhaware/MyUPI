@@ -215,136 +215,33 @@ class NativeTtsHelper(private val context: Context) : TextToSpeech.OnInitListene
     // ── Speech text builder ──────────────────────────────────────────────────
 
     companion object {
-        /**
-         * Converts a raw amount string to a speech-friendly sentence.
-         *
-         *   "1"      → "Payment received, 1 rupee"
-         *   "10"     → "Payment received, 10 rupees"
-         *   "500"    → "Payment received, 500 rupees"
-         *   "1,250"  → "Payment received, 1,250 rupees"
-         *   "25.50"  → "Payment received, 25 rupees 50 paise"
-         */
         fun buildPaymentSpeech(rawAmount: String): String {
-            val cleaned = rawAmount.replace(",", "").trim()
-            if (cleaned.isEmpty()) return "Payment received"
-
-            val parts = cleaned.split(".")
-            val rupeeInt = parts[0].toIntOrNull() ?: 0
-            val paiseStr = if (parts.size > 1) parts[1].padEnd(2, '0').take(2) else null
-            val paiseInt = paiseStr?.toIntOrNull() ?: 0
-
-            val rupeeDisplay = rawAmount.split(".")[0]
-
             val lang = SharedPreferencesManager.getLanguage()
             val formatType = SharedPreferencesManager.getAnnouncementFormat()
             val includeShopName = SharedPreferencesManager.isIncludeShopNameEnabled()
             val merchantName = SharedPreferencesManager.getMerchantName()
 
-            // Construct amount text in localized format
-            val amountText = when (lang) {
-                "hi-IN" -> if (paiseInt > 0) "$rupeeDisplay रुपये $paiseInt पैसे" else "$rupeeDisplay रुपये"
-                "mr-IN" -> if (paiseInt > 0) "$rupeeDisplay रुपये $paiseInt पैसे" else "$rupeeDisplay रुपये"
-                "gu-IN" -> if (paiseInt > 0) "$rupeeDisplay રૂપિયા $paiseInt પૈસા" else "$rupeeDisplay રૂપિયા"
-                "ta-IN" -> if (paiseInt > 0) "$rupeeDisplay ரூபாய் $paiseInt காசுகள்" else "$rupeeDisplay ரூபாய்"
-                "te-IN" -> if (paiseInt > 0) "$rupeeDisplay రూపాయలు $paiseInt పైసలు" else "$rupeeDisplay రూపాయలు"
-                "bn-IN" -> if (paiseInt > 0) "$rupeeDisplay টাকা $paiseInt পয়সা" else "$rupeeDisplay টাকা"
-                "kn-IN" -> if (paiseInt > 0) "$rupeeDisplay ರೂಪಾಯಿ $paiseInt ಪೈಸೆ" else "$rupeeDisplay ರೂಪಾಯಿ"
-                else -> { // en-IN fallback
-                    val rupeeWord = if (rupeeInt == 1) "rupee" else "rupees"
-                    if (paiseInt > 0) "$rupeeDisplay $rupeeWord $paiseInt paise" else "$rupeeDisplay $rupeeWord"
-                }
-            }
-
-            var sentence = ""
-            val shop = if (includeShopName && merchantName.isNotBlank()) merchantName else ""
-
-            when (lang) {
-                "hi-IN" -> {
-                    sentence = when (formatType) {
-                        "B" -> "$amountText प्राप्त हुए।"
-                        "C" -> "पेमेंट प्राप्त हुआ, $amountText। धन्यवाद।"
-                        else -> "पेमेंट प्राप्त हुआ, $amountText।"
-                    }
-                    if (shop.isNotEmpty()) sentence = "$shop पर $sentence"
-                }
-                "mr-IN" -> {
-                    sentence = when (formatType) {
-                        "B" -> "$amountText प्राप्त झाले."
-                        "C" -> "पेमेंट प्राप्त झाले, $amountText. धन्यवाद."
-                        else -> "पेमेंट प्राप्त झाले, $amountText."
-                    }
-                    if (shop.isNotEmpty()) sentence = "$shop वर $sentence"
-                }
-                "gu-IN" -> {
-                    sentence = when (formatType) {
-                        "B" -> "$amountText પ્રાપ્ત થયા."
-                        "C" -> "પેમેન્ટ પ્રાપ્ત થયું, $amountText. આભાર."
-                        else -> "પેમેન્ટ પ્રાપ્ત થયું, $amountText."
-                    }
-                    if (shop.isNotEmpty()) sentence = "$shop પર $sentence"
-                }
-                "ta-IN" -> {
-                    sentence = when (formatType) {
-                        "B" -> "$amountText பெறப்பட்டது."
-                        "C" -> "பணம் பெறப்பட்டது, $amountText. நன்றி."
-                        else -> "பணம் பெறப்பட்டது, $amountText."
-                    }
-                    if (shop.isNotEmpty()) sentence = "$shop இல் $sentence"
-                }
-                "te-IN" -> {
-                    sentence = when (formatType) {
-                        "B" -> "$amountText అందాయి."
-                        "C" -> "చెల్లింపు అందింది, $amountText. ధన్యవాదాలు."
-                        else -> "చెల్లింపు అందింది, $amountText."
-                    }
-                    if (shop.isNotEmpty()) sentence = "$shop వద్ద $sentence"
-                }
-                "bn-IN" -> {
-                    sentence = when (formatType) {
-                        "B" -> "$amountText পাওয়া গেছে।"
-                        "C" -> "পেমেন্ট পাওয়া গেছে, $amountText। ধন্যবাদ।"
-                        else -> "পেমেন্ট পাওয়া গেছে, $amountText।"
-                    }
-                    if (shop.isNotEmpty()) sentence = "$shop এ $sentence"
-                }
-                "kn-IN" -> {
-                    sentence = when (formatType) {
-                        "B" -> "$amountText ಸ್ವೀಕರಿಸಲಾಗಿದೆ."
-                        "C" -> "ಪಾವತಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ, $amountText. ಧನ್ಯವಾದಗಳು."
-                        else -> "ಪಾವತಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ, $amountText."
-                    }
-                    if (shop.isNotEmpty()) sentence = "$shop ನಲ್ಲಿ $sentence"
-                }
-                else -> { // en-IN
-                    sentence = when (formatType) {
-                        "B" -> "$amountText received"
-                        "C" -> "Payment received, $amountText. Thank you."
-                        else -> "Payment received, $amountText"
-                    }
-                    if (shop.isNotEmpty()) {
-                        if (sentence.endsWith(".")) {
-                            sentence = sentence.dropLast(1) + " at $shop."
-                        } else {
-                            sentence += " at $shop."
-                        }
-                    }
-                }
-            }
-
-            return sentence
+            return SpeechTemplateBuilder.buildAnnouncement(
+                rawAmount = rawAmount,
+                langCode = lang,
+                format = formatType,
+                merchantName = merchantName,
+                includeShopName = includeShopName
+            )
         }
 
         fun buildTestSpeech(): String {
-            return when (SharedPreferencesManager.getLanguage()) {
-                "hi-IN" -> "यह MyUPI साउंडबॉक्स का परीक्षण है।"
-                "mr-IN" -> "हा MyUPI साउंडबॉक्सचा चाचणी संदेश आहे."
-                "gu-IN" -> "આ MyUPI સાઉન્ડબોક્સનું પરીક્ષણ છે."
-                "ta-IN" -> "இது MyUPI சவுண்ட்பாக்ஸ் சோதனை."
-                "te-IN" -> "ఇది MyUPI సౌండ్‌బాక్స్ పరీక్ష."
-                "bn-IN" -> "এটি MyUPI সাউন্ডবক্সের একটি পরীক্ষা।"
-                "kn-IN" -> "ಇದು MyUPI ಸೌಂಡ್‌ಬಾಕ್ಸ್ ಪರೀಕ್ಷೆ."
-                else -> "This is a MyUPI soundbox test."
-            }
+            val lang = SharedPreferencesManager.getLanguage()
+            val formatType = SharedPreferencesManager.getAnnouncementFormat()
+            val includeShopName = SharedPreferencesManager.isIncludeShopNameEnabled()
+            val merchantName = SharedPreferencesManager.getMerchantName()
+
+            return SpeechTemplateBuilder.buildTestSpeech(
+                langCode = lang,
+                format = formatType,
+                merchantName = merchantName,
+                includeShopName = includeShopName
+            )
         }
     }
 

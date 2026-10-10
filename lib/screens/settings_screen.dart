@@ -20,6 +20,7 @@ import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../tts_service.dart';
+import '../utils/speech_template_builder.dart';
 import '../widgets/premium_buttons.dart';
 import '../widgets/premium_card.dart';
 import '../widgets/section_header.dart';
@@ -461,7 +462,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                                   items: const [
                                     DropdownMenuItem(value: 'A', child: Text('Standard')),
                                     DropdownMenuItem(value: 'B', child: Text('Short')),
-                                    DropdownMenuItem(value: 'C', child: Text('Polite')),
+                                    DropdownMenuItem(value: 'C', child: Text('With shop name')),
                                   ],
                                   onChanged: (v) {
                                     if (v != null) _setAnnounceFormat(v);
@@ -709,7 +710,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                       child: const Icon(Icons.storefront_rounded, color: AppColors.primaryBlue, size: 20),
                     ),
                     title: const Text('Shop / Business Name', style: AppTypography.titleSmall),
-                    subtitle: Text(_merchantName, style: AppTypography.bodySmall),
+                    subtitle: Text('$_merchantName • Long names are shortened when spoken', style: AppTypography.caption),
                     trailing: const Icon(Icons.edit_rounded, size: 18, color: AppColors.textSecondary),
                     onTap: _showEditMerchantNameDialog,
                   ),
@@ -1107,14 +1108,13 @@ class _SettingsScreenState extends State<SettingsScreen>
 
 
   String _getFormatPreviewText(String f) {
-    switch (f) {
-      case 'B':
-        return 'Preview: "500 rupees received"';
-      case 'C':
-        return 'Preview: "Payment received, 500 rupees. Thank you."';
-      default:
-        return 'Preview: "Payment received, 500 rupees"';
-    }
+    final preview = SpeechTemplateBuilder.getFormatPreviewText(
+      format: f,
+      langCode: _language,
+      merchantName: _merchantName,
+      includeShopName: _includeShopName,
+    );
+    return 'Preview: "$preview"';
   }
 
   String _getLanguageLabel(String langCode) {

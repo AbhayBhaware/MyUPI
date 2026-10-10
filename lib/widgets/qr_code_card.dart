@@ -546,24 +546,6 @@ class _QrCodeCardState extends State<QrCodeCard> {
     );
   }
 
-  Widget _buildAppBadge(String name) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Text(
-        name,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textSecondary,
-        ),
-      ),
-    );
-  }
 
   Widget _buildEmptyState(BuildContext context) {
     return Container(

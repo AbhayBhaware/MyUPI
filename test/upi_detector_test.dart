@@ -13,6 +13,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myupi/upi_detector.dart';
+import 'package:myupi/utils/speech_template_builder.dart';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -966,113 +967,132 @@ void main() {
 
   group('M17: Multilingual announcement template testing', () {
     String buildSpeech(String rawAmount, String lang, String format) {
-      final cleaned = rawAmount.replaceAll(',', '').trim();
-      final parts = cleaned.split('.');
-      final rupeeInt = int.tryParse(parts[0]) ?? 0;
-      final paiseInt = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
-      final rupeeDisplay = rawAmount.split('.')[0];
-
-      final amountText = switch (lang) {
-        'hi-IN' => paiseInt > 0 ? '$rupeeDisplay रुपये $paiseInt पैसे' : '$rupeeDisplay रुपये',
-        'mr-IN' => paiseInt > 0 ? '$rupeeDisplay रुपये $paiseInt पैसे' : '$rupeeDisplay रुपये',
-        'gu-IN' => paiseInt > 0 ? '$rupeeDisplay રૂપિયા $paiseInt પૈસા' : '$rupeeDisplay રૂપિયા',
-        'ta-IN' => paiseInt > 0 ? '$rupeeDisplay ரூபாய் $paiseInt காசுகள்' : '$rupeeDisplay ரூபாய்',
-        'te-IN' => paiseInt > 0 ? '$rupeeDisplay రూపాయలు $paiseInt పైసలు' : '$rupeeDisplay రూపాయలు',
-        'bn-IN' => paiseInt > 0 ? '$rupeeDisplay টাকা $paiseInt পয়সা' : '$rupeeDisplay টাকা',
-        'kn-IN' => paiseInt > 0 ? '$rupeeDisplay ರೂಪಾಯಿ $paiseInt ಪೈಸೆ' : '$rupeeDisplay ರೂಪಾಯಿ',
-        _ => rupeeInt == 1 ? '$rupeeDisplay rupee' : '$rupeeDisplay rupees',
-      };
-
-      return switch (lang) {
-        'hi-IN' => switch (format) {
-          'B' => '$amountText प्राप्त हुए।',
-          'C' => 'पेमेंट प्राप्त हुआ, $amountText। धन्यवाद।',
-          _ => 'पेमेंट प्राप्त हुआ, $amountText।',
-        },
-        'mr-IN' => switch (format) {
-          'B' => '$amountText प्राप्त झाले.',
-          'C' => 'पेमेंट प्राप्त झाले, $amountText. धन्यवाद.',
-          _ => 'पेमेंट प्राप्त झाले, $amountText.',
-        },
-        'gu-IN' => switch (format) {
-          'B' => '$amountText પ્રાપ્ત થયા.',
-          'C' => 'પેમેન્ટ પ્રાપ્ત થયું, $amountText. આભાર.',
-          _ => 'પેમેન્ટ પ્રાપ્ત થયું, $amountText.',
-        },
-        'ta-IN' => switch (format) {
-          'B' => '$amountText பெறப்பட்டது.',
-          'C' => 'பணம் பெறப்பட்டது, $amountText. நன்றி.',
-          _ => 'பணம் பெறப்பட்டது, $amountText.',
-        },
-        'te-IN' => switch (format) {
-          'B' => '$amountText అందాయి.',
-          'C' => 'చెల్లింపు అందింది, $amountText. ధన్యవాదాలు.',
-          _ => 'చెల్లింపు అందింది, $amountText.',
-        },
-        'bn-IN' => switch (format) {
-          'B' => '$amountText পাওয়া গেছে।',
-          'C' => 'পেমেন্ট পাওয়া গেছে, $amountText। ধন্যবাদ।',
-          _ => 'পেমেন্ট পাওয়া গেছে, $amountText।',
-        },
-        'kn-IN' => switch (format) {
-          'B' => '$amountText ಸ್ವೀಕರಿಸಲಾಗಿದೆ.',
-          'C' => 'ಪಾವತಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ, $amountText. ಧನ್ಯವಾದಗಳು.',
-          _ => 'ಪಾವತಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ, $amountText.',
-        },
-        _ => switch (format) {
-          'B' => '$amountText received',
-          'C' => 'Payment received, $amountText. Thank you.',
-          _ => 'Payment received, $amountText',
-        },
-      };
+      return SpeechTemplateBuilder.buildAnnouncement(
+        rawAmount: rawAmount,
+        langCode: lang,
+        format: format,
+      );
     }
 
     test('English (India) Formats A, B, C', () {
-      expect(buildSpeech('500', 'en-IN', 'A'), 'Payment received, 500 rupees');
+      expect(buildSpeech('500', 'en-IN', 'A'), '500 rupees received on My U P I');
       expect(buildSpeech('500', 'en-IN', 'B'), '500 rupees received');
-      expect(buildSpeech('500', 'en-IN', 'C'), 'Payment received, 500 rupees. Thank you.');
+      expect(buildSpeech('500', 'en-IN', 'C'), '500 rupees received on My U P I');
+      expect(
+        SpeechTemplateBuilder.buildAnnouncement(
+          rawAmount: '500',
+          langCode: 'en-IN',
+          format: 'C',
+          merchantName: 'Ramesh Store',
+          includeShopName: true,
+        ),
+        '500 rupees received on My U P I for Ramesh Store',
+      );
     });
 
     test('Hindi Formats A, B, C', () {
-      expect(buildSpeech('500', 'hi-IN', 'A'), 'पेमेंट प्राप्त हुआ, 500 रुपये।');
-      expect(buildSpeech('500', 'hi-IN', 'B'), '500 रुपये प्राप्त हुए।');
-      expect(buildSpeech('500', 'hi-IN', 'C'), 'पेमेंट प्राप्त हुआ, 500 रुपये। धन्यवाद।');
+      expect(buildSpeech('500', 'hi-IN', 'A'), 'माय यू पी आई पर 500 रुपये प्राप्त हुए');
+      expect(buildSpeech('500', 'hi-IN', 'B'), '500 रुपये प्राप्त हुए');
+      expect(
+        SpeechTemplateBuilder.buildAnnouncement(
+          rawAmount: '500',
+          langCode: 'hi-IN',
+          format: 'C',
+          merchantName: 'Ramesh Store',
+          includeShopName: true,
+        ),
+        'माय यू पी आई पर 500 रुपये प्राप्त हुए, Ramesh Store के लिए',
+      );
     });
 
     test('Marathi Formats A, B, C', () {
-      expect(buildSpeech('500', 'mr-IN', 'A'), 'पेमेंट प्राप्त झाले, 500 रुपये.');
-      expect(buildSpeech('500', 'mr-IN', 'B'), '500 रुपये प्राप्त झाले.');
-      expect(buildSpeech('500', 'mr-IN', 'C'), 'पेमेंट प्राप्त झाले, 500 रुपये. धन्यवाद.');
+      expect(buildSpeech('500', 'mr-IN', 'A'), 'माय यू पी आय वर 500 रुपये मिळाले');
+      expect(buildSpeech('500', 'mr-IN', 'B'), '500 रुपये मिळाले');
+      expect(
+        SpeechTemplateBuilder.buildAnnouncement(
+          rawAmount: '500',
+          langCode: 'mr-IN',
+          format: 'C',
+          merchantName: 'Ramesh Store',
+          includeShopName: true,
+        ),
+        'माय यू पी आय वर 500 रुपये मिळाले, Ramesh Store साठी',
+      );
     });
 
     test('Gujarati Formats A, B, C', () {
-      expect(buildSpeech('500', 'gu-IN', 'A'), 'પેમેન્ટ પ્રાપ્ત થયું, 500 રૂપિયા.');
-      expect(buildSpeech('500', 'gu-IN', 'B'), '500 રૂપિયા પ્રાપ્ત થયા.');
-      expect(buildSpeech('500', 'gu-IN', 'C'), 'પેમેન્ટ પ્રાપ્ત થયું, 500 રૂપિયા. આભાર.');
+      expect(buildSpeech('500', 'gu-IN', 'A'), 'માય યુ પી આઈ પર 500 રૂપિયા પ્રાપ્ત થયા');
+      expect(buildSpeech('500', 'gu-IN', 'B'), '500 રૂપિયા પ્રાપ્ત થયા');
+      expect(
+        SpeechTemplateBuilder.buildAnnouncement(
+          rawAmount: '500',
+          langCode: 'gu-IN',
+          format: 'C',
+          merchantName: 'Ramesh Store',
+          includeShopName: true,
+        ),
+        'માય યુ પી આઈ પર 500 રૂપિયા પ્રાપ્ત થયા, Ramesh Store માટે',
+      );
     });
 
     test('Tamil Formats A, B, C', () {
-      expect(buildSpeech('500', 'ta-IN', 'A'), 'பணம் பெறப்பட்டது, 500 ரூபாய்.');
-      expect(buildSpeech('500', 'ta-IN', 'B'), '500 ரூபாய் பெறப்பட்டது.');
-      expect(buildSpeech('500', 'ta-IN', 'C'), 'பணம் பெறப்பட்டது, 500 ரூபாய். நன்றி.');
+      expect(buildSpeech('500', 'ta-IN', 'A'), 'மை யூ பி ஐ இல் 500 ரூபாய் பெறப்பட்டது');
+      expect(buildSpeech('500', 'ta-IN', 'B'), '500 ரூபாய் பெறப்பட்டது');
+      expect(
+        SpeechTemplateBuilder.buildAnnouncement(
+          rawAmount: '500',
+          langCode: 'ta-IN',
+          format: 'C',
+          merchantName: 'Ramesh Store',
+          includeShopName: true,
+        ),
+        'மை யூ பி ஐ இல் 500 ரூபாய் பெறப்பட்டது, Ramesh Store க்காக',
+      );
     });
 
     test('Telugu Formats A, B, C', () {
-      expect(buildSpeech('500', 'te-IN', 'A'), 'చెల్లింపు అందింది, 500 రూపాయలు.');
-      expect(buildSpeech('500', 'te-IN', 'B'), '500 రూపాయలు అందాయి.');
-      expect(buildSpeech('500', 'te-IN', 'C'), 'చెల్లింపు అందింది, 500 రూపాయలు. ధన్యవాదాలు.');
+      expect(buildSpeech('500', 'te-IN', 'A'), 'మై యు పి ఐ పై 500 రూపాయలు అందాయి');
+      expect(buildSpeech('500', 'te-IN', 'B'), '500 రూపాయలు అందాయి');
+      expect(
+        SpeechTemplateBuilder.buildAnnouncement(
+          rawAmount: '500',
+          langCode: 'te-IN',
+          format: 'C',
+          merchantName: 'Ramesh Store',
+          includeShopName: true,
+        ),
+        'మై యు పి ఐ పై 500 రూపాయలు అందాయి, Ramesh Store కొరకు',
+      );
     });
 
     test('Bengali Formats A, B, C', () {
-      expect(buildSpeech('500', 'bn-IN', 'A'), 'পেমেন্ট পাওয়া গেছে, 500 টাকা।');
-      expect(buildSpeech('500', 'bn-IN', 'B'), '500 টাকা পাওয়া গেছে।');
-      expect(buildSpeech('500', 'bn-IN', 'C'), 'পেমেন্ট পাওয়া গেছে, 500 টাকা। ধন্যবাদ।');
+      expect(buildSpeech('500', 'bn-IN', 'A'), 'মাই ইউ পি আই এ 500 টাকা পাওয়া গেছে');
+      expect(buildSpeech('500', 'bn-IN', 'B'), '500 টাকা পাওয়া গেছে');
+      expect(
+        SpeechTemplateBuilder.buildAnnouncement(
+          rawAmount: '500',
+          langCode: 'bn-IN',
+          format: 'C',
+          merchantName: 'Ramesh Store',
+          includeShopName: true,
+        ),
+        'মাই ইউ পি আই এ 500 টাকা পাওয়া গেছে, Ramesh Store এর জন্য',
+      );
     });
 
     test('Kannada Formats A, B, C', () {
-      expect(buildSpeech('500', 'kn-IN', 'A'), 'ಪಾವತಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ, 500 ರೂಪಾಯಿ.');
-      expect(buildSpeech('500', 'kn-IN', 'B'), '500 ರೂಪಾಯಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ.');
-      expect(buildSpeech('500', 'kn-IN', 'C'), 'ಪಾವತಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ, 500 ರೂಪಾಯಿ. ಧನ್ಯವಾದಗಳು.');
+      expect(buildSpeech('500', 'kn-IN', 'A'), 'ಮೈ ಯು ಪಿ ಐ ನಲ್ಲಿ 500 ರೂಪಾಯಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ');
+      expect(buildSpeech('500', 'kn-IN', 'B'), '500 ರೂಪಾಯಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ');
+      expect(
+        SpeechTemplateBuilder.buildAnnouncement(
+          rawAmount: '500',
+          langCode: 'kn-IN',
+          format: 'C',
+          merchantName: 'Ramesh Store',
+          includeShopName: true,
+        ),
+        'ಮೈ ಯು ಪಿ ಐ ನಲ್ಲಿ 500 ರೂಪಾಯಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ, Ramesh Store ಗಾಗಿ',
+      );
     });
   });
 }

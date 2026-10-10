@@ -51,4 +51,48 @@
 1. **Audio Route Badge (Loudspeaker vs Bluetooth)**:
    - *Reason*: Determining whether the active audio output stream is currently routed to the internal speaker, a Bluetooth soundbox, or a wired jack requires querying Android's native `AudioManager` (`getDevices` / `isBluetoothA2dpOn`). This requires modifications to `MainActivity.kt` and adding native method channels, which is barred under the task's native code guardrail.
 2. **TTS Per-Language Engine Download Status ("Downloaded / Needs Download")**:
-   - *Reason*: Querying whether specific regional voice data files (e.g. Hindi, Tamil, Telugu) are installed on the device's Google Speech Services engine requires native Android `TextToSpeech.Engine.ACTION_CHECK_TTS_DATA` intent queries, not supported via Flutter's standard `flutter_tts` package. Deferred to prevent touching native Android codebase.
+   - *Reason*: Querying whether specific regional voice data files (e.g. Hindi, Tamil, Telugu) are installed on the device's Google Speech Services engine requires native Android `TextToSpeech.Engine.ACTION_CHECK_TTS_DATA` intent queries, not supported via Flutter's standard `flutter_tts` package. Deferred to prevent touching---
+
+## AGENT TASK — Professional Announcement Wording
+
+### 1. Key Architectural & Wording Changes
+- **Amount-First Wording**: Amount spoken in first ~1.5s to ensure instant clarity in noisy merchant retail environments.
+- **Say "rupees", never "Rs." or "₹"**: Explicit word `"rupees"` used everywhere; paise omitted when zero; plain decimal formatting.
+- **Phonetic Brand Spelling**: Brand name "MyUPI" spelled phonetically per language so TTS engines read letter-by-letter rather than "my-u-pee":
+  - `en-IN`: `My U P I`
+  - `hi`: `माय यू पी आई`
+  - `mr`: `माय यू पी आय`
+  - `gu`: `માય યુ પી આઈ`
+  - `ta`: `மை யூ பி ஐ`
+  - `te`: `మై యు పి ஐ`
+  - `bn`: `মাই ইউ পি আই`
+  - `kn`: `ಮೈ ಯು ಪಿ ಐ`
+- **Shop Name Handling**:
+  - Strips emojis and punctuation (`*#_|~`), replaces `&` with `and`, collapses whitespace.
+  - Capped at ~30 characters / 5 words cut cleanly at word boundaries.
+  - Positioned strictly at the end of the announcement.
+  - Settings screen displays hint: `"Long names are shortened when spoken."`
+- **Formats**:
+  - **A (Standard, default)**: `{amount} rupees received on My U P I` (appends shop name if "Include Shop Name" is enabled).
+  - **B (Short)**: `{amount} rupees received` (never includes shop name).
+  - **C (With shop name)**: `{amount} rupees received on My U P I for {shop}` (falls back cleanly to format A if shop name is empty).
+- **Parity Across Dart & Kotlin**:
+  - Pure builder `SpeechTemplateBuilder` implemented in Dart (`lib/utils/speech_template_builder.dart`).
+  - Mirror pure builder `SpeechTemplateBuilder` implemented in Kotlin (`android/app/src/main/kotlin/com/example/myupi/SpeechTemplateBuilder.kt`).
+  - Identical test table of inputs → expected strings tested in both Dart and Kotlin test suites.
+  - UI Settings preview, Test announcement, Onboarding voice preview, Repeat announcement, and native background announcement all share the pure builders.
+
+### 2. Guardrail Compliance
+- Native edits restricted strictly to `NativeTtsHelper.kt` (delegation to `SpeechTemplateBuilder.kt`).
+- Zero modifications made to audio playback, queueing, TTS engine selection, detection, dedup, ledger, SMS receiver, channels, billing, or auth.
+
+### 3. Test Updates (`test/upi_detector_test.dart`)
+- Updated M17 TTS Speech text generation tests to reflect the new soundbox standards:
+  - English: `"500 rupees received on My U P I"`
+  - Hindi: `"माय यू पी आई पर 500 रुपये प्राप्त हुए"`
+  - Marathi: `"माय यू पी आय वर 500 रुपये मिळाले"`
+  - English with shop name: `"500 rupees received on My U P I for Ramesh Kirana"`
+  - Hindi with shop name: `"माय यू पी आई पर 500 रुपये प्राप्त हुए, Ramesh Kirana के लिए"`
+  - Short format: `"500 rupees received"`
+  - New test suites added: `test/speech_template_builder_test.dart` (Dart) and `android/app/src/test/kotlin/com/example/myupi/SpeechTemplateBuilderTest.kt` (Kotlin).
+

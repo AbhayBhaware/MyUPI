@@ -24,6 +24,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
+import 'utils/speech_template_builder.dart';
+
 // ─── TTS status enum ──────────────────────────────────────────────────────────
 
 enum TtsStatus {
@@ -178,7 +180,7 @@ class TtsService {
       debugPrint('MyUPI TTS: Skipping test speech — TTS unavailable.');
       return;
     }
-    _enqueue('This is a MyUPI soundbox test.');
+    _enqueue(SpeechTemplateBuilder.buildTestSpeech());
   }
 
   /// Stop any current speech and clear the queue.
@@ -201,38 +203,9 @@ class TtsService {
 
   // ── Speech text builder ─────────────────────────────────────────────────────
 
-  /// Converts a raw amount string into a speech-friendly sentence.
-  ///
-  /// Examples:
-  ///   "1"      → "Payment received, 1 rupee"
-  ///   "10"     → "Payment received, 10 rupees"
-  ///   "1,250"  → "Payment received, 1250 rupees"
-  ///   "25.50"  → "Payment received, 25 rupees 50 paise"
-  ///
-  /// The UI continues to display the original formatted amount (e.g. ₹1,250).
+  /// Converts a raw amount string into a speech-friendly sentence via SpeechTemplateBuilder.
   static String _buildPaymentSpeech(String rawAmount) {
-    // Remove commas (Indian formatting: 1,250 → 1250).
-    final cleaned = rawAmount.replaceAll(',', '').trim();
-
-    if (cleaned.isEmpty) {
-      return 'Payment received';
-    }
-
-    // Split on decimal point.
-    final parts = cleaned.split('.');
-    final rupeePart  = int.tryParse(parts[0]) ?? 0;
-    final paisePart  = parts.length > 1
-        ? int.tryParse(parts[1].padRight(2, '0').substring(0, 2))
-        : null;
-
-    final rupeeWord = rupeePart == 1 ? 'rupee' : 'rupees';
-
-    if (paisePart != null && paisePart > 0) {
-      final paiseWord = paisePart == 1 ? 'paise' : 'paise';
-      return 'Payment received, $rupeePart $rupeeWord $paisePart $paiseWord';
-    }
-
-    return 'Payment received, $rupeePart $rupeeWord';
+    return SpeechTemplateBuilder.buildAnnouncement(rawAmount: rawAmount);
   }
 
   // ── Queue management ────────────────────────────────────────────────────────
