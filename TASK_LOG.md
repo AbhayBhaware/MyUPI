@@ -96,3 +96,54 @@
   - Short format: `"500 rupees received"`
   - New test suites added: `test/speech_template_builder_test.dart` (Dart) and `android/app/src/test/kotlin/com/example/myupi/SpeechTemplateBuilderTest.kt` (Kotlin).
 
+---
+
+## AGENT TASK — Pro Redesign, Splash & Overflow-Proof System
+
+### 1. Phase Execution Record
+- **Phase A (Overflow System & Matrix Tests)**:
+  - Created shared widgets `SwitchRow`, `NavRow`, `StackedField` in `lib/widgets/settings_rows.dart` with bounded `Expanded` text columns and min 48×48 dp touch targets.
+  - Replaced inline fixed-width dropdowns with modal bottom-sheet pickers (`showSelectionBottomSheet` in `lib/widgets/selection_bottom_sheet.dart`) per Android Settings guidelines.
+  - Compacted `QrCodeCard`: removed fake verified tick, sized QR to 170 dp, UPI ID wrapped with `Flexible` + `FittedBox(fit: BoxFit.scaleDown)`, single centered `"Scan with any UPI app"` banner.
+  - Implemented `test/overflow_matrix_test.dart`: 84 automated tests across widths 320/360/411 dp × text scales 1.0/1.3/1.6/2.0 across `HomeScreen`, `QrCodeCard`, `SettingsScreen`, `HistoryScreen`, `PaywallScreen`, `WelcomeScreen`, `StepShopProfileScreen`. **All 84 tests pass with zero layout exceptions.**
+- **Phase B (Professional Splash Experience)**:
+  - Configured Android 12+ `flutter_native_splash` with `#F8FAFE` (dark `#0F172A`), centered vector logo mark within safe circular mask, and 800×320 wordmark branding.
+  - Added `FlutterNativeSplash.preserve` with a hard timeout of 2 seconds in `main.dart`.
+  - Replaced `_AuthLoadingSplash` (white boxed sticker with spinner) with `_HomeSkeletonPlaceholder` (grey placeholder blocks in Home layout) in `AuthGate`, holding native splash during auth/pref resolution and fading directly to interactive Home.
+- **Phase C (Home Screen Rebuild)**:
+  - Rebuilt `HomeScreen` strictly to Section 4.1 wireframe:
+    - Header: App logo, 1-line shop name with ellipsis, `VolumeIndicatorPill`. Removed header gear and duplicate status pill.
+    - Soundbox Status Card: ONE full-width card (min 56 dp). Calm green/blue when ON; loud amber warning card with `[Turn on]` button when OFF.
+    - Hero Card: Big amount, source, time, `[Repeat]` announcement button, and combined stats row (`Today ₹... · ... payments →`).
+    - Alert strip for notification/battery warnings, offer banner, and anti-fraud footer.
+- **Phase D (Settings IA & Setup Health Card)**:
+  - Reorganized `SettingsScreen` into 7 clear sections:
+    1. *Setup Health Card (top)*: 4-step checklist (Notification access, Battery optimization, UPI ID, Sound preview) showing progress and "All Set • Soundbox Ready" when complete.
+    2. *Voice*: Language (shows native script name), Voice type (with HUMAN badge), Announcement style, Attention Chime toggle, integrated Sample Announcement preview box with Play Sample button, Speech Speed picker.
+    3. *Shop*: Shop name (NavRow), Include shop name (SwitchRow), UPI ID (confirm-protected edit).
+    4. *Counter Mode*: Keep screen awake (SwitchRow), Media Volume (NavRow opening volume sheet).
+    5. *Plan*: Compact Premium card with "Restore purchases" as a NavRow inside the card.
+    6. *Help & Reliability*: Reliability checklist, Notification access, Help & support, WhatsApp chat button, About MyUPI.
+    7. *Account*: Profile info, Sign out confirmation, Delete account confirmation.
+- **Phase E (History Polish & 2-Step Onboarding)**:
+  - `TransactionDetailBottomSheet`: Neutral `Icons.payments_outlined` badge with `"Payment detected"` (removed green tick); confidence levels formatted as High / Medium / Low; amber `"Verify in bank • SMS-only detection without push notification"` footnote for SMS alerts.
+  - History day header totals formatted with `CurrencyFormatter`.
+  - Polished `SetupWizardScreen`: 2-step setup where Shop Name is the single required field, handle suggestions for UPI ID (`@okhdfcbank`, `@okaxis`, `@oksbi`, `@okicici`, `@ybl`, `@paytm`), and "Hear Your Soundbox" preview box.
+
+### 2. Changed Test Assertions (`test/milestone21_merchant_experience_test.dart`)
+- Updated Settings category assertions to match Section 4.2 Pro Redesign IA:
+  - Checked for SectionHeaders `VOICE`, `SHOP`, `PLAN`, `HELP & RELIABILITY`.
+  - Checked for items `Soundbox`, `Announcement Language`, `Shop / Business Name`, `Include Shop Name`.
+  - Changed `expect(find.text('Notification Access'), findsOneWidget)` to `findsWidgets` (present in Setup Health Card and Help & Reliability).
+- Updated HomeScreen assertions to match Section 4.1 wireframe:
+  - Changed `expect(find.text('ACTIVE'), findsOneWidget)` to `expect(find.text('Soundbox is ON'), findsOneWidget)`.
+  - Changed `expect(find.text('Most Recent Payment'), findsOneWidget)` to `expect(find.text('Last payment'), findsOneWidget)`.
+  - Changed `expect(find.text('PhonePe'), findsWidgets)` to `expect(find.textContaining('PhonePe'), findsWidgets)` (matches `'PhonePe · 4:18 PM'` combined subtitle).
+
+### 3. Guardrail Verification
+- Zero edits to `PaymentNotificationListener.kt`, `SmsReceiver.kt`, `KotlinUpiDetector.kt`.
+- Zero edits to ledger/dedup/trust logic, billing/subscription/entitlement, `AuthGate` routing conditions, Firestore rules, channel contracts.
+- Static analysis: `flutter analyze` completed with 0 errors and 0 warnings.
+- Test suite: `flutter test` completed with **315 passing tests and 0 failures**.
+
+

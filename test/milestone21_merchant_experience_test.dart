@@ -254,14 +254,14 @@ void main() {
       // Soundbox/Voice items
       expect(find.text('Soundbox'), findsOneWidget);
       expect(find.text('Announcement Language'), findsOneWidget);
-      expect(find.text('Shop Name'), findsOneWidget);
+      expect(find.text('Shop / Business Name'), findsOneWidget);
       expect(find.text('Include Shop Name'), findsOneWidget);
 
       // Developer diagnostics is REMOVED from the list view
       expect(find.text('Developer Diagnostics'), findsNothing);
 
       // App items
-      expect(find.text('Notification Access'), findsOneWidget);
+      expect(find.text('Notification Access'), findsWidgets);
       expect(find.text('Help & Support'), findsOneWidget);
       expect(find.text('About MyUPI'), findsOneWidget);
     });
@@ -387,7 +387,7 @@ void main() {
       // Last payment hero card
       expect(find.text('Last payment'), findsOneWidget);
       expect(find.text('₹500'), findsWidgets);
-      expect(find.text('PhonePe'), findsWidgets);
+      expect(find.textContaining('PhonePe'), findsWidgets);
     });
   });
 }
