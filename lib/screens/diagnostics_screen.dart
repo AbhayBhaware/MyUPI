@@ -599,12 +599,16 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
               children: [
                 Icon(icon, size: 18, color: const Color(0xFF5B21B6)),
                 const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.2,
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.2,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -628,39 +632,47 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFF4B5563),
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-          if (badgeColor != null && badgeBg != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: badgeBg,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                value,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: badgeColor,
-                ),
-              ),
-            )
-          else
-            Text(
-              value,
+          Expanded(
+            flex: 5,
+            child: Text(
+              label,
               style: const TextStyle(
                 fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF111827),
+                color: Color(0xFF4B5563),
+                fontWeight: FontWeight.w400,
               ),
             ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            flex: 6,
+            child: badgeColor != null && badgeBg != null
+                ? Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: badgeBg,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      value,
+                      textAlign: TextAlign.end,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: badgeColor,
+                      ),
+                    ),
+                  )
+                : Text(
+                    value,
+                    textAlign: TextAlign.end,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF111827),
+                    ),
+                  ),
+          ),
         ],
       ),
     );

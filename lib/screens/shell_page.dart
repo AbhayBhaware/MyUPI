@@ -31,7 +31,7 @@ class _ShellPageState extends State<ShellPage> {
     if (mounted) setState(() => _selectedIndex = index);
   }
 
-  late final List<Widget> _pages = [
+  List<Widget> get _pages => [
     HomeScreen(onNavigateToTab: _navigateToTab),
     const HistoryScreen(),
     const SettingsScreen(),
@@ -41,7 +41,7 @@ class _ShellPageState extends State<ShellPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
-        index: _selectedIndex,
+        index: _selectedIndex.clamp(0, _pages.length - 1),
         children: _pages,
       ),
       bottomNavigationBar: Container(

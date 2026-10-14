@@ -81,105 +81,116 @@ class _StepNotifScreenState extends State<StepNotifScreen>
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.xl,
-            vertical: AppSpacing.lg,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Step indicator ──────────────────────────────────────────────
-              const _StepIndicator(current: 2, total: 6),
-              const SizedBox(height: AppSpacing.xl),
-
-              // ── Icon ────────────────────────────────────────────────────────
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: granted ? AppColors.successBg : AppColors.lightBlue,
-                  borderRadius: AppRadius.lgRadius,
-                  border: Border.all(
-                    color: granted ? AppColors.successBorder : AppColors.primaryBlue.withAlpha(50),
-                    width: 1.0,
-                  ),
-                ),
-                child: Icon(
-                  granted ? Icons.check_circle_rounded : Icons.notifications_active_rounded,
-                  size: 38,
-                  color: granted ? AppColors.success : AppColors.primaryBlue,
-                ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xl,
+                vertical: AppSpacing.lg,
               ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // ── Title ───────────────────────────────────────────────────────
-              const Text(
-                'Allow MyUPI to hear payment notifications',
-                style: AppTypography.headlineMedium,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-
-              // ── Body ────────────────────────────────────────────────────────
-              const Text(
-                'MyUPI uses payment notifications from supported UPI apps to announce incoming payments aloud.',
-                style: AppTypography.bodyMedium,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.successBg,
-                  borderRadius: AppRadius.mdRadius,
-                  border: Border.all(color: AppColors.successBorder),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - (AppSpacing.lg * 2),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Icon(Icons.shield_rounded, size: 20, color: AppColors.success),
-                    SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Text(
-                        'MyUPI does not need or access your UPI PIN, bank password, or card details. Everything stays private on your phone.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF14532D),
-                          height: 1.35,
-                          fontWeight: FontWeight.w500,
+                child: IntrinsicHeight(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ── Step indicator ──────────────────────────────────────────────
+                      const _StepIndicator(current: 2, total: 6),
+                      const SizedBox(height: AppSpacing.xl),
+
+                      // ── Icon ────────────────────────────────────────────────────────
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          color: granted ? AppColors.successBg : AppColors.lightBlue,
+                          borderRadius: AppRadius.lgRadius,
+                          border: Border.all(
+                            color: granted ? AppColors.successBorder : AppColors.primaryBlue.withAlpha(50),
+                            width: 1.0,
+                          ),
+                        ),
+                        child: Icon(
+                          granted ? Icons.check_circle_rounded : Icons.notifications_active_rounded,
+                          size: 38,
+                          color: granted ? AppColors.success : AppColors.primaryBlue,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // ── Title ───────────────────────────────────────────────────────
+                      const Text(
+                        'Allow MyUPI to hear payment notifications',
+                        style: AppTypography.headlineMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+
+                      // ── Body ────────────────────────────────────────────────────────
+                      const Text(
+                        'MyUPI uses payment notifications from supported UPI apps to announce incoming payments aloud.',
+                        style: AppTypography.bodyMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: AppColors.successBg,
+                          borderRadius: AppRadius.mdRadius,
+                          border: Border.all(color: AppColors.successBorder),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Icon(Icons.shield_rounded, size: 20, color: AppColors.success),
+                            SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: Text(
+                                'MyUPI does not need or access your UPI PIN, bank password, or card details. Everything stays private on your phone.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF14532D),
+                                  height: 1.35,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // ── Status card ─────────────────────────────────────────────────
+                      _AccessStatusCard(
+                        checking: _checking,
+                        granted: granted,
+                        onOpenSettings: _openSettings,
+                      ),
+
+                      const Spacer(),
+
+                      // ── Continue / action button ─────────────────────────────────
+                      if (granted)
+                        PrimaryButton(
+                          label: 'Continue',
+                          icon: Icons.arrow_forward_rounded,
+                          onPressed: widget.onContinue,
+                        )
+                      else
+                        PrimaryButton(
+                          label: 'Enable Notification Access',
+                          icon: Icons.open_in_new_rounded,
+                          onPressed: _openSettings,
+                        ),
+                      const SizedBox(height: AppSpacing.base),
+                    ],
+                  ),
                 ),
               ),
-
-              const SizedBox(height: AppSpacing.lg),
-
-              // ── Status card ─────────────────────────────────────────────────
-              _AccessStatusCard(
-                checking: _checking,
-                granted: granted,
-                onOpenSettings: _openSettings,
-              ),
-
-              const Spacer(),
-
-              // ── Continue / action button ─────────────────────────────────
-              if (granted)
-                PrimaryButton(
-                  label: 'Continue',
-                  icon: Icons.arrow_forward_rounded,
-                  onPressed: widget.onContinue,
-                )
-              else
-                PrimaryButton(
-                  label: 'Enable Notification Access',
-                  icon: Icons.open_in_new_rounded,
-                  onPressed: _openSettings,
-                ),
-              const SizedBox(height: AppSpacing.base),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -217,7 +228,9 @@ class _AccessStatusCard extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryBlue),
             ),
             SizedBox(width: AppSpacing.md),
-            Text('Checking notification access…', style: AppTypography.bodySmall),
+            Expanded(
+              child: Text('Checking notification access…', style: AppTypography.bodySmall),
+            ),
           ],
         ),
       );

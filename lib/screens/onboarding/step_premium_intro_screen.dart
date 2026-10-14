@@ -40,82 +40,93 @@ class StepPremiumIntroScreen extends StatelessWidget {
               const SizedBox(height: AppSpacing.xl),
 
               Expanded(
-                child: Column(
-                  children: [
-                    const Spacer(),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                        child: IntrinsicHeight(
+                          child: Column(
+                            children: [
+                              const Spacer(),
 
-                    // ── Sparkle Icon ──────────────────────────────────────────
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: AppColors.lightBlue,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.primaryBlue.withAlpha(60), width: 1.5),
-                      ),
-                      child: const Icon(
-                        Icons.workspace_premium_rounded,
-                        size: 42,
-                        color: AppColors.primaryBlue,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
+                              // ── Sparkle Icon ──────────────────────────────────────────
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  color: AppColors.lightBlue,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: AppColors.primaryBlue.withAlpha(60), width: 1.5),
+                                ),
+                                child: const Icon(
+                                  Icons.workspace_premium_rounded,
+                                  size: 42,
+                                  color: AppColors.primaryBlue,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.lg),
 
-                    // ── Headline ──────────────────────────────────────────────
-                    const Text(
-                      'Try MyUPI for ₹1',
-                      style: AppTypography.headlineMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
+                              // ── Headline ──────────────────────────────────────────────
+                              const Text(
+                                'Try MyUPI for ₹1',
+                                style: AppTypography.headlineMedium,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
 
-                    const Text(
-                      'Get your first month of MyUPI Smart Soundbox for just ₹1, then ₹49/month.',
-                      style: AppTypography.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
+                              const Text(
+                                'Get your first month of MyUPI Smart Soundbox for just ₹1, then ₹49/month.',
+                                style: AppTypography.bodyMedium,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: AppSpacing.xl),
 
-                    // ── Key Highlights ────────────────────────────────────────
-                    _buildHighlightRow(
-                      icon: Icons.check_circle_outline_rounded,
-                      text: 'Instant audio on every customer UPI payment',
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    _buildHighlightRow(
-                      icon: Icons.translate_rounded,
-                      text: 'Available in Hindi, Marathi, Gujarati, Tamil & more',
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    _buildHighlightRow(
-                      icon: Icons.savings_outlined,
-                      text: 'Save ₹1,500+ every year over hardware soundboxes',
-                    ),
+                              // ── Key Highlights ────────────────────────────────────────
+                              _buildHighlightRow(
+                                icon: Icons.check_circle_outline_rounded,
+                                text: 'Instant audio on every customer UPI payment',
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              _buildHighlightRow(
+                                icon: Icons.translate_rounded,
+                                text: 'Available in Hindi, Marathi, Gujarati, Tamil & more',
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              _buildHighlightRow(
+                                icon: Icons.savings_outlined,
+                                text: 'Save ₹1,500+ every year over hardware soundboxes',
+                              ),
 
-                    const Spacer(flex: 2),
+                              const Spacer(flex: 2),
 
-                    // ── View Offer Button ─────────────────────────────────────
-                    PrimaryButton(
-                      label: 'View Premium Offer',
-                      icon: Icons.star_rounded,
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (ctx) => const PaywallScreen(sourceEntry: 'onboarding'),
+                              // ── View Offer Button ─────────────────────────────────────
+                              PrimaryButton(
+                                label: 'View Premium Offer',
+                                icon: Icons.star_rounded,
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (ctx) => const PaywallScreen(sourceEntry: 'onboarding'),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+
+                              // ── Continue to Dashboard ─────────────────────────────────
+                              CustomOutlineButton(
+                                label: 'Continue with Free Soundbox',
+                                onPressed: onFinish,
+                              ),
+                              const SizedBox(height: AppSpacing.base),
+                            ],
                           ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-
-                    // ── Continue to Dashboard ─────────────────────────────────
-                    CustomOutlineButton(
-                      label: 'Continue with Free Soundbox',
-                      onPressed: onFinish,
-                    ),
-                    const SizedBox(height: AppSpacing.base),
-                  ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],

@@ -20,6 +20,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 
+import '../app_channels.dart';
 import '../models/user_profile.dart';
 import '../screens/auth/setup_wizard_screen.dart';
 import '../screens/auth/welcome_screen.dart';
@@ -105,6 +106,16 @@ class _FirestoreProfileGateState extends State<_FirestoreProfileGate> {
           _profile = profile;
           _isLoading = false;
         });
+
+        // Push shop name to native Android Kotlin storage for audio engine
+        if (profile != null && profile.shopName.trim().isNotEmpty) {
+          try {
+            await kMethodChannel.invokeMethod('setMerchantName', {'name': profile.shopName.trim()});
+            await kMethodChannel.invokeMethod('setIncludeShopName', {'enabled': true});
+          } catch (e) {
+            debugPrint('[AuthGate] Method channel sync error: $e');
+          }
+        }
       }
     } catch (e) {
       debugPrint('[AuthGate] Error reading profile: $e');

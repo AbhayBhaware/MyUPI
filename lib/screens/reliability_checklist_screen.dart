@@ -161,12 +161,16 @@ class _ReliabilityChecklistScreenState extends State<ReliabilityChecklistScreen>
                         children: [
                           Icon(Icons.shield_rounded, color: Colors.white, size: 28),
                           SizedBox(width: AppSpacing.sm),
-                          Text(
-                            'Dual-Channel Detection',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
+                          Expanded(
+                            child: Text(
+                              'Dual-Channel Detection',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -268,12 +272,16 @@ class _ReliabilityChecklistScreenState extends State<ReliabilityChecklistScreen>
                         children: [
                           Icon(Icons.warning_amber_rounded, color: Color(0xFFD97706), size: 20),
                           SizedBox(width: 8),
-                          Text(
-                            'Merchant Anti-Fraud Notice',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF92400E),
+                          Expanded(
+                            child: Text(
+                              'Merchant Anti-Fraud Notice',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF92400E),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],

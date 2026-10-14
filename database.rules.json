@@ -1,0 +1,44 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['shopName', 'setupComplete'])",
+        "shopName": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+        },
+        "ownerName": {
+          ".validate": "newData.isString()"
+        },
+        "category": {
+          ".validate": "newData.isString()"
+        },
+        "categoryOther": {
+          ".validate": "newData.isString()"
+        },
+        "upiId": {
+          ".validate": "newData.isString()"
+        },
+        "setupComplete": {
+          ".validate": "newData.isBoolean()"
+        },
+        "phone": {
+          ".validate": "newData.isString()"
+        },
+        "email": {
+          ".validate": "newData.isString()"
+        },
+        "authMethod": {
+          ".validate": "newData.isString()"
+        },
+        "updatedAt": {
+          ".validate": "newData.isString()"
+        },
+        "createdAt": {
+          ".validate": "newData.isString()"
+        }
+      }
+    }
+  }
+}

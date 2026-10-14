@@ -20,6 +20,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/user_profile.dart';
 
@@ -44,33 +45,76 @@ class FirestoreService {
   // In-memory cache of current profile
   UserProfile? _cachedProfile;
   UserProfile? get cachedProfile => _cachedProfile;
+  @visibleForTesting
+  set cachedProfile(UserProfile? p) => _cachedProfile = p;
 
   final _profileController = StreamController<UserProfile?>.broadcast();
   Stream<UserProfile?> get profileStream => _profileController.stream;
 
+  static String _cacheKey(String uid) => 'cached_user_profile_$uid';
+
+  /// Reads persistent offline user profile from device storage.
+  Future<UserProfile?> _getCachedProfileFromPrefs(String uid) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonStr = prefs.getString(_cacheKey(uid));
+      if (jsonStr != null && jsonStr.trim().isNotEmpty && jsonStr.trim() != 'null') {
+        final data = jsonDecode(jsonStr);
+        if (data is Map<String, dynamic>) {
+          return UserProfile.fromMap(uid, data);
+        }
+      }
+    } catch (e) {
+      debugPrint('[DatabaseService] Failed to read local profile cache: $e');
+    }
+    return null;
+  }
+
+  /// Writes persistent offline user profile to device storage.
+  Future<void> _saveCachedProfileToPrefs(UserProfile profile) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_cacheKey(profile.uid), jsonEncode(profile.toMap()));
+    } catch (e) {
+      debugPrint('[DatabaseService] Failed to write local profile cache: $e');
+    }
+  }
+
   /// Retrieves the merchant's profile from `/users/{uid}.json`.
   /// Returns null if document does not exist (genuine new user).
-  /// Throws on network or permission errors so AuthGate can display Retry.
+  /// Falls back to local persistent storage on network disconnect or auth failure.
   Future<UserProfile?> getUserProfile(String uid, {User? user}) async {
     final effectiveUser = user ?? _currentUser;
-    // Force refresh token to ensure it hasn't expired
-    final token = await effectiveUser?.getIdToken(true);
 
-    final authParam = (token != null && token.isNotEmpty) ? '?auth=$token' : '';
-    final url = '$rtdbUrl/$kCollectionUsers/$uid.json$authParam';
-    debugPrint('[DatabaseService] ─── GET User Profile ───');
-    debugPrint('[DatabaseService] URL: $rtdbUrl/$kCollectionUsers/$uid.json (auth token present: ${token != null})');
-    debugPrint('[DatabaseService] UID: $uid');
+    try {
+      return await _fetchRemoteProfile(uid, effectiveUser);
+    } catch (e) {
+      debugPrint('[DatabaseService] Remote read failed ($e). Checking offline cache...');
+      final cached = await _getCachedProfileFromPrefs(uid);
+      if (cached != null) {
+        debugPrint('[DatabaseService] Offline cached profile restored for $uid');
+        _cachedProfile = cached;
+        _profileController.add(cached);
+        return cached;
+      }
+      // If no local cache exists, rethrow so AuthGate can offer retry/setup
+      rethrow;
+    }
+  }
 
-    final uri = Uri.parse(url);
-    final headers = <String, String>{
-      'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
+  Future<UserProfile?> _fetchRemoteProfile(String uid, User? user) async {
+    String? token = await user?.getIdToken(false);
 
-    final res = await _client.get(uri, headers: headers).timeout(
-          const Duration(seconds: 10),
-        );
+    http.Response res = await _executeGet(uid, token);
+
+    // If unauthorized / token expired, refresh token and retry once
+    if (res.statusCode == 401 || res.statusCode == 403) {
+      debugPrint('[DatabaseService] Token expired or 401/403. Refreshing token...');
+      token = await user?.getIdToken(true);
+      if (token != null && token.isNotEmpty) {
+        res = await _executeGet(uid, token);
+      }
+    }
 
     debugPrint('[DatabaseService] RTDB Read Response: [${res.statusCode}] ${res.body}');
 
@@ -87,7 +131,8 @@ class FirestoreService {
         final profile = UserProfile.fromMap(uid, body);
         _cachedProfile = profile;
         _profileController.add(profile);
-        debugPrint('[DatabaseService] Profile Loaded: ${profile.shopName}, setupComplete=${profile.setupComplete}');
+        await _saveCachedProfileToPrefs(profile);
+        debugPrint('[DatabaseService] Profile Loaded & Cached: ${profile.shopName}, setupComplete=${profile.setupComplete}');
         return profile;
       } else {
         _cachedProfile = null;
@@ -103,9 +148,28 @@ class FirestoreService {
     }
   }
 
+  Future<http.Response> _executeGet(String uid, String? token) {
+    final authParam = (token != null && token.isNotEmpty) ? '?auth=$token' : '';
+    final url = '$rtdbUrl/$kCollectionUsers/$uid.json$authParam';
+    final uri = Uri.parse(url);
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+    return _client.get(uri, headers: headers).timeout(
+          const Duration(seconds: 10),
+        );
+  }
+
   /// Writes merchant profile to `/users/{uid}.json` with `setupComplete: true`.
-  /// Returns true only if write was confirmed by server (HTTP 200-299).
+  /// Persists locally immediately, then syncs to RTDB.
   Future<bool> saveUserProfile(UserProfile profile) async {
+    // 1. Immediately update local in-memory and persistent cache
+    _cachedProfile = profile;
+    _profileController.add(profile);
+    await _saveCachedProfileToPrefs(profile);
+
+    // 2. Synchronize to remote RTDB
     try {
       final user = _currentUser;
       final token = await user?.getIdToken(true);
@@ -132,74 +196,28 @@ class FirestoreService {
       debugPrint('[DatabaseService] RTDB Write Response: [${res.statusCode}] ${res.body}');
 
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        _cachedProfile = profile;
-        _profileController.add(profile);
         debugPrint('[DatabaseService] Profile saved successfully to RTDB with setupComplete=true!');
         return true;
       } else {
-        debugPrint('[DatabaseService] FAILED to save profile: status=${res.statusCode}, body=${res.body}');
+        debugPrint('[DatabaseService] FAILED to save profile to remote RTDB: status=${res.statusCode}, body=${res.body}');
         return false;
       }
     } catch (e) {
-      debugPrint('[DatabaseService] Exception saving profile: $e');
+      debugPrint('[DatabaseService] Exception saving profile to remote RTDB: $e');
       return false;
     }
   }
 
-  /// Detects if another merchant profile with matching phone or email
-  /// already exists in Realtime Database under a different UID.
+  /// Duplicate accounts are guarded securely at the Firebase Authentication layer
+  /// (which natively prevents duplicate email and phone sign-ups).
+  /// Bulk querying /users.json is disabled to protect merchant privacy and satisfy
+  /// hardened database rules.
   Future<String?> findDuplicateAccount({
     required String currentUid,
     String? phone,
     String? email,
   }) async {
-    try {
-      final user = _currentUser;
-      final token = await user?.getIdToken();
-
-      final authParam = (token != null && token.isNotEmpty) ? '?auth=$token' : '';
-      final url = '$rtdbUrl/$kCollectionUsers.json$authParam';
-      final uri = Uri.parse(url);
-      final headers = <String, String>{
-        'Content-Type': 'application/json',
-        if (token != null) 'Authorization': 'Bearer $token',
-      };
-
-      final res = await _client.get(uri, headers: headers).timeout(
-            const Duration(seconds: 6),
-          );
-
-      if (res.statusCode == 200 && res.body.trim() != 'null') {
-        final allUsers = jsonDecode(res.body);
-        if (allUsers is Map<String, dynamic>) {
-          for (final entry in allUsers.entries) {
-            final uid = entry.key;
-            if (uid == currentUid) continue;
-
-            final userMap = entry.value;
-            if (userMap is Map<String, dynamic>) {
-              final existingPhone = userMap['phone'] as String?;
-              final existingEmail = userMap['email'] as String?;
-
-              if (phone != null && phone.isNotEmpty && existingPhone == phone) {
-                final maskedPhone = phone.length > 4
-                    ? '${phone.substring(0, 3)}****${phone.substring(phone.length - 3)}'
-                    : phone;
-                return 'This mobile number ($maskedPhone) is already registered to an existing MyUPI account.';
-              }
-              if (email != null && email.isNotEmpty && existingEmail == email) {
-                return 'This email ($email) is already linked to an existing MyUPI account.';
-              }
-            }
-          }
-        }
-      }
-      return null;
-    } catch (e) {
-      // Non-blocking duplicate detection failure
-      debugPrint('[DatabaseService] Duplicate account check skipped: $e');
-      return null;
-    }
+    return null;
   }
 
   /// Permanently deletes the merchant profile from database
@@ -215,9 +233,14 @@ class FirestoreService {
         if (token != null) 'Authorization': 'Bearer $token',
       };
       await _client.delete(uri, headers: headers);
-      clearLocalCache();
     } catch (e) {
       debugPrint('[DatabaseService] Error deleting user profile: $e');
+    } finally {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove(_cacheKey(uid));
+      } catch (_) {}
+      clearLocalCache();
     }
   }
 

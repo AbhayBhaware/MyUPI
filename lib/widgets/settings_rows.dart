@@ -193,40 +193,42 @@ class NavRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          // Value, badge, and trailing chevron
-          Flexible(
-            fit: FlexFit.loose,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (badge != null) ...[
-                  badge!,
-                  const SizedBox(width: 6),
-                ],
-                if (value != null && value!.isNotEmpty)
-                  Flexible(
-                    child: Text(
-                      value!,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+          // Value, badge, and trailing chevron (only rendered when content exists)
+          if (badge != null || (value != null && value!.isNotEmpty) || onTap != null)
+            Flexible(
+              fit: FlexFit.loose,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (badge != null) ...[
+                    badge!,
+                    const SizedBox(width: 6),
+                  ],
+                  if (value != null && value!.isNotEmpty)
+                    Flexible(
+                      child: Text(
+                        value!,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.end,
                     ),
-                  ),
-                if (onTap != null) ...[
-                  const SizedBox(width: 4),
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    color: AppColors.textTertiary,
-                    size: 20,
-                  ),
+                  if (onTap != null) ...[
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppColors.textTertiary,
+                      size: 20,
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -308,4 +310,49 @@ class StackedField extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 4. PickerRow: standard bottom-sheet trigger row preventing any custom trailing overflow.
+class PickerRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String valueLabel;
+  final VoidCallback onTap;
+
+  const PickerRow({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.valueLabel,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 56),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            Icon(icon, size: 22, color: AppColors.primaryBlue),
+            const SizedBox(width: 16),
+            Expanded(child: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis)),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                valueLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary),
+          ],
+        ),
+      ),
+    ),
+  );
 }

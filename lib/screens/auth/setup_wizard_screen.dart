@@ -419,6 +419,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           const Text('Category (Optional)', style: AppTypography.titleSmall),
           const SizedBox(height: AppSpacing.xs),
           DropdownButtonFormField<String>(
+            isExpanded: true,
             initialValue: _selectedCategory,
             icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textSecondary),
             style: const TextStyle(
@@ -431,7 +432,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
               prefixIcon: Icon(Icons.category_outlined, color: AppColors.primaryBlue),
             ),
             items: kShopCategories.map((cat) {
-              return DropdownMenuItem(value: cat, child: Text(cat));
+              return DropdownMenuItem(value: cat, child: Text(cat, overflow: TextOverflow.ellipsis));
             }).toList(),
             onChanged: (val) {
               setState(() => _selectedCategory = val);

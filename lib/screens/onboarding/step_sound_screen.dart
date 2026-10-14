@@ -206,6 +206,7 @@ class _StepSoundScreenState extends State<StepSoundScreen> {
                             ),
                             const SizedBox(height: AppSpacing.xs),
                             DropdownButtonFormField<String>(
+                              isExpanded: true,
                               initialValue: _language,
                               decoration: InputDecoration(
                                 prefixIcon: const Icon(Icons.language_rounded, color: AppColors.primaryBlue),
@@ -229,7 +230,10 @@ class _StepSoundScreenState extends State<StepSoundScreen> {
                                 final (code, enName, natName) = item;
                                 return DropdownMenuItem<String>(
                                   value: code,
-                                  child: Text('$enName ($natName)'),
+                                  child: Text(
+                                    '$enName ($natName)',
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 );
                               }).toList(),
                               onChanged: (val) {

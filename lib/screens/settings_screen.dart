@@ -1,12 +1,7 @@
 // lib/screens/settings_screen.dart
 //
-// Settings screen — Modern Fintech Redesign
-// Organized strictly into 3 merchant categories:
-// 1. SOUNDBOX (toggle, shop name, language, speed, format, volume)
-// 2. SUBSCRIPTION (MyUPI Premium status, upgrade plans, restore purchases)
-// 3. APP (notification access, Help & Support, About MyUPI)
-//
-// Developer Diagnostics is kept behind a 7-tap version gesture in AboutScreen.
+// MyUPI Soundbox — Merchant Settings Screen.
+// Rewritten for maximum stability, resilience, and premium fintech aesthetic.
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -14,26 +9,23 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../app_channels.dart';
+import '../services/auth_service.dart';
+import '../services/counter_kiosk_service.dart';
 import '../services/firestore_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
+import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../tts_service.dart';
 import '../utils/speech_template_builder.dart';
-import '../widgets/premium_buttons.dart';
-import '../widgets/premium_card.dart';
-import '../widgets/section_header.dart';
-import '../widgets/status_badge.dart';
+import '../widgets/selection_bottom_sheet.dart';
+import '../widgets/volume_indicator_pill.dart';
 import 'about_screen.dart';
 import 'help_support_screen.dart';
 import 'paywall_screen.dart';
 import 'reliability_checklist_screen.dart';
-import '../services/auth_service.dart';
-import '../services/counter_kiosk_service.dart';
-import '../widgets/selection_bottom_sheet.dart';
-import '../widgets/settings_rows.dart';
-import '../widgets/volume_indicator_pill.dart';
+import 'settings/settings_values.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -42,11 +34,7 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen>
-    with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
-  @override
-  bool get wantKeepAlive => true;
-
+class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObserver {
   bool _soundboxEnabled = true;
   String _speechSpeed = 'normal';
   String _language = 'en-IN';
@@ -81,13 +69,82 @@ class _SettingsScreenState extends State<SettingsScreen>
     }
   }
 
+  Future<T> _safe<T>(Future<T?> Function() call, T fallback) async {
+    try {
+      return (await call().timeout(const Duration(seconds: 3))) ?? fallback;
+    } catch (e, s) {
+      debugPrint('SETTINGS_LOAD_FAIL: $e\n$s');
+      return fallback;
+    }
+  }
+
   Future<void> _loadAll() async {
-    await Future.wait([
-      _loadSettings(),
-      _checkAccess(),
-      _checkBattery(),
-      _loadTestSoundPlayed(),
-    ]);
+    try {
+      await Future.wait([
+        _loadSettings(),
+        _checkAccess(),
+        _checkBattery(),
+        _loadTestSoundPlayed(),
+      ]);
+    } catch (e) {
+      debugPrint('[SettingsScreen] _loadAll error: $e');
+    }
+  }
+
+  Future<void> _loadSettings() async {
+    try {
+      final on = await _safe(() => kMethodChannel.invokeMethod<bool>('isSoundboxEnabled'), true);
+      final rawSpeed = await _safe(() => kMethodChannel.invokeMethod<String>('getSpeechSpeed'), 'normal');
+      final speed = safeSpeed(rawSpeed);
+      final rawLang = await _safe(() => kMethodChannel.invokeMethod<String>('getLanguage'), 'en-IN');
+      final lang = safeLanguage(rawLang);
+      final rawMName = await _safe(() => kMethodChannel.invokeMethod<String>('getMerchantName'), 'MyUPI');
+      final mName = safeMerchantName(rawMName);
+      final rawAFmt = await _safe(() => kMethodChannel.invokeMethod<String>('getAnnouncementFormat'), 'A');
+      final aFmt = safeFormat(rawAFmt);
+      final inc = await _safe(() => kMethodChannel.invokeMethod<bool>('getIncludeShopName'), false);
+
+      bool human = false;
+      bool chime = true;
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        human = prefs.getBool('human_voice_enabled') ?? false;
+        chime = prefs.getBool('soundbox_chime_enabled') ?? true;
+      } catch (_) {}
+
+      // Reconcile shop name with Firestore UserProfile
+      String effectiveShopName = mName;
+      final cachedProfile = FirestoreService.instance.cachedProfile;
+      if (cachedProfile != null && cachedProfile.shopName.trim().isNotEmpty) {
+        if (effectiveShopName == 'MyUPI' || effectiveShopName.isEmpty) {
+          effectiveShopName = cachedProfile.shopName.trim();
+          try {
+            await kMethodChannel.invokeMethod('setMerchantName', {'name': effectiveShopName});
+          } catch (_) {}
+        }
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _soundboxEnabled = on;
+        _speechSpeed = speed;
+        _language = lang;
+        _merchantName = effectiveShopName;
+        _announceFormat = aFmt;
+        _includeShopName = inc;
+        _humanVoice = human;
+        _chimeEnabled = chime;
+      });
+    } catch (e, s) {
+      debugPrint('SETTINGS_LOAD_FAIL: $e\n$s');
+    }
+  }
+
+  Future<void> _checkAccess() async {
+    try {
+      final ok = await kMethodChannel.invokeMethod<bool>('isNotificationAccessEnabled') ?? false;
+      if (mounted) setState(() => _notifAccess = ok);
+    } catch (_) {}
   }
 
   Future<void> _checkBattery() async {
@@ -107,58 +164,31 @@ class _SettingsScreenState extends State<SettingsScreen>
     } catch (_) {}
   }
 
-  Future<void> _playSample() async {
+  Future<void> _setSoundbox(bool val) async {
+    setState(() => _soundboxEnabled = val);
     try {
-      await kMethodChannel.invokeMethod('speakTest');
-    } on PlatformException catch (_) {
-      TtsService.instance.speakTest();
-    }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('test_sound_played', true);
-    if (mounted) setState(() => _testSoundPlayed = true);
+      await kMethodChannel.invokeMethod('setSoundboxEnabled', {'enabled': val});
+    } catch (_) {}
   }
 
-  Future<void> _launchWhatsAppSupport() async {
-    const whatsappUrl = 'https://wa.me/919999999999?text=Hi%20MyUPI%20Support%2C%20I%20need%20help%20with%20my%20Soundbox';
+  Future<void> _setLanguage(String langCode) async {
     try {
-      await kMethodChannel.invokeMethod('openUrl', {'url': whatsappUrl});
-    } catch (_) {
+      final available = await kMethodChannel.invokeMethod<bool>(
+          'checkLanguageAvailability', {'language': langCode});
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not open WhatsApp. Please check if WhatsApp is installed.'),
-          backgroundColor: AppColors.warning,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  Future<void> _loadSettings() async {
-    try {
-      final on = await kMethodChannel.invokeMethod<bool>('isSoundboxEnabled') ?? true;
-      final speed = await kMethodChannel.invokeMethod<String>('getSpeechSpeed') ?? 'normal';
-      final lang = await kMethodChannel.invokeMethod<String>('getLanguage') ?? 'en-IN';
-      final mName = await kMethodChannel.invokeMethod<String>('getMerchantName') ?? 'MyUPI';
-      final aFmt = await kMethodChannel.invokeMethod<String>('getAnnouncementFormat') ?? 'A';
-      final inc = await kMethodChannel.invokeMethod<bool>('getIncludeShopName') ?? false;
-
-      final prefs = await SharedPreferences.getInstance();
-      final human = prefs.getBool('human_voice_enabled') ?? false;
-      final chime = prefs.getBool('soundbox_chime_enabled') ?? true;
-
-      if (!mounted) return;
-      setState(() {
-        _soundboxEnabled = on;
-        _speechSpeed = speed;
-        _language = lang;
-        _merchantName = mName;
-        _announceFormat = aFmt;
-        _includeShopName = inc;
-        _humanVoice = human;
-        _chimeEnabled = chime;
-      });
-    } on PlatformException catch (_) {}
+      if (available == true) {
+        setState(() => _language = langCode);
+        await kMethodChannel.invokeMethod('setLanguage', {'language': langCode});
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Selected language is not available on this device voice engine.'),
+            backgroundColor: AppColors.warning,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (_) {}
   }
 
   Future<void> _setHumanVoice(bool val) async {
@@ -166,6 +196,13 @@ class _SettingsScreenState extends State<SettingsScreen>
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('human_voice_enabled', val);
+    } catch (_) {}
+  }
+
+  Future<void> _setAnnounceFormat(String val) async {
+    setState(() => _announceFormat = val);
+    try {
+      await kMethodChannel.invokeMethod('setAnnouncementFormat', {'format': val});
     } catch (_) {}
   }
 
@@ -177,73 +214,63 @@ class _SettingsScreenState extends State<SettingsScreen>
     } catch (_) {}
   }
 
-  Future<void> _checkAccess() async {
+  Future<void> _setSpeed(String speed) async {
+    setState(() => _speechSpeed = speed);
     try {
-      final ok = await kMethodChannel.invokeMethod<bool>('isNotificationAccessEnabled') ?? false;
-      if (!mounted) return;
-      setState(() => _notifAccess = ok);
-    } on PlatformException catch (_) {}
+      await kMethodChannel.invokeMethod('setSpeechSpeed', {'speed': speed});
+    } catch (_) {}
   }
 
-  Future<void> _setSoundbox(bool v) async {
-    setState(() => _soundboxEnabled = v);
+  Future<void> _setIncludeShopName(bool val) async {
+    setState(() => _includeShopName = val);
     try {
-      await kMethodChannel.invokeMethod('setSoundboxEnabled', {'enabled': v});
-    } on PlatformException catch (_) {}
-  }
-
-  Future<void> _setSpeed(String v) async {
-    setState(() => _speechSpeed = v);
-    try {
-      await kMethodChannel.invokeMethod('setSpeechSpeed', {'speed': v});
-    } on PlatformException catch (_) {}
-  }
-
-  Future<void> _setLanguage(String langCode) async {
-    try {
-      final available = await kMethodChannel.invokeMethod<bool>(
-          'checkLanguageAvailability', {'language': langCode});
-      if (available == true) {
-        setState(() => _language = langCode);
-        await kMethodChannel.invokeMethod('setLanguage', {'language': langCode});
-      } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Selected language is not available on this device voice engine.'),
-            backgroundColor: AppColors.warning,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } on PlatformException catch (_) {}
+      await kMethodChannel.invokeMethod('setIncludeShopName', {'enabled': val});
+    } catch (_) {}
   }
 
   Future<void> _setMerchantName(String name) async {
-    setState(() => _merchantName = name);
+    final clean = name.trim().isEmpty ? 'MyUPI' : name.trim();
+    setState(() => _merchantName = clean);
     try {
-      await kMethodChannel.invokeMethod('setMerchantName', {'name': name});
-    } on PlatformException catch (_) {}
-  }
+      await kMethodChannel.invokeMethod('setMerchantName', {'name': clean});
+    } catch (_) {}
 
-  Future<void> _setAnnounceFormat(String v) async {
-    setState(() => _announceFormat = v);
     try {
-      await kMethodChannel.invokeMethod('setAnnouncementFormat', {'format': v});
-    } on PlatformException catch (_) {}
-  }
-
-  Future<void> _setIncludeShopName(bool v) async {
-    setState(() => _includeShopName = v);
-    try {
-      await kMethodChannel.invokeMethod('setIncludeShopName', {'enabled': v});
-    } on PlatformException catch (_) {}
+      var profile = FirestoreService.instance.cachedProfile;
+      if (profile == null) {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          profile = await FirestoreService.instance.getUserProfile(user.uid);
+        }
+      }
+      if (profile != null) {
+        final updated = profile.copyWith(shopName: clean, updatedAt: DateTime.now());
+        await FirestoreService.instance.saveUserProfile(updated);
+      }
+    } catch (e) {
+      debugPrint('[SettingsScreen] Error updating shop name in database: $e');
+    }
   }
 
   Future<void> _openAccessSettings() async {
     try {
       await kMethodChannel.invokeMethod('openNotificationAccessSettings');
-    } on PlatformException catch (_) {}
+    } catch (_) {}
+  }
+
+  Future<void> _playSample() async {
+    try {
+      await kMethodChannel.invokeMethod('speakTest');
+    } catch (_) {
+      try {
+        TtsService.instance.speakTest();
+      } catch (_) {}
+    }
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('test_sound_played', true);
+      if (mounted) setState(() => _testSoundPlayed = true);
+    } catch (_) {}
   }
 
   Future<void> _handleRestorePurchases() async {
@@ -273,16 +300,98 @@ class _SettingsScreenState extends State<SettingsScreen>
     }
   }
 
-  // ── Build ──────────────────────────────────────────────────────────────────
+  Future<void> _launchWhatsAppSupport() async {
+    const whatsappUrl = 'https://wa.me/919999999999?text=Hi%20MyUPI%20Support%2C%20I%20need%20help%20with%20my%20Soundbox';
+    try {
+      await kMethodChannel.invokeMethod('openUrl', {'url': whatsappUrl});
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not open WhatsApp. Please check if WhatsApp is installed.'),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
 
-  // ── Build ──────────────────────────────────────────────────────────────────
+  String _getUpiIdDisplay() {
+    try {
+      final profile = FirestoreService.instance.cachedProfile;
+      final upi = profile?.upiId.trim() ?? '';
+      return upi.isEmpty ? 'Not set' : upi;
+    } catch (_) {
+      return 'Not set';
+    }
+  }
+
+  String _getFormatPreviewText() {
+    try {
+      return SpeechTemplateBuilder.getFormatPreviewText(
+        format: _announceFormat,
+        langCode: _language,
+        merchantName: _merchantName,
+        includeShopName: _includeShopName,
+      );
+    } catch (e) {
+      debugPrint('[SettingsScreen] _getFormatPreviewText error: $e');
+      return '500 rupees received on My U P I';
+    }
+  }
+
+  String _getLanguageLabel(String langCode) {
+    return kLanguages[langCode] ?? 'English';
+  }
+
+  String _getFormatName(String fmt) {
+    switch (fmt) {
+      case 'B': return 'Short';
+      case 'C': return 'With shop name';
+      default: return 'Standard';
+    }
+  }
+
+  Widget _safeCard({required String sectionName, required Widget Function() builder}) {
+    try {
+      return builder();
+    } catch (e, st) {
+      debugPrint('SETTINGS_SECTION_FAIL[$sectionName]: $e\n$st');
+      return _buildCardWrapper(
+        color: AppColors.surface,
+        borderColor: AppColors.cardBorder,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.base),
+          child: Row(
+            children: [
+              const Icon(Icons.info_outline_rounded, color: AppColors.textTertiary, size: 20),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  '$sectionName is temporarily unavailable',
+                  style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                ),
+              ),
+              TextButton(
+                onPressed: () => setState(() {}),
+                child: const Text('RETRY', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryBlue)),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // BUILD
+  // ════════════════════════════════════════════════════════════════════════════
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
-
     return Scaffold(
       backgroundColor: AppColors.background,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('Settings', style: AppTypography.titleLarge),
         backgroundColor: AppColors.surface,
@@ -293,102 +402,84 @@ class _SettingsScreenState extends State<SettingsScreen>
           child: Divider(height: 1, color: AppColors.borderLight),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-        children: [
-          // ════════════════════════════════════════════════════════════════════
-          // 1. SETUP HEALTH CARD (TOP — "NOBODY GETS STUCK")
-          // ════════════════════════════════════════════════════════════════════
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: _buildSetupHealthCard(),
-          ),
-          const SizedBox(height: AppSpacing.lg),
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base, vertical: AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 1. Setup Health
+              _safeCard(sectionName: 'Setup Health', builder: _buildSetupHealthCard),
+              const SizedBox(height: AppSpacing.md),
 
-          // ════════════════════════════════════════════════════════════════════
-          // 2. VOICE (ONE CARD)
-          // ════════════════════════════════════════════════════════════════════
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: SectionHeader(title: 'VOICE'),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: _buildVoiceCard(),
-          ),
-          const SizedBox(height: AppSpacing.lg),
+              // 2. Voice
+              _buildSectionHeader('VOICE'),
+              _safeCard(sectionName: 'Voice Settings', builder: _buildVoiceCard),
+              const SizedBox(height: AppSpacing.md),
 
-          // ════════════════════════════════════════════════════════════════════
-          // 3. SHOP
-          // ════════════════════════════════════════════════════════════════════
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: SectionHeader(title: 'SHOP'),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: _buildShopCard(),
-          ),
-          const SizedBox(height: AppSpacing.lg),
+              // 3. Shop
+              _buildSectionHeader('SHOP'),
+              _safeCard(sectionName: 'Shop Details', builder: _buildShopCard),
+              const SizedBox(height: AppSpacing.md),
 
-          // ════════════════════════════════════════════════════════════════════
-          // 4. COUNTER MODE
-          // ════════════════════════════════════════════════════════════════════
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: SectionHeader(title: 'COUNTER MODE'),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: _buildCounterModeCard(),
-          ),
-          const SizedBox(height: AppSpacing.lg),
+              // 4. Counter Mode
+              _buildSectionHeader('COUNTER MODE'),
+              _safeCard(sectionName: 'Counter Mode', builder: _buildCounterModeCard),
+              const SizedBox(height: AppSpacing.md),
 
-          // ════════════════════════════════════════════════════════════════════
-          // 5. PLAN
-          // ════════════════════════════════════════════════════════════════════
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: SectionHeader(title: 'PLAN'),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: _buildPlanCard(),
-          ),
-          const SizedBox(height: AppSpacing.lg),
+              // 5. Subscription Plan
+              _buildSectionHeader('PLAN'),
+              _safeCard(sectionName: 'Subscription Plan', builder: _buildPlanCard),
+              const SizedBox(height: AppSpacing.md),
 
-          // ════════════════════════════════════════════════════════════════════
-          // 6. HELP & RELIABILITY
-          // ════════════════════════════════════════════════════════════════════
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: SectionHeader(title: 'HELP & RELIABILITY'),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: _buildHelpAndReliabilityCard(),
-          ),
-          const SizedBox(height: AppSpacing.lg),
+              // 6. Help & Reliability
+              _buildSectionHeader('HELP & RELIABILITY'),
+              _safeCard(sectionName: 'Help & Reliability', builder: _buildHelpAndReliabilityCard),
+              const SizedBox(height: AppSpacing.md),
 
-          // ════════════════════════════════════════════════════════════════════
-          // 7. ACCOUNT
-          // ════════════════════════════════════════════════════════════════════
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: SectionHeader(title: 'ACCOUNT'),
+              // 7. Merchant Account
+              _buildSectionHeader('ACCOUNT'),
+              _safeCard(sectionName: 'Merchant Account', builder: _buildAccountCard),
+              const SizedBox(height: AppSpacing.xxl),
+            ],
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
-            child: _buildAccountCard(),
-          ),
-          const SizedBox(height: AppSpacing.xxl),
-        ],
+        ),
+      ),
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // SECTION COMPONENTS
+  // ════════════════════════════════════════════════════════════════════════════
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: AppColors.primaryBlue,
+          letterSpacing: 1.1,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCardWrapper({required Widget child, Color? color, Color? borderColor}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color ?? AppColors.surface,
+        borderRadius: AppRadius.lgRadius,
+        border: Border.all(color: borderColor ?? AppColors.cardBorder, width: 1.0),
+        boxShadow: AppShadows.card,
+      ),
+      child: ClipRRect(
+        borderRadius: AppRadius.lgRadius,
+        child: child,
       ),
     );
   }
@@ -409,134 +500,136 @@ class _SettingsScreenState extends State<SettingsScreen>
     final isAllSet = completedCount == 4;
 
     if (isAllSet) {
-      return PremiumCard(
+      return _buildCardWrapper(
         color: AppColors.successBg,
         borderColor: AppColors.successBorder,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.base),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 20),
+                  const SizedBox(width: AppSpacing.sm),
+                  const Expanded(
+                    child: Text(
+                      'All Set • Soundbox Ready',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.success,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withAlpha(40),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      '4/4 ✓',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.success,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Notification access, battery optimization, UPI ID, and sound preview are verified.',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return _buildCardWrapper(
+      color: AppColors.warningBg,
+      borderColor: AppColors.warningBorder,
+      child: Padding(
         padding: const EdgeInsets.all(AppSpacing.base),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 20),
+                const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 20),
                 const SizedBox(width: AppSpacing.sm),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'All Set • Soundbox Ready',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
+                    'Setup Health • $completedCount of 4 complete',
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.success,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.15),
+                    color: AppColors.warning.withAlpha(40),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text(
-                    '4/4 ✓',
-                    style: TextStyle(
+                  child: Text(
+                    '$completedCount/4',
+                    style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.success,
+                      color: AppColors.warning,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 6),
-            Text(
-              'Notification access, battery optimization, UPI ID, and sound preview are verified.',
-              style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+            const SizedBox(height: 4),
+            const Text(
+              'Complete setup to prevent missed payment announcements.',
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 12),
+            _buildHealthCheckRow(
+              title: 'Notification Access',
+              isDone: notifOk,
+              actionLabel: 'Enable',
+              onAction: _openAccessSettings,
+            ),
+            const SizedBox(height: 8),
+            _buildHealthCheckRow(
+              title: 'Battery & Autostart',
+              isDone: batteryOk,
+              actionLabel: 'Review',
+              onAction: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (ctx) => const ReliabilityChecklistScreen()),
+                );
+                _checkBattery();
+              },
+            ),
+            const SizedBox(height: 8),
+            _buildHealthCheckRow(
+              title: 'UPI ID Added',
+              isDone: upiOk,
+              actionLabel: 'Add',
+              onAction: _showEditUpiIdDialog,
+            ),
+            const SizedBox(height: 8),
+            _buildHealthCheckRow(
+              title: 'Test Sound Played',
+              isDone: soundOk,
+              actionLabel: 'Play',
+              onAction: _playSample,
             ),
           ],
         ),
-      );
-    }
-
-    return PremiumCard(
-      color: AppColors.warningBg,
-      borderColor: AppColors.warningBorder,
-      padding: const EdgeInsets.all(AppSpacing.base),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 20),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  'Setup Health • $completedCount of 4 complete',
-                  style: const TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '$completedCount/4',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.warning,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Complete setup to prevent missed payment announcements.',
-            style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 12),
-          _buildHealthCheckRow(
-            title: 'Notification Access',
-            isDone: notifOk,
-            actionLabel: 'Enable',
-            onAction: _openAccessSettings,
-          ),
-          const SizedBox(height: 8),
-          _buildHealthCheckRow(
-            title: 'Battery & Autostart',
-            isDone: batteryOk,
-            actionLabel: 'Review',
-            onAction: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (ctx) => const ReliabilityChecklistScreen()),
-              );
-              _checkBattery();
-            },
-          ),
-          const SizedBox(height: 8),
-          _buildHealthCheckRow(
-            title: 'UPI ID Added',
-            isDone: upiOk,
-            actionLabel: 'Add',
-            onAction: _showEditUpiIdDialog,
-          ),
-          const SizedBox(height: 8),
-          _buildHealthCheckRow(
-            title: 'Test Sound Played',
-            isDone: soundOk,
-            actionLabel: 'Play',
-            onAction: _playSample,
-          ),
-        ],
       ),
     );
   }
@@ -551,7 +644,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       children: [
         Icon(
           isDone ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-          size: 16,
+          size: 18,
           color: isDone ? AppColors.success : AppColors.textTertiary,
         ),
         const SizedBox(width: 8),
@@ -568,22 +661,17 @@ class _SettingsScreenState extends State<SettingsScreen>
         ),
         if (!isDone) ...[
           const SizedBox(width: 8),
-          Flexible(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: SizedBox(
-                height: 28,
-                child: FilledButton(
-                  onPressed: onAction,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primaryBlue,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  child: Text(actionLabel, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
-                ),
+          SizedBox(
+            height: 28,
+            child: FilledButton(
+              onPressed: onAction,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primaryBlue,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                visualDensity: VisualDensity.compact,
               ),
+              child: Text(actionLabel, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
             ),
           ),
         ],
@@ -594,79 +682,61 @@ class _SettingsScreenState extends State<SettingsScreen>
   // ── 2. Voice Card ──────────────────────────────────────────────────────────
 
   Widget _buildVoiceCard() {
-    return PremiumCard(
-      padding: EdgeInsets.zero,
+    return _buildCardWrapper(
       child: Column(
         children: [
-          // Master Soundbox switch
-          SwitchRow(
-            iconData: _soundboxEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+          // Master Soundbox toggle
+          _buildSwitchRow(
+            icon: _soundboxEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+            iconColor: _soundboxEnabled ? AppColors.success : AppColors.textTertiary,
+            iconBgColor: _soundboxEnabled ? AppColors.successBg : AppColors.background,
             title: 'Soundbox',
             subtitle: _soundboxEnabled
                 ? 'Payment announcements are on'
                 : 'Payment announcements are paused',
             value: _soundboxEnabled,
             onChanged: _setSoundbox,
-            iconColor: _soundboxEnabled ? AppColors.success : AppColors.textTertiary,
-            iconBgColor: _soundboxEnabled ? AppColors.successBg : AppColors.background,
             showDivider: true,
           ),
 
-          // Language NavRow
-          NavRow(
-            iconData: Icons.language_rounded,
+          // Language
+          _buildNavRow(
+            icon: Icons.language_rounded,
             title: 'Announcement Language',
             subtitle: 'Spoken language for payments',
-            value: _getLanguageLabel(_language),
+            valueText: _getLanguageLabel(_language),
             onTap: _showLanguagePicker,
             showDivider: true,
           ),
 
-          // Voice Type NavRow (with HUMAN tag)
-          NavRow(
-            iconData: Icons.record_voice_over_rounded,
+          // Voice Type
+          _buildNavRow(
+            icon: Icons.record_voice_over_rounded,
             title: 'Announcement Voice',
             subtitle: _humanVoice
                 ? (_includeShopName
                     ? 'Human voice active • Shop name uses system TTS'
                     : 'Natural human voice (offline pack)')
                 : 'Standard voice (device system TTS)',
-            value: _humanVoice ? 'Human Voice' : 'Standard',
-            badge: _humanVoice
-                ? Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: AppColors.success.withValues(alpha: 0.4)),
-                    ),
-                    child: const Text(
-                      'HUMAN',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.success,
-                      ),
-                    ),
-                  )
-                : null,
+            valueText: _humanVoice ? 'Human Voice' : 'Standard',
+            badge: _humanVoice ? _buildTag('HUMAN', AppColors.success) : null,
             onTap: _showVoicePicker,
             showDivider: true,
           ),
 
-          // Announcement Style NavRow
-          NavRow(
-            iconData: Icons.style_rounded,
+          // Announcement Style
+          _buildNavRow(
+            icon: Icons.style_rounded,
             title: 'Announcement Style',
             subtitle: 'Format spoken on payment',
-            value: _getFormatName(_announceFormat),
+            valueText: _getFormatName(_announceFormat),
             onTap: _showAnnounceFormatPicker,
             showDivider: true,
           ),
 
-          // Melodic Attention Chime SwitchRow
-          SwitchRow(
-            iconData: _chimeEnabled ? Icons.notifications_active_rounded : Icons.notifications_off_outlined,
+          // Attention Chime
+          _buildSwitchRow(
+            icon: _chimeEnabled ? Icons.notifications_active_rounded : Icons.notifications_off_outlined,
             title: 'Payment Attention Chime',
             subtitle: 'Play melodic chime before speech',
             value: _chimeEnabled,
@@ -674,7 +744,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             showDivider: true,
           ),
 
-          // Single Play Sample Box with exact sentence preview
+          // Sample preview box
           Padding(
             padding: const EdgeInsets.all(AppSpacing.base),
             child: Container(
@@ -689,22 +759,20 @@ class _SettingsScreenState extends State<SettingsScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    children: [
-                      const Icon(Icons.hearing_rounded, size: 16, color: AppColors.primaryBlue),
-                      const SizedBox(width: 6),
+                    children: const [
+                      Icon(Icons.hearing_rounded, size: 16, color: AppColors.primaryBlue),
+                      SizedBox(width: 6),
                       Expanded(
                         child: Text(
                           'Sample Announcement',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.titleSmall.copyWith(fontSize: 13, color: AppColors.primaryBlue),
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primaryBlue),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    _getFormatPreviewText(_announceFormat),
+                    'Preview: "${_getFormatPreviewText()}"',
                     style: const TextStyle(
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
@@ -731,12 +799,12 @@ class _SettingsScreenState extends State<SettingsScreen>
             ),
           ),
 
-          // Advanced ▸ Speech speed
-          NavRow(
-            iconData: Icons.speed_rounded,
+          // Speed
+          _buildNavRow(
+            icon: Icons.speed_rounded,
             title: 'Speech Speed (Advanced)',
             subtitle: 'Pacing of voice announcements',
-            value: _speechSpeed.toUpperCase(),
+            valueText: _speechSpeed.toUpperCase(),
             onTap: _showSpeedPicker,
             showDivider: false,
           ),
@@ -748,20 +816,19 @@ class _SettingsScreenState extends State<SettingsScreen>
   // ── 3. Shop Card ───────────────────────────────────────────────────────────
 
   Widget _buildShopCard() {
-    return PremiumCard(
-      padding: EdgeInsets.zero,
+    return _buildCardWrapper(
       child: Column(
         children: [
-          NavRow(
-            iconData: Icons.storefront_rounded,
+          _buildNavRow(
+            icon: Icons.storefront_rounded,
             title: 'Shop / Business Name',
             subtitle: 'Spoken in announcement and displayed on QR',
-            value: _merchantName,
+            valueText: _merchantName,
             onTap: _showEditMerchantNameDialog,
             showDivider: true,
           ),
-          SwitchRow(
-            iconData: Icons.store_rounded,
+          _buildSwitchRow(
+            icon: Icons.store_rounded,
             title: 'Include Shop Name',
             subtitle: _includeShopName
                 ? 'Shop name included in announcement'
@@ -770,11 +837,11 @@ class _SettingsScreenState extends State<SettingsScreen>
             onChanged: _setIncludeShopName,
             showDivider: true,
           ),
-          NavRow(
-            iconData: Icons.qr_code_2_rounded,
+          _buildNavRow(
+            icon: Icons.qr_code_2_rounded,
             title: 'UPI ID',
             subtitle: 'Payment address for QR code generation',
-            value: _getUpiIdDisplay(),
+            valueText: _getUpiIdDisplay(),
             onTap: _showEditUpiIdDialog,
             showDivider: false,
           ),
@@ -786,26 +853,32 @@ class _SettingsScreenState extends State<SettingsScreen>
   // ── 4. Counter Mode Card ───────────────────────────────────────────────────
 
   Widget _buildCounterModeCard() {
-    return PremiumCard(
-      padding: EdgeInsets.zero,
+    bool isAwake = false;
+    try {
+      isAwake = CounterKioskService.instance.isKeepAwake;
+    } catch (_) {}
+
+    return _buildCardWrapper(
       child: Column(
         children: [
-          SwitchRow(
-            iconData: Icons.screen_lock_portrait_rounded,
+          _buildSwitchRow(
+            icon: Icons.screen_lock_portrait_rounded,
             title: 'Keep Screen Awake on Counter',
             subtitle: 'Storefront counter display (increases battery drain)',
-            value: CounterKioskService.instance.isKeepAwake,
+            value: isAwake,
             onChanged: (v) async {
-              await CounterKioskService.instance.setKeepAwake(v);
-              setState(() {});
+              try {
+                await CounterKioskService.instance.setKeepAwake(v);
+              } catch (_) {}
+              if (mounted) setState(() {});
             },
             showDivider: true,
           ),
-          NavRow(
-            iconData: Icons.volume_up_rounded,
+          _buildNavRow(
+            icon: Icons.volume_up_rounded,
             title: 'Announcement Volume',
             subtitle: 'Adjust phone media volume',
-            value: 'Media Volume',
+            valueText: 'Media Volume',
             onTap: () => VolumeIndicatorPill.showVolumeSheet(context),
             showDivider: false,
           ),
@@ -821,10 +894,9 @@ class _SettingsScreenState extends State<SettingsScreen>
       valueListenable: SubscriptionManager.instance.subscriptionInfoNotifier,
       builder: (context, subInfo, _) {
         final isEntitled = subInfo.state.hasPremiumEntitlement;
-        return PremiumCard(
-          padding: EdgeInsets.zero,
+        return _buildCardWrapper(
           color: isEntitled ? AppColors.surface : AppColors.lightBlue,
-          borderColor: isEntitled ? AppColors.successBorder : AppColors.primaryBlue.withValues(alpha: 0.2),
+          borderColor: isEntitled ? AppColors.successBorder : AppColors.softBlueBorder,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -834,73 +906,63 @@ class _SettingsScreenState extends State<SettingsScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: Row(
-                            children: const [
-                              Icon(
-                                Icons.workspace_premium_rounded,
-                                size: 22,
-                                color: AppColors.primaryBlue,
-                              ),
-                              SizedBox(width: AppSpacing.sm),
-                              Flexible(
-                                child: Text(
-                                  'MyUPI Premium',
-                                  style: AppTypography.titleSmall,
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
-                              ),
-                            ],
+                        const Icon(Icons.workspace_premium_rounded, size: 22, color: AppColors.primaryBlue),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            'MyUPI Premium',
+                            style: AppTypography.titleSmall,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.xs),
-                        Flexible(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: StatusBadge(
-                              label: subInfo.state.label.toUpperCase(),
-                              type: isEntitled ? StatusBadgeType.active : StatusBadgeType.info,
-                              showDot: true,
-                            ),
-                          ),
+                        const SizedBox(width: 8),
+                        _buildTag(
+                          isEntitled ? 'ACTIVE' : 'OFFER',
+                          isEntitled ? AppColors.success : AppColors.primaryBlue,
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: 8),
                     Text(
                       isEntitled
                           ? 'All 8 Indian languages, custom shop branding, and priority announcements active.'
                           : 'Introductory Offer: ₹1 for first month, then ₹49/month. Cancel anytime via Play Store.',
                       style: AppTypography.bodySmall,
                     ),
-                    const SizedBox(height: AppSpacing.md),
-                    SecondaryButton(
-                      label: isEntitled ? 'Manage Subscription' : 'View Premium Plans',
-                      icon: Icons.star_rounded,
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
                       height: 42,
-                      isFullWidth: true,
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (ctx) => const PaywallScreen(sourceEntry: 'settings'),
-                          ),
-                        );
-                      },
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppColors.primaryBlue),
+                          shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+                        ),
+                        icon: const Icon(Icons.star_rounded, size: 18, color: AppColors.primaryBlue),
+                        label: Text(
+                          isEntitled ? 'Manage Subscription' : 'View Premium Plans',
+                          style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.primaryBlue),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (ctx) => const PaywallScreen(sourceEntry: 'settings'),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ],
                 ),
               ),
               const Divider(height: 1, color: AppColors.borderLight),
-              // Restore Purchases as a clean NavRow INSIDE the card per spec
-              NavRow(
-                iconData: Icons.restore_rounded,
+              _buildNavRow(
+                icon: Icons.restore_rounded,
                 title: 'Restore Purchases',
                 subtitle: 'Restore active Play Store subscription',
-                value: _isRestoring ? 'Restoring…' : 'Restore',
+                valueText: _isRestoring ? 'Restoring…' : 'Restore',
                 onTap: _isRestoring ? null : _handleRestorePurchases,
                 showDivider: false,
               ),
@@ -914,15 +976,14 @@ class _SettingsScreenState extends State<SettingsScreen>
   // ── 6. Help & Reliability Card ─────────────────────────────────────────────
 
   Widget _buildHelpAndReliabilityCard() {
-    return PremiumCard(
-      padding: EdgeInsets.zero,
+    return _buildCardWrapper(
       child: Column(
         children: [
-          NavRow(
-            iconData: Icons.shield_rounded,
+          _buildNavRow(
+            icon: Icons.shield_rounded,
             title: 'Reliability Checklist',
             subtitle: 'Battery exemption, SMS backup & autostart',
-            value: _batteryIgnored ? 'Optimal' : 'Needs Review',
+            valueText: _batteryIgnored ? 'Optimal' : 'Needs Review',
             onTap: () {
               Navigator.push(
                 context,
@@ -931,20 +992,20 @@ class _SettingsScreenState extends State<SettingsScreen>
             },
             showDivider: true,
           ),
-          NavRow(
-            iconData: _notifAccess == true ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+          _buildNavRow(
+            icon: _notifAccess == true ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+            iconColor: _notifAccess == true ? AppColors.success : AppColors.warning,
+            iconBgColor: _notifAccess == true ? AppColors.successBg : AppColors.warningBg,
             title: 'Notification Access',
             subtitle: _notifAccess == true
                 ? 'Enabled — MyUPI hears payment notifications'
                 : 'Disabled — payments cannot be announced',
-            value: _notifAccess == true ? 'Active' : 'Enable',
-            iconColor: _notifAccess == true ? AppColors.success : AppColors.warning,
-            iconBgColor: _notifAccess == true ? AppColors.successBg : AppColors.warningBg,
+            valueText: _notifAccess == true ? 'Active' : 'Enable',
             onTap: _openAccessSettings,
             showDivider: true,
           ),
-          NavRow(
-            iconData: Icons.help_outline_rounded,
+          _buildNavRow(
+            icon: Icons.help_outline_rounded,
             title: 'Help & Support',
             subtitle: 'FAQs, setup guides, and troubleshooting',
             onTap: () {
@@ -955,18 +1016,18 @@ class _SettingsScreenState extends State<SettingsScreen>
             },
             showDivider: true,
           ),
-          NavRow(
-            iconData: Icons.chat_rounded,
-            title: 'Chat on WhatsApp',
-            subtitle: 'Instant support for merchants via WhatsApp',
-            value: 'Chat',
+          _buildNavRow(
+            icon: Icons.chat_rounded,
             iconColor: const Color(0xFF25D366),
             iconBgColor: const Color(0xFFE8F8EE),
+            title: 'Chat on WhatsApp',
+            subtitle: 'Instant support for merchants via WhatsApp',
+            valueText: 'Chat',
             onTap: _launchWhatsAppSupport,
             showDivider: true,
           ),
-          NavRow(
-            iconData: Icons.info_outline_rounded,
+          _buildNavRow(
+            icon: Icons.info_outline_rounded,
             title: 'About MyUPI',
             subtitle: 'Version 1.0.0, privacy policy, and terms',
             onTap: () {
@@ -985,36 +1046,59 @@ class _SettingsScreenState extends State<SettingsScreen>
   // ── 7. Account Card ────────────────────────────────────────────────────────
 
   Widget _buildAccountCard() {
-    return PremiumCard(
-      padding: EdgeInsets.zero,
+    final user = AuthService.instance.currentUser;
+    final profile = FirestoreService.instance.cachedProfile;
+
+    String accountTitle = 'Merchant Profile';
+    final userDisplayName = user?.displayName?.trim();
+    final profileOwner = profile?.ownerName.trim();
+    final profileShop = profile?.shopName.trim();
+
+    if (userDisplayName != null && userDisplayName.isNotEmpty) {
+      accountTitle = userDisplayName;
+    } else if (profileOwner != null && profileOwner.isNotEmpty) {
+      accountTitle = profileOwner;
+    } else if (profileShop != null && profileShop.isNotEmpty) {
+      accountTitle = profileShop;
+    }
+
+    String accountSubtitle = 'Signed in';
+    final userEmail = user?.email?.trim();
+    final userPhone = user?.phoneNumber?.trim();
+    final profilePhone = profile?.phone.trim();
+
+    if (userEmail != null && userEmail.isNotEmpty) {
+      accountSubtitle = userEmail;
+    } else if (userPhone != null && userPhone.isNotEmpty) {
+      accountSubtitle = userPhone;
+    } else if (profilePhone != null && profilePhone.isNotEmpty) {
+      accountSubtitle = profilePhone;
+    }
+
+    return _buildCardWrapper(
       child: Column(
         children: [
-          NavRow(
-            iconData: Icons.person_outline_rounded,
-            title: AuthService.instance.currentUser?.displayName ??
-                FirestoreService.instance.cachedProfile?.ownerName ??
-                'Merchant Profile',
-            subtitle: AuthService.instance.currentUser?.email ??
-                AuthService.instance.currentUser?.phoneNumber ??
-                FirestoreService.instance.cachedProfile?.phone ??
-                'Signed in',
+          _buildNavRow(
+            icon: Icons.person_outline_rounded,
+            title: accountTitle,
+            subtitle: accountSubtitle,
             showDivider: true,
           ),
-          NavRow(
-            iconData: Icons.logout_rounded,
-            title: 'Sign Out',
-            subtitle: 'Sign out and switch merchant accounts',
+          _buildNavRow(
+            icon: Icons.logout_rounded,
             iconColor: AppColors.error,
             iconBgColor: AppColors.errorBg,
+            title: 'Sign Out',
+            subtitle: 'Sign out and switch merchant accounts',
             onTap: _showSignOutDialog,
             showDivider: true,
           ),
-          NavRow(
-            iconData: Icons.delete_forever_rounded,
-            title: 'Delete Account & Data',
-            subtitle: 'Permanently remove your merchant data',
+          _buildNavRow(
+            icon: Icons.delete_forever_rounded,
             iconColor: AppColors.error,
             iconBgColor: AppColors.errorBg,
+            title: 'Delete Account & Data',
+            subtitle: 'Permanently remove your merchant data',
             onTap: _showDeleteAccountDialog,
             showDivider: false,
           ),
@@ -1023,132 +1107,190 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  void _showDeleteAccountDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          shape: const RoundedRectangleBorder(borderRadius: AppRadius.lgRadius),
-          title: const Text('Delete Account & Data', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold)),
-          content: const Text(
-            'This will permanently delete your merchant profile and clear local transaction history. This action cannot be undone.',
-            style: AppTypography.bodySmall,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('CANCEL', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+  // ════════════════════════════════════════════════════════════════════════════
+  // ROW ATOMS
+  // ════════════════════════════════════════════════════════════════════════════
+
+  Widget _buildSwitchRow({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    Color iconColor = AppColors.primaryBlue,
+    Color iconBgColor = AppColors.lightBlue,
+    bool showDivider = false,
+  }) {
+    final content = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: value ? iconBgColor : const Color(0xFFF1F5F9),
+              borderRadius: AppRadius.smRadius,
             ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.error,
-                shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+            child: Icon(icon, size: 20, color: value ? iconColor : AppColors.textTertiary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (subtitle != null && subtitle.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Switch.adaptive(
+            value: value,
+            onChanged: onChanged,
+            activeTrackColor: AppColors.primaryBlue,
+          ),
+        ],
+      ),
+    );
+
+    if (!showDivider) return content;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        content,
+        const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+      ],
+    );
+  }
+
+  Widget _buildNavRow({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    String? valueText,
+    Widget? badge,
+    VoidCallback? onTap,
+    Color iconColor = AppColors.primaryBlue,
+    Color iconBgColor = AppColors.lightBlue,
+    bool showDivider = false,
+  }) {
+    Widget content = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: iconBgColor,
+              borderRadius: AppRadius.smRadius,
+            ),
+            child: Icon(icon, size: 20, color: iconColor),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (subtitle != null && subtitle.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (badge != null) ...[
+            const SizedBox(width: 6),
+            badge,
+          ],
+          if (valueText != null && valueText.isNotEmpty) ...[
+            const SizedBox(width: 6),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 120),
+              child: Text(
+                valueText,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
               ),
-              onPressed: () async {
-                Navigator.pop(ctx);
-                try {
-                  final user = FirebaseAuth.instance.currentUser;
-                  if (user != null) {
-                    await FirestoreService.instance.deleteUserProfile(user.uid);
-                    await user.delete();
-                  }
-                  await kMethodChannel.invokeMethod('clearPaymentHistory');
-                  await AuthService.instance.signOut();
-                } catch (e) {
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to delete account: $e. You may need to sign in again first.'),
-                      backgroundColor: AppColors.error,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              },
-              child: const Text('DELETE PERMANENTLY', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
-        );
-      },
-    );
-  }
-
-  void _showSignOutDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          shape: const RoundedRectangleBorder(borderRadius: AppRadius.lgRadius),
-          title: const Text('Sign Out', style: AppTypography.titleMedium),
-          content: const Text(
-            'Are you sure you want to sign out of your MyUPI merchant account?',
-            style: AppTypography.bodySmall,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('CANCEL', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.error,
-                shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
-              ),
-              onPressed: () async {
-                Navigator.pop(ctx);
-                await AuthService.instance.signOut();
-              },
-              child: const Text('SIGN OUT', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
+          if (onTap != null) ...[
+            const SizedBox(width: 4),
+            const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.textTertiary),
           ],
-        );
-      },
+        ],
+      ),
+    );
+
+    if (onTap != null) {
+      content = Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          child: content,
+        ),
+      );
+    }
+
+    if (!showDivider) return content;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        content,
+        const Divider(height: 1, indent: 68, endIndent: 16, color: AppColors.borderLight),
+      ],
     );
   }
 
-
-
-  String _getFormatPreviewText(String f) {
-    final preview = SpeechTemplateBuilder.getFormatPreviewText(
-      format: f,
-      langCode: _language,
-      merchantName: _merchantName,
-      includeShopName: _includeShopName,
+  Widget _buildTag(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withAlpha(25),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withAlpha(60), width: 1),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: color),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
-    return 'Preview: "$preview"';
   }
 
-  String _getLanguageLabel(String langCode) {
-    switch (langCode) {
-      case 'hi-IN':
-        return 'Hindi (हिन्दी)';
-      case 'mr-IN':
-        return 'Marathi (मराठी)';
-      case 'gu-IN':
-        return 'Gujarati (ગુજરાતી)';
-      case 'ta-IN':
-        return 'Tamil (தமிழ்)';
-      case 'te-IN':
-        return 'Telugu (తెలుగు)';
-      case 'bn-IN':
-        return 'Bengali (বাংলা)';
-      case 'kn-IN':
-        return 'Kannada (ಕನ್ನಡ)';
-      default:
-        return 'English';
-    }
-  }
-
-  String _getFormatName(String f) {
-    switch (f) {
-      case 'B':
-        return 'Short';
-      case 'C':
-        return 'With shop name';
-      default:
-        return 'Standard';
-    }
-  }
+  // ════════════════════════════════════════════════════════════════════════════
+  // DIALOGS & PICKERS
+  // ════════════════════════════════════════════════════════════════════════════
 
   Future<void> _showLanguagePicker() async {
     HapticFeedback.selectionClick();
@@ -1193,10 +1335,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             borderRadius: BorderRadius.circular(4),
             border: Border.all(color: AppColors.success.withAlpha(60)),
           ),
-          child: const Text(
-            'HUMAN',
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.success),
-          ),
+          child: const Text('HUMAN', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.success)),
         ),
       ),
     ];
@@ -1215,21 +1354,9 @@ class _SettingsScreenState extends State<SettingsScreen>
   Future<void> _showAnnounceFormatPicker() async {
     HapticFeedback.selectionClick();
     final items = [
-      const SelectionItem<String>(
-        value: 'A',
-        title: 'Standard',
-        subtitle: 'Amount first + My U P I',
-      ),
-      const SelectionItem<String>(
-        value: 'B',
-        title: 'Short',
-        subtitle: 'Amount received only',
-      ),
-      const SelectionItem<String>(
-        value: 'C',
-        title: 'With shop name',
-        subtitle: 'Amount first + My U P I + Shop name',
-      ),
+      const SelectionItem<String>(value: 'A', title: 'Standard', subtitle: 'Amount first + My U P I'),
+      const SelectionItem<String>(value: 'B', title: 'Short', subtitle: 'Amount received only'),
+      const SelectionItem<String>(value: 'C', title: 'With shop name', subtitle: 'Amount first + My U P I + Shop name'),
     ];
     final selected = await showSelectionBottomSheet<String>(
       context: context,
@@ -1246,21 +1373,9 @@ class _SettingsScreenState extends State<SettingsScreen>
   Future<void> _showSpeedPicker() async {
     HapticFeedback.selectionClick();
     final items = [
-      const SelectionItem<String>(
-        value: 'slow',
-        title: 'Slow',
-        subtitle: 'Clear, slower pacing for noisy shops',
-      ),
-      const SelectionItem<String>(
-        value: 'normal',
-        title: 'Normal',
-        subtitle: 'Standard conversational speed',
-      ),
-      const SelectionItem<String>(
-        value: 'fast',
-        title: 'Fast',
-        subtitle: 'Brisk, fast pacing',
-      ),
+      const SelectionItem<String>(value: 'slow', title: 'Slow', subtitle: 'Clear, slower pacing for noisy shops'),
+      const SelectionItem<String>(value: 'normal', title: 'Normal', subtitle: 'Standard conversational speed'),
+      const SelectionItem<String>(value: 'fast', title: 'Fast', subtitle: 'Brisk, fast pacing'),
     ];
     final selected = await showSelectionBottomSheet<String>(
       context: context,
@@ -1316,12 +1431,6 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  String _getUpiIdDisplay() {
-    final profile = FirestoreService.instance.cachedProfile;
-    final upiId = profile?.upiId ?? '';
-    return upiId.isEmpty ? 'Not set' : upiId;
-  }
-
   void _showEditUpiIdDialog() {
     HapticFeedback.selectionClick();
     final profile = FirestoreService.instance.cachedProfile;
@@ -1337,9 +1446,9 @@ class _SettingsScreenState extends State<SettingsScreen>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Your payment address for QR code generation.',
-                style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -1387,10 +1496,103 @@ class _SettingsScreenState extends State<SettingsScreen>
                 if (targetProfile != null) {
                   final updated = targetProfile.copyWith(upiId: text, updatedAt: DateTime.now());
                   await FirestoreService.instance.saveUserProfile(updated);
-                  if (mounted) setState(() {});
+                  if (mounted) {
+                    setState(() {});
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('UPI ID updated successfully'),
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: AppColors.success,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
                 }
               },
               child: const Text('SAVE', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showSignOutDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.lgRadius),
+          title: const Text('Sign Out', style: AppTypography.titleMedium),
+          content: const Text(
+            'Are you sure you want to sign out of your MyUPI merchant account?',
+            style: TextStyle(fontSize: 13, color: AppColors.textPrimary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('CANCEL', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.error,
+                shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+              ),
+              onPressed: () async {
+                Navigator.pop(ctx);
+                await AuthService.instance.signOut();
+              },
+              child: const Text('SIGN OUT', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDeleteAccountDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.lgRadius),
+          title: const Text('Delete Account & Data', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold)),
+          content: const Text(
+            'This will permanently delete your merchant profile and clear local transaction history. This action cannot be undone.',
+            style: TextStyle(fontSize: 13, color: AppColors.textPrimary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('CANCEL', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.error,
+                shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+              ),
+              onPressed: () async {
+                Navigator.pop(ctx);
+                try {
+                  final user = FirebaseAuth.instance.currentUser;
+                  if (user != null) {
+                    await FirestoreService.instance.deleteUserProfile(user.uid);
+                    await user.delete();
+                  }
+                  await kMethodChannel.invokeMethod('clearPaymentHistory');
+                  await AuthService.instance.signOut();
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to delete account: $e. You may need to sign in again first.'),
+                      backgroundColor: AppColors.error,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+              child: const Text('DELETE PERMANENTLY', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         );
