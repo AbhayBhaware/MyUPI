@@ -60,7 +60,7 @@ void main() {
 
     final scrollViewFinder = find.descendant(
       of: find.byType(SettingsScreen),
-      matching: find.byType(SingleChildScrollView),
+      matching: find.byWidgetPredicate((w) => w is ScrollView || w is SingleChildScrollView),
     );
     expect(scrollViewFinder, findsOneWidget);
     final scrollSize = tester.getSize(scrollViewFinder);

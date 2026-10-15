@@ -404,47 +404,53 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
       ),
       body: SafeArea(
         top: false,
-        child: SingleChildScrollView(
+        child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base, vertical: AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 1. Setup Health
-              _safeCard(sectionName: 'Setup Health', builder: _buildSetupHealthCard),
-              const SizedBox(height: AppSpacing.md),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base, vertical: AppSpacing.md),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // 1. Setup Health
+                    _safeCard(sectionName: 'Setup Health', builder: _buildSetupHealthCard),
+                    const SizedBox(height: AppSpacing.md),
 
-              // 2. Voice
-              _buildSectionHeader('VOICE'),
-              _safeCard(sectionName: 'Voice Settings', builder: _buildVoiceCard),
-              const SizedBox(height: AppSpacing.md),
+                    // 2. Voice
+                    _buildSectionHeader('VOICE'),
+                    _safeCard(sectionName: 'Voice Settings', builder: _buildVoiceCard),
+                    const SizedBox(height: AppSpacing.md),
 
-              // 3. Shop
-              _buildSectionHeader('SHOP'),
-              _safeCard(sectionName: 'Shop Details', builder: _buildShopCard),
-              const SizedBox(height: AppSpacing.md),
+                    // 3. Shop
+                    _buildSectionHeader('SHOP'),
+                    _safeCard(sectionName: 'Shop Details', builder: _buildShopCard),
+                    const SizedBox(height: AppSpacing.md),
 
-              // 4. Counter Mode
-              _buildSectionHeader('COUNTER MODE'),
-              _safeCard(sectionName: 'Counter Mode', builder: _buildCounterModeCard),
-              const SizedBox(height: AppSpacing.md),
+                    // 4. Counter Mode
+                    _buildSectionHeader('COUNTER MODE'),
+                    _safeCard(sectionName: 'Counter Mode', builder: _buildCounterModeCard),
+                    const SizedBox(height: AppSpacing.md),
 
-              // 5. Subscription Plan
-              _buildSectionHeader('PLAN'),
-              _safeCard(sectionName: 'Subscription Plan', builder: _buildPlanCard),
-              const SizedBox(height: AppSpacing.md),
+                    // 5. Subscription Plan
+                    _buildSectionHeader('PLAN'),
+                    _safeCard(sectionName: 'Subscription Plan', builder: _buildPlanCard),
+                    const SizedBox(height: AppSpacing.md),
 
-              // 6. Help & Reliability
-              _buildSectionHeader('HELP & RELIABILITY'),
-              _safeCard(sectionName: 'Help & Reliability', builder: _buildHelpAndReliabilityCard),
-              const SizedBox(height: AppSpacing.md),
+                    // 6. Help & Reliability
+                    _buildSectionHeader('HELP & RELIABILITY'),
+                    _safeCard(sectionName: 'Help & Reliability', builder: _buildHelpAndReliabilityCard),
+                    const SizedBox(height: AppSpacing.md),
 
-              // 7. Merchant Account
-              _buildSectionHeader('ACCOUNT'),
-              _safeCard(sectionName: 'Merchant Account', builder: _buildAccountCard),
-              const SizedBox(height: AppSpacing.xxl),
-            ],
-          ),
+                    // 7. Merchant Account
+                    _buildSectionHeader('ACCOUNT'),
+                    _safeCard(sectionName: 'Merchant Account', builder: _buildAccountCard),
+                    const SizedBox(height: AppSpacing.xxl),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -661,17 +667,26 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
         ),
         if (!isDone) ...[
           const SizedBox(width: 8),
-          SizedBox(
-            height: 28,
-            child: FilledButton(
-              onPressed: onAction,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                visualDensity: VisualDensity.compact,
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onAction,
+              borderRadius: BorderRadius.circular(6),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  actionLabel,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
               ),
-              child: Text(actionLabel, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
             ),
           ),
         ],
