@@ -1,7 +1,7 @@
 # MyUPI Soundbox — Database, Security & Settings Deep Audit
 
 **Date:** 2026-10-13  
-**Target Project:** MyUPI Soundbox (`com.example.myupi`)  
+**Target Project:** MyUPI Soundbox (`com.myupi.soundbox`)  
 **Scope:** Firebase Database, Security Rules, Authentication, State Synchronization, Settings Screen Integrity  
 
 ---

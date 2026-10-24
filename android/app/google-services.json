@@ -23,10 +23,47 @@
           }
         },
         {
-          "client_id": "336803590129-p28aid8dms9e7742egb73940uvp8hksf.apps.googleusercontent.com",
+          "client_id": "336803590129-ve6eo8cc21nt8jahe1ue25a5cmjr5e9p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDC7FiLONfONLh3G7Zsw7kqPhhXeBdXXkA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "336803590129-ve6eo8cc21nt8jahe1ue25a5cmjr5e9p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:336803590129:android:06890c94ad664f4358de50",
+        "android_client_info": {
+          "package_name": "com.myupi.soundbox"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "336803590129-8hnp5p9ru0mduam2am3l8c8732a95lbp.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.myupi",
+            "package_name": "com.myupi.soundbox",
+            "certificate_hash": "52f0be8d9e0292977bda7201e844796cd587ef4e"
+          }
+        },
+        {
+          "client_id": "336803590129-qkvdg7j15ft84ortvtlr54flig559ms8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.myupi.soundbox",
             "certificate_hash": "4d51de9e2474bd3a9026b4e237db6794b2673248"
           }
         },

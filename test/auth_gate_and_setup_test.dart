@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myupi/models/user_profile.dart';
 import 'package:myupi/screens/auth/welcome_screen.dart';
-import 'package:myupi/screens/auth/phone_auth_screen.dart';
 import 'package:myupi/screens/auth/email_auth_screen.dart';
 
 void main() {
@@ -85,7 +84,7 @@ void main() {
   });
 
   group('WelcomeScreen Widget Tests', () {
-    testWidgets('WelcomeScreen renders logo, title, and 3 auth entry points', (tester) async {
+    testWidgets('WelcomeScreen renders logo, title, and 2 auth entry points', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: WelcomeScreen(),
@@ -95,10 +94,12 @@ void main() {
       expect(find.text('MyUPI'), findsOneWidget);
       expect(find.text('Smart Payment Soundbox for Indian Merchants'), findsOneWidget);
 
-      // Verify the three distinct auth buttons
+      // Verify the two auth buttons (Google + Email)
       expect(find.text('Continue with Google'), findsOneWidget);
-      expect(find.text('Continue with Phone'), findsOneWidget);
       expect(find.text('Continue with Email'), findsOneWidget);
+
+      // Phone auth removed
+      expect(find.text('Continue with Phone'), findsNothing);
 
       // Verify feature highlights
       expect(find.text('Instant Voice Announcements'), findsOneWidget);
@@ -108,18 +109,6 @@ void main() {
   });
 
   group('Auth Screens Widget Tests', () {
-    testWidgets('PhoneAuthScreen renders mobile number input and +91 indicator', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: PhoneAuthScreen(),
-        ),
-      );
-
-      expect(find.text('Enter your mobile number'), findsOneWidget);
-      expect(find.text('+91'), findsOneWidget);
-      expect(find.text('Send OTP'), findsOneWidget);
-    });
-
     testWidgets('EmailAuthScreen toggles between Log In and Create Account modes', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(

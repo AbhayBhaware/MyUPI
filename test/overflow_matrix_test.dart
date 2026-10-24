@@ -21,7 +21,7 @@ import 'package:myupi/widgets/qr_code_card.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const channel = MethodChannel('com.example.myupi/notification_access');
+  const channel = MethodChannel('com.myupi.soundbox/notification_access');
 
   const testShopName = 'Ramesh Supermarket & General Kirana 1234';
   const testUpiId = 'rameshsupermarketkirana1234@okhdfcbank';

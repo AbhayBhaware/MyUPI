@@ -10,13 +10,12 @@ import 'package:myupi/screens/onboarding/step_sound_screen.dart';
 import 'package:myupi/screens/onboarding/step_test_sound_screen.dart';
 import 'package:myupi/screens/onboarding/step_ready_screen.dart';
 import 'package:myupi/screens/onboarding/step_premium_intro_screen.dart';
-import 'package:myupi/screens/auth/phone_auth_screen.dart';
 import 'package:myupi/screens/auth/email_auth_screen.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const channel = MethodChannel('com.example.myupi/notification_access');
+  const channel = MethodChannel('com.myupi.soundbox/notification_access');
   setUp(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (MethodCall call) async {
@@ -46,7 +45,6 @@ void main() {
     'StepTestSoundScreen': StepTestSoundScreen(onContinue: () {}),
     'StepReadyScreen': StepReadyScreen(onFinish: () {}, notifAccessGranted: true, soundboxEnabled: true),
     'StepPremiumIntroScreen': StepPremiumIntroScreen(onFinish: () {}),
-    'PhoneAuthScreen': const PhoneAuthScreen(),
     'EmailAuthScreen': const EmailAuthScreen(),
   };
 

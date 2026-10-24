@@ -20,8 +20,8 @@ export 'services/billing_service.dart';
 
 // ─── Channel references ───────────────────────────────────────────────────────
 
-const kMethodChannel = MethodChannel('com.example.myupi/notification_access');
-const kEventChannel  = EventChannel('com.example.myupi/notification_stream');
+const kMethodChannel = MethodChannel('com.myupi.soundbox/notification_access');
+const kEventChannel  = EventChannel('com.myupi.soundbox/notification_stream');
 
 // ─── Backward-compatible PaymentRecord ────────────────────────────────────────
 

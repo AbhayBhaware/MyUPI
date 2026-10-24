@@ -1,4 +1,4 @@
-package com.example.myupi
+package com.myupi.soundbox
 
 import android.Manifest
 import android.content.ComponentName
@@ -20,8 +20,8 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
 
     companion object {
-        private const val METHOD_CHANNEL = "com.example.myupi/notification_access"
-        private const val EVENT_CHANNEL  = "com.example.myupi/notification_stream"
+        private const val METHOD_CHANNEL = "com.myupi.soundbox/notification_access"
+        private const val EVENT_CHANNEL  = "com.myupi.soundbox/notification_stream"
         private const val SMS_PERMISSION_REQUEST_CODE = 2001
     }
 

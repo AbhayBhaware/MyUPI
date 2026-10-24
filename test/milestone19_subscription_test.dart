@@ -19,7 +19,7 @@ import 'package:myupi/screens/onboarding/step_premium_intro_screen.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const channel = MethodChannel('com.example.myupi/notification_access');
+  const channel = MethodChannel('com.myupi.soundbox/notification_access');
 
   group('SubscriptionState & Model Tests', () {
     test('SubscriptionState parsing and storage keys', () {

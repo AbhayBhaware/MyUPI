@@ -42,7 +42,7 @@
 
         <!-- MyUPI: NotificationListenerService for intercepting Android notifications -->
         <service
-            android:name="com.example.myupi.PaymentNotificationListener"
+            android:name="com.myupi.soundbox.PaymentNotificationListener"
             android:label="MyUPI Notification Listener"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
             android:exported="true">
@@ -53,7 +53,7 @@
 
         <!-- MyUPI: SMS BroadcastReceiver for backup payment detection -->
         <receiver
-            android:name="com.example.myupi.SmsReceiver"
+            android:name="com.myupi.soundbox.SmsReceiver"
             android:exported="true">
             <intent-filter android:priority="999">
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />

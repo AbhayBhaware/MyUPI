@@ -49,7 +49,12 @@ class AuthService {
     }
 
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn();
+      // Provide Firebase Web Client ID to ensure Google Play Services generates
+      // an idToken compatible with Firebase Auth and avoid ApiException: 10
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        serverClientId:
+            '336803590129-ve6eo8cc21nt8jahe1ue25a5cmjr5e9p.apps.googleusercontent.com',
+      );
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
       if (googleUser == null) {
@@ -228,6 +233,27 @@ class AuthService {
     } catch (_) {}
     try {
       await _auth?.signOut();
+    } catch (_) {}
+    FirestoreService.instance.clearLocalCache();
+  }
+
+  /// Permanently deletes the current user's account and database records.
+  /// Throws FirebaseAuthException with code 'requires-recent-login' if the user
+  /// hasn't authenticated recently.
+  Future<void> deleteAccount() async {
+    final user = currentUser;
+    if (user == null) return;
+    final uid = user.uid;
+
+    // 1. Delete user profile from database
+    await FirestoreService.instance.deleteUserProfile(uid);
+
+    // 2. Delete the Firebase user
+    await user.delete();
+
+    // 3. Sign out of Google & cleanup local cache
+    try {
+      await GoogleSignIn().signOut();
     } catch (_) {}
     FirestoreService.instance.clearLocalCache();
   }

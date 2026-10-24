@@ -1,4 +1,4 @@
-package com.example.myupi
+package com.myupi.soundbox
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

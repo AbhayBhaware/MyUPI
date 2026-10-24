@@ -18,12 +18,12 @@ void main() {
     addTearDown(() {
       FlutterError.onError = originalOnError;
       tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        const MethodChannel('com.example.myupi/notification_access'),
+        const MethodChannel('com.myupi.soundbox/notification_access'),
         null,
       );
     });
     tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      const MethodChannel('com.example.myupi/notification_access'),
+      const MethodChannel('com.myupi.soundbox/notification_access'),
       (call) async {
         switch (call.method) {
           case 'isSoundboxEnabled': return true;

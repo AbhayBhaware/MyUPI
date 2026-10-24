@@ -28,7 +28,7 @@ import 'package:myupi/screens/settings_screen.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const channel = MethodChannel('com.example.myupi/notification_access');
+  const channel = MethodChannel('com.myupi.soundbox/notification_access');
 
   // Track method invocations during test
   final List<MethodCall> methodCalls = [];

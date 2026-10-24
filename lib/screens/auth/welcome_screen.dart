@@ -3,11 +3,10 @@
 // Welcome Screen — First merchant touchpoint.
 // ------------------------------------------
 // Displays app branding with the established palette (#0060F5 primary,
-// #060C1C deep navy text, #F8FAFE/#FFFFFF background) and 3 unified
+// #060C1C deep navy text, #F8FAFE/#FFFFFF background) and 2 unified
 // authentication entry points:
 // 1. Continue with Google (single tap)
-// 2. Continue with Phone (navigates to Phone OTP flow)
-// 3. Continue with Email (navigates to Email auth flow)
+// 2. Continue with Email (navigates to Email auth flow)
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +17,6 @@ import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_typography.dart';
 import 'email_auth_screen.dart';
-import 'phone_auth_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -225,46 +223,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 ),
                 const SizedBox(height: AppSpacing.md),
 
-                // 2. Continue with Phone
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: FilledButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const PhoneAuthScreen()),
-                      );
-                    },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.primaryBlue,
-                      shape: const RoundedRectangleBorder(borderRadius: AppRadius.mdRadius),
-                      elevation: 1,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.phone_iphone_rounded, size: 20, color: Colors.white),
-                        SizedBox(width: AppSpacing.md),
-                        Flexible(
-                          child: Text(
-                            'Continue with Phone',
-                            style: TextStyle(
-                              fontFamily: AppTypography.fontFamily,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-
-                // 3. Continue with Email
+                // 2. Continue with Email
                 SizedBox(
                   width: double.infinity,
                   height: 50,

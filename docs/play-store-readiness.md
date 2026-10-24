@@ -3,7 +3,7 @@
 **Document Version:** 1.0.0  
 **Target Release:** Production v1.0.0 (Build 1)  
 **App Name:** MyUPI  
-**Package Name:** `com.example.myupi`
+**Package Name:** `com.myupi.soundbox`
 
 ---
 

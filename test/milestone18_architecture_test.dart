@@ -17,7 +17,7 @@ import 'package:myupi/app_channels.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const channel = MethodChannel('com.example.myupi/notification_access');
+  const channel = MethodChannel('com.myupi.soundbox/notification_access');
 
   group('PaymentEvent & Trust vs Verification', () {
     test('Defaults: source is notification, verificationStatus is notVerified, parserVersion is 1', () {

@@ -1,4 +1,4 @@
-package com.example.myupi
+package com.myupi.soundbox
 
 // KotlinUpiDetector.kt
 //

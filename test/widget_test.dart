@@ -1,7 +1,7 @@
 // test/widget_test.dart
 //
 // Smoke tests — verifies MyUpiApp boots without crashing:
-//   1. Unauthenticated launch → AuthGate displays WelcomeScreen with 3 auth options
+//   1. Unauthenticated launch → AuthGate displays WelcomeScreen with 2 auth options
 //   2. Post-auth dashboard → ShellPage displays Home, History, and Settings tabs
 //   3. No stray PIXEL watermarks or debug banners on HomeScreen
 
@@ -15,7 +15,7 @@ import 'package:myupi/screens/shell_page.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const channel = MethodChannel('com.example.myupi/notification_access');
+  const channel = MethodChannel('com.myupi.soundbox/notification_access');
 
   void setMock() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -42,7 +42,7 @@ void main() {
   });
 
   testWidgets(
-    'Unauthenticated launch → AuthGate displays WelcomeScreen with 3 auth options',
+    'Unauthenticated launch → AuthGate displays WelcomeScreen with 2 auth options',
     (WidgetTester tester) async {
       await tester.pumpWidget(const MyUpiApp());
       await tester.pumpAndSettle();
@@ -51,10 +51,12 @@ void main() {
       expect(find.text('MyUPI'), findsWidgets);
       expect(find.text('Smart Payment Soundbox for Indian Merchants'), findsOneWidget);
 
-      // Unified Auth Entry Points
+      // Unified Auth Entry Points (Google + Email)
       expect(find.text('Continue with Google'), findsOneWidget);
-      expect(find.text('Continue with Phone'),  findsOneWidget);
       expect(find.text('Continue with Email'),  findsOneWidget);
+
+      // Phone auth removed — should NOT be present
+      expect(find.text('Continue with Phone'),  findsNothing);
 
       // Main nav must NOT be visible yet
       expect(find.text('History'),  findsNothing);

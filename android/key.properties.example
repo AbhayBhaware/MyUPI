@@ -1,0 +1,8 @@
+# Release Keystore Configuration Template
+# Copy this file to `android/key.properties` and fill in your real keystore credentials.
+# IMPORTANT: Never commit `key.properties` or `.jks` files to version control!
+
+storePassword=YOUR_KEYSTORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=upload
+storeFile=app/upload-keystore.jks

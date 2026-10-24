@@ -1589,13 +1589,10 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
               onPressed: () async {
                 Navigator.pop(ctx);
                 try {
-                  final user = FirebaseAuth.instance.currentUser;
-                  if (user != null) {
-                    await FirestoreService.instance.deleteUserProfile(user.uid);
-                    await user.delete();
-                  }
-                  await kMethodChannel.invokeMethod('clearPaymentHistory');
-                  await AuthService.instance.signOut();
+                  await AuthService.instance.deleteAccount();
+                  try {
+                    await kMethodChannel.invokeMethod('clearPaymentHistory');
+                  } catch (_) {}
                 } catch (e) {
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
