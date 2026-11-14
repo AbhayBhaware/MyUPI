@@ -26,6 +26,7 @@ import 'help_support_screen.dart';
 import 'paywall_screen.dart';
 import 'reliability_checklist_screen.dart';
 import 'settings/settings_values.dart';
+import '../widgets/upi_id_verification_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -301,9 +302,17 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
   }
 
   Future<void> _launchWhatsAppSupport() async {
-    const whatsappUrl = 'https://wa.me/919999999999?text=Hi%20MyUPI%20Support%2C%20I%20need%20help%20with%20my%20Soundbox';
+    const phone = '917083236221';
+    final message = Uri.encodeComponent('Hi MyUPI Support, I need help with my Soundbox');
+    final whatsappSchemeUrl = 'whatsapp://send?phone=$phone&text=$message';
+    final whatsappWebUrl = 'https://wa.me/$phone?text=$message';
     try {
-      await kMethodChannel.invokeMethod('openUrl', {'url': whatsappUrl});
+      await kMethodChannel.invokeMethod('openUrl', {'url': whatsappSchemeUrl});
+      return;
+    } catch (_) {}
+
+    try {
+      await kMethodChannel.invokeMethod('openUrl', {'url': whatsappWebUrl});
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -997,7 +1006,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
           _buildNavRow(
             icon: Icons.shield_rounded,
             title: 'Reliability Checklist',
-            subtitle: 'Battery exemption, SMS backup & autostart',
+            subtitle: 'Battery optimization & autostart guidance',
             valueText: _batteryIgnored ? 'Optimal' : 'Needs Review',
             onTap: () {
               Navigator.push(
@@ -1036,7 +1045,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
             iconColor: const Color(0xFF25D366),
             iconBgColor: const Color(0xFFE8F8EE),
             title: 'Chat on WhatsApp',
-            subtitle: 'Instant support for merchants via WhatsApp',
+            subtitle: '+91 7083236221 • Instant merchant support',
             valueText: 'Chat',
             onTap: _launchWhatsAppSupport,
             showDivider: true,
@@ -1450,84 +1459,27 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
     HapticFeedback.selectionClick();
     final profile = FirestoreService.instance.cachedProfile;
     final currentUpi = profile?.upiId ?? '';
-    final controller = TextEditingController(text: currentUpi);
-    showDialog(
+    final merchantName = profile?.shopName ?? 'MyUPI';
+
+    showUpiIdVerificationDialog(
       context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          shape: const RoundedRectangleBorder(borderRadius: AppRadius.lgRadius),
-          title: const Text('Edit UPI ID', style: AppTypography.titleMedium),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Your payment address for QR code generation.',
-                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  labelText: 'UPI ID',
-                  hintText: 'yourname@upi / 9876543210@ybl',
-                  prefixIcon: Icon(Icons.qr_code_rounded, color: AppColors.primaryBlue),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                autofocus: true,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('CANCEL', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
-              ),
-              onPressed: () async {
-                final text = controller.text.trim().toLowerCase();
-                if (text.isNotEmpty && !text.contains('@')) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    const SnackBar(
-                      content: Text('UPI ID must contain @ (e.g. name@upi)'),
-                      behavior: SnackBarBehavior.floating,
-                      backgroundColor: AppColors.warning,
-                    ),
-                  );
-                  return;
-                }
-                Navigator.pop(ctx);
-                var targetProfile = profile;
-                if (targetProfile == null) {
-                  final user = FirebaseAuth.instance.currentUser;
-                  if (user != null) {
-                    targetProfile = await FirestoreService.instance.getUserProfile(user.uid);
-                  }
-                }
-                if (targetProfile != null) {
-                  final updated = targetProfile.copyWith(upiId: text, updatedAt: DateTime.now());
-                  await FirestoreService.instance.saveUserProfile(updated);
-                  if (mounted) {
-                    setState(() {});
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('UPI ID updated successfully'),
-                        behavior: SnackBarBehavior.floating,
-                        backgroundColor: AppColors.success,
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  }
-                }
-              },
-              child: const Text('SAVE', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ],
-        );
+      initialUpiId: currentUpi,
+      merchantName: merchantName,
+      onSave: (validUpi) async {
+        var targetProfile = profile;
+        if (targetProfile == null) {
+          final user = FirebaseAuth.instance.currentUser;
+          if (user != null) {
+            targetProfile = await FirestoreService.instance.getUserProfile(user.uid);
+          }
+        }
+        if (targetProfile != null) {
+          final updated = targetProfile.copyWith(upiId: validUpi, updatedAt: DateTime.now());
+          await FirestoreService.instance.saveUserProfile(updated);
+          if (mounted) {
+            setState(() {});
+          }
+        }
       },
     );
   }

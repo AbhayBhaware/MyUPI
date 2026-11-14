@@ -166,7 +166,6 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
   Widget _buildSystemHealthCard(ThemeData theme) {
     final accessGranted = _diagnostics['notificationAccessGranted'] == true;
     final serviceBound = _diagnostics['serviceBound'] == true;
-    final smsGranted = _diagnostics['smsPermissionGranted'] == true;
     final batteryIgnored = _diagnostics['batteryOptimizationIgnored'] == true;
     final mfg = (_diagnostics['deviceManufacturer'] ?? 'Android').toString();
     final soundboxEnabled = _diagnostics['soundboxEnabled'] == true;
@@ -183,12 +182,6 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
           accessGranted ? 'Granted' : 'Disabled',
           badgeColor: accessGranted ? Colors.green.shade700 : Colors.red.shade700,
           badgeBg: accessGranted ? Colors.green.shade50 : Colors.red.shade50,
-        ),
-        _buildRow(
-          'SMS Backup Channel',
-          smsGranted ? 'Active' : 'Disabled',
-          badgeColor: smsGranted ? Colors.green.shade700 : Colors.amber.shade800,
-          badgeBg: smsGranted ? Colors.green.shade50 : Colors.amber.shade50,
         ),
         _buildRow(
           'Battery Optimization',
@@ -232,9 +225,9 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
       icon: Icons.alt_route_rounded,
       children: [
         _buildRow('Notification Parser', 'v$parserVer (Strict Allowlist)'),
-        _buildRow('Bank SMS Parser', 'v$smsParserVer (DLT Headers + UPI Credit)'),
-        _buildRow('Cross-Channel Merge', '45s Sliding Window (DUAL CONFIRMED)'),
-        _buildRow('Default Source Tag', 'NOTIFICATION / SMS / BOTH'),
+        _buildRow('Notification Engine', 'Real-time UPI EventChannel'),
+        _buildRow('Deduplication Window', '45s Sliding Window'),
+        _buildRow('Default Source Tag', 'NOTIFICATION'),
         _buildRow('Default Verification', 'NOT_VERIFIED'),
         _buildRow('Trusted UPI Apps', '$pkgCount packages supported'),
         if (packages.isNotEmpty) ...[

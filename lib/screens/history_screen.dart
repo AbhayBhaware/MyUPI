@@ -51,10 +51,10 @@ class _HistoryScreenState extends State<HistoryScreen>
 
   final List<String> _filters = const [
     'All',
-    'Google Pay',
     'PhonePe',
+    'Google Pay',
     'Paytm',
-    'SMS',
+    'BHIM',
   ];
 
   @override
@@ -150,15 +150,13 @@ class _HistoryScreenState extends State<HistoryScreen>
 
   List<PaymentRecord> get _filteredHistory {
     return _history.where((r) {
-      // 1. Channel / App filter
+      // 1. App filter
       if (_selectedFilter != 'All') {
-        if (_selectedFilter == 'SMS') {
-          if (r.source != PaymentSource.sms && r.source != PaymentSource.both) {
-            return false;
-          }
+        final app = r.appName.toLowerCase();
+        final target = _selectedFilter.toLowerCase();
+        if (target.contains('google')) {
+          if (!app.contains('google') && !app.contains('gpay')) return false;
         } else {
-          final app = r.appName.toLowerCase();
-          final target = _selectedFilter.toLowerCase();
           if (!app.contains(target)) return false;
         }
       }
@@ -275,11 +273,6 @@ class _HistoryScreenState extends State<HistoryScreen>
             icon: const Icon(Icons.share_outlined, color: AppColors.primaryBlue),
             tooltip: 'Share Daily Summary',
             onPressed: _shareDailySummary,
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: AppColors.textPrimary),
-            tooltip: 'Refresh',
-            onPressed: _loadHistory,
           ),
           if (_history.isNotEmpty)
             IconButton(
@@ -556,15 +549,27 @@ class _HistoryScreenState extends State<HistoryScreen>
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
-                    const Expanded(
+                    const Text(
+                      "Today's Collection",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       child: Text(
-                        "Today's Collection",
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                        '${today.length} ${today.length == 1 ? "payment" : "payments"}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primaryBlue,
                         ),
                       ),
                     ),
@@ -588,40 +593,30 @@ class _HistoryScreenState extends State<HistoryScreen>
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 110),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerRight,
-              child: InkWell(
-                onTap: _shareDailySummary,
+          InkWell(
+            onTap: _shareDailySummary,
+            borderRadius: AppRadius.mdRadius,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.lightBlue,
                 borderRadius: AppRadius.mdRadius,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
+                border: Border.all(color: AppColors.softBlueBorder, width: 1.0),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.share_rounded, size: 15, color: AppColors.primaryBlue),
+                  SizedBox(width: 6),
+                  Text(
+                    'Share',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primaryBlue,
+                    ),
                   ),
-                  decoration: BoxDecoration(
-                    color: AppColors.lightBlue,
-                    borderRadius: AppRadius.mdRadius,
-                    border: Border.all(color: AppColors.softBlueBorder, width: 1.0),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.share_rounded, size: 13, color: AppColors.primaryBlue),
-                      const SizedBox(width: 5),
-                      Text(
-                        '${today.length} ${today.length == 1 ? "payment" : "payments"}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primaryBlue,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                ],
               ),
             ),
           ),

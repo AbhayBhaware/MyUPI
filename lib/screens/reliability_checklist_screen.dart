@@ -5,10 +5,9 @@
 // Guided merchant checklist to guarantee zero missed payments:
 //   1. Notification Listener Access
 //   2. Battery Optimization Exemption (prevents OS from killing background listener)
-//   3. SMS Backup Detection Permission
-//   4. OEM-specific Background & Autostart Settings (Realme/Xiaomi/Vivo/Oppo)
-//   5. Installed UPI Apps Notification Verification (deep-links to per-app settings)
-//   6. Anti-Fraud Merchant Disclosure
+//   3. OEM-specific Background & Autostart Settings (Realme/Xiaomi/Vivo/Oppo)
+//   4. Installed UPI Apps Notification Verification (deep-links to per-app settings)
+//   5. Anti-Fraud Merchant Disclosure
 
 import 'package:flutter/material.dart';
 
@@ -33,7 +32,6 @@ class _ReliabilityChecklistScreenState extends State<ReliabilityChecklistScreen>
 
   bool _loading = true;
   bool _notifGranted = false;
-  bool _smsGranted = false;
   bool _batteryIgnored = false;
   String _manufacturer = 'Android';
   List<Map<String, String>> _installedUpiApps = [];
@@ -62,7 +60,6 @@ class _ReliabilityChecklistScreenState extends State<ReliabilityChecklistScreen>
     setState(() => _loading = true);
     try {
       final notif = await kMethodChannel.invokeMethod<bool>('isNotificationAccessEnabled') ?? false;
-      final sms = await kMethodChannel.invokeMethod<bool>('isSmsPermissionGranted') ?? false;
       final battery = await kMethodChannel.invokeMethod<bool>('isBatteryOptimizationIgnored') ?? false;
       final mfg = await kMethodChannel.invokeMethod<String>('getDeviceManufacturer') ?? 'Android';
       final appsRaw = await kMethodChannel.invokeMethod<List<dynamic>>('getInstalledUpiApps') ?? [];
@@ -79,7 +76,6 @@ class _ReliabilityChecklistScreenState extends State<ReliabilityChecklistScreen>
       if (!mounted) return;
       setState(() {
         _notifGranted = notif;
-        _smsGranted = sms;
         _batteryIgnored = battery;
         _manufacturer = mfg;
         _installedUpiApps = apps;
@@ -97,11 +93,6 @@ class _ReliabilityChecklistScreenState extends State<ReliabilityChecklistScreen>
     } catch (_) {}
   }
 
-  Future<void> _requestSmsPermission() async {
-    try {
-      await kMethodChannel.invokeMethod('requestSmsPermission');
-    } catch (_) {}
-  }
 
   Future<void> _requestBatteryOptimization() async {
     try {
@@ -163,7 +154,7 @@ class _ReliabilityChecklistScreenState extends State<ReliabilityChecklistScreen>
                           SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
-                              'Dual-Channel Detection',
+                              'Active Soundbox Reliability',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
@@ -177,7 +168,7 @@ class _ReliabilityChecklistScreenState extends State<ReliabilityChecklistScreen>
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       const Text(
-                        'MyUPI listens simultaneously to Notifications and Bank SMS with 45-second cross-channel deduplication. Complete these checks so Android never delays an announcement.',
+                        'MyUPI listens to UPI app notifications with intelligent deduplication. Complete these checks so Android never delays an announcement.',
                         style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
                       ),
                     ],
@@ -209,15 +200,6 @@ class _ReliabilityChecklistScreenState extends State<ReliabilityChecklistScreen>
                   onAction: _requestBatteryOptimization,
                 ),
 
-                // 3. SMS Backup Channel
-                _buildCheckItem(
-                  icon: Icons.sms_rounded,
-                  title: 'SMS Backup Channel',
-                  subtitle: 'Secondary channel that detects bank credit texts if notifications drop.',
-                  isDone: _smsGranted,
-                  actionText: 'Allow SMS',
-                  onAction: _requestSmsPermission,
-                ),
 
                 // 4. OEM Autostart Guidance
                 _buildOemGuidanceCard(),
@@ -288,7 +270,7 @@ class _ReliabilityChecklistScreenState extends State<ReliabilityChecklistScreen>
                       ),
                       const SizedBox(height: 6),
                       const Text(
-                        'MyUPI voice announcements are convenience alerts. Never release high-value merchandise based solely on an SMS or audio prompt. Always confirm large payments in your actual banking app.',
+                        'MyUPI voice announcements are convenience alerts. Never release high-value merchandise based solely on an audio prompt. Always confirm large payments in your actual banking app.',
                         style: TextStyle(fontSize: 12, color: Color(0xFF78350F), height: 1.4),
                       ),
                     ],

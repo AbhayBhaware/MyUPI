@@ -779,7 +779,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           _buildFaqItem(
             question: 'Do I need to link my bank account or enter UPI PIN?',
             answer:
-                'No! MyUPI never asks for your bank account details, netbanking passwords, or UPI PINs. It works locally by detecting legitimate incoming transaction notifications and SMS alerts directly on your device.',
+                'No! MyUPI never asks for your bank account details, netbanking passwords, or UPI PINs. It works locally by detecting legitimate incoming transaction notifications from your UPI apps directly on your device.',
           ),
           const Divider(height: 1, color: AppColors.borderLight),
           _buildFaqItem(
@@ -791,7 +791,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           _buildFaqItem(
             question: 'Does voice announcement work offline?',
             answer:
-                'Yes! The Text-to-Speech voice engine is downloaded directly on your smartphone. When SMS or notification alerts arrive, MyUPI speaks the payment amount aloud immediately even if internet connectivity drops.',
+                'Yes! The Text-to-Speech voice engine is downloaded directly on your smartphone. When payment notifications arrive, MyUPI speaks the payment amount aloud immediately even if internet connectivity drops.',
           ),
         ],
       ),

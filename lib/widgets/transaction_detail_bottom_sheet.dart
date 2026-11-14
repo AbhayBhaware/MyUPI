@@ -84,7 +84,7 @@ class TransactionDetailBottomSheet extends StatelessWidget {
       case TrustLevel.medium:
         return 'Notification details parsed successfully';
       case TrustLevel.low:
-        return 'SMS alert only — please verify in bank app';
+        return 'Please verify transaction details in your bank app';
     }
   }
 
@@ -251,54 +251,25 @@ class TransactionDetailBottomSheet extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
 
-            // Amber "Verify in bank" hint shown only for SMS-only detections per spec
-            if (record.source == PaymentSource.sms) ...[
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFFBEB),
-                  borderRadius: AppRadius.smRadius,
-                  border: Border.all(color: const Color(0xFFFDE68A)),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFFB45309)),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Verify in bank • SMS-only detection without push notification.',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFFB45309),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-            ],
-
-            // Calm Bank Verification Footnote
+            // Clean Security Footnote
             Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFFFEF9C3).withValues(alpha: 0.5),
-                borderRadius: AppRadius.smRadius,
-                border: Border.all(color: const Color(0xFFFEF08A)),
+                color: const Color(0xFFF8FAFC),
+                borderRadius: AppRadius.mdRadius,
+                border: Border.all(color: AppColors.borderLight),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.shield_outlined, size: 16, color: Color(0xFF854D0E)),
-                  SizedBox(width: 8),
+                  Icon(Icons.shield_outlined, size: 18, color: AppColors.primaryBlue),
+                  SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Confirm large payments in your bank app before handing over high-value goods.',
+                      'Confirm high-value payments in your bank app before handing over goods.',
                       style: TextStyle(
                         fontSize: 11,
-                        color: Color(0xFF713F12),
-                        height: 1.3,
+                        color: AppColors.textSecondary,
+                        height: 1.35,
                         fontWeight: FontWeight.w500,
                       ),
                     ),

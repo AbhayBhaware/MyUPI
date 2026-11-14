@@ -22,7 +22,6 @@ class MainActivity : FlutterActivity() {
     companion object {
         private const val METHOD_CHANNEL = "com.myupi.soundbox/notification_access"
         private const val EVENT_CHANNEL  = "com.myupi.soundbox/notification_stream"
-        private const val SMS_PERMISSION_REQUEST_CODE = 2001
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -49,19 +48,11 @@ class MainActivity : FlutterActivity() {
                         result.success(null)
                     }
 
-                    // ── SMS Permission (Master Brief Part 1b) ─────────────────
+                    // ── SMS Permission (removed for Play Store compliance) ────
                     "isSmsPermissionGranted" -> {
-                        val granted = ContextCompat.checkSelfPermission(
-                            this, Manifest.permission.RECEIVE_SMS
-                        ) == PackageManager.PERMISSION_GRANTED
-                        result.success(granted)
+                        result.success(false)
                     }
                     "requestSmsPermission" -> {
-                        ActivityCompat.requestPermissions(
-                            this,
-                            arrayOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_SMS),
-                            SMS_PERMISSION_REQUEST_CODE
-                        )
                         result.success(null)
                     }
 
@@ -238,6 +229,10 @@ class MainActivity : FlutterActivity() {
                         SharedPreferencesManager.clearHistory()
                         result.success(null)
                     }
+                    "resetSession" -> {
+                        SharedPreferencesManager.resetSession()
+                        result.success(null)
+                    }
 
                     // ── Onboarding ────────────────────────────────────────────
                     "isOnboardingCompleted" -> {
@@ -326,20 +321,14 @@ class MainActivity : FlutterActivity() {
                             true
                         }
 
-                        val smsGranted = ContextCompat.checkSelfPermission(
-                            this, Manifest.permission.RECEIVE_SMS
-                        ) == PackageManager.PERMISSION_GRANTED
-
                         val diagnostics = mapOf(
                             "notificationAccessGranted" to accessGranted,
                             "serviceBound"              to (PaymentNotificationListener.eventSink != null),
-                            "smsPermissionGranted"      to smsGranted,
                             "batteryOptimizationIgnored" to isBatteryIgnored,
                             "deviceManufacturer"        to Build.MANUFACTURER,
                             "deviceModel"               to Build.MODEL,
                             "androidVersion"            to Build.VERSION.RELEASE,
                             "parserVersion"             to KotlinUpiDetector.UPI_PARSER_VERSION,
-                            "smsParserVersion"          to BankSmsDetector.SMS_PARSER_VERSION,
                             "supportedPackagesCount"    to trustedMap.size,
                             "supportedPackages"         to trustedMap.keys.toList(),
                             "soundboxEnabled"           to SharedPreferencesManager.isSoundboxEnabled(),

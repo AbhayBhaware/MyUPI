@@ -5,6 +5,8 @@
 
 import 'package:flutter/material.dart';
 
+import '../app_channels.dart';
+
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
@@ -178,6 +180,55 @@ class HelpSupportScreen extends StatelessWidget {
 
           const SizedBox(height: AppSpacing.lg),
 
+          // WhatsApp Support Card
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.base),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F8EE),
+              borderRadius: AppRadius.mdRadius,
+              border: Border.all(color: const Color(0xFF25D366).withAlpha(60)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: const [
+                    Icon(Icons.chat_rounded, color: Color(0xFF25D366), size: 22),
+                    SizedBox(width: 8),
+                    Text(
+                      'Still need help?',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Chat with our dedicated merchant support team on WhatsApp at +91 7083236221.',
+                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 42,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF25D366),
+                      shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+                    ),
+                    icon: const Icon(Icons.chat_rounded, size: 18, color: Colors.white),
+                    label: const Text(
+                      'Chat on WhatsApp (+91 7083236221)',
+                      style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white),
+                    ),
+                    onPressed: () => _launchWhatsAppSupport(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
+
           // Privacy note
           Center(
             child: Text(
@@ -190,6 +241,29 @@ class HelpSupportScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _launchWhatsAppSupport(BuildContext context) async {
+    const phone = '917083236221';
+    final message = Uri.encodeComponent('Hi MyUPI Support, I need help with my Soundbox');
+    final whatsappSchemeUrl = 'whatsapp://send?phone=$phone&text=$message';
+    final whatsappWebUrl = 'https://wa.me/$phone?text=$message';
+    try {
+      await kMethodChannel.invokeMethod('openUrl', {'url': whatsappSchemeUrl});
+      return;
+    } catch (_) {}
+    try {
+      await kMethodChannel.invokeMethod('openUrl', {'url': whatsappWebUrl});
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not open WhatsApp. Please check if WhatsApp is installed.'),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 }
 

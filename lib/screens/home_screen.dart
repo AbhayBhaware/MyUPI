@@ -26,7 +26,9 @@ import '../widgets/qr_code_card.dart';
 import 'paywall_screen.dart';
 import '../services/counter_kiosk_service.dart';
 import '../utils/currency_formatter.dart';
+import '../utils/upi_validator.dart';
 import '../widgets/volume_indicator_pill.dart';
+import '../widgets/upi_id_verification_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   final void Function(int tabIndex)? onNavigateToTab;
@@ -166,120 +168,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   void _showEditUpiIdDialog() {
     HapticFeedback.selectionClick();
-    final controller = TextEditingController(text: _upiId);
-    showDialog(
+    showUpiIdVerificationDialog(
       context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          shape: const RoundedRectangleBorder(borderRadius: AppRadius.lgRadius),
-          title: const Text('Edit UPI ID', style: AppTypography.titleMedium),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Enter your UPI payment address. This will be used to generate your QR code.',
-                style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  labelText: 'UPI ID',
-                  hintText: 'yourname@upi / 9876543210@ybl',
-                  prefixIcon: Icon(Icons.qr_code_rounded, color: AppColors.primaryBlue),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                autofocus: true,
-              ),
-              const SizedBox(height: 8),
-              InkWell(
-                onTap: () async {
-                  final data = await Clipboard.getData(Clipboard.kTextPlain);
-                  final text = data?.text?.trim().toLowerCase();
-                  if (!ctx.mounted) return;
-                  if (text != null && text.contains('@')) {
-                    controller.text = text;
-                    HapticFeedback.lightImpact();
-                    ScaffoldMessenger.of(ctx).showSnackBar(
-                      SnackBar(
-                        content: Text('Pasted from clipboard: $text'),
-                        behavior: SnackBarBehavior.floating,
-                        backgroundColor: AppColors.success,
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(ctx).showSnackBar(
-                      const SnackBar(
-                        content: Text('Clipboard text is not a valid UPI ID (must contain @)'),
-                        behavior: SnackBarBehavior.floating,
-                        backgroundColor: AppColors.warning,
-                      ),
-                    );
-                  }
-                },
-                borderRadius: BorderRadius.circular(4),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.content_paste_rounded, size: 14, color: AppColors.primaryBlue),
-                      SizedBox(width: 4),
-                      Text(
-                        'Paste from clipboard',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primaryBlue,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('CANCEL', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
-              ),
-              onPressed: () async {
-                final text = controller.text.trim().toLowerCase();
-                if (text.isNotEmpty && !text.contains('@')) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    const SnackBar(
-                      content: Text('UPI ID must contain @ (e.g. name@upi)'),
-                      behavior: SnackBarBehavior.floating,
-                      backgroundColor: AppColors.warning,
-                    ),
-                  );
-                  return;
-                }
-                Navigator.pop(ctx);
-                setState(() => _upiId = text);
-                // Persist to Firestore via cached profile update
-                var cached = FirestoreService.instance.cachedProfile;
-                final user = FirebaseAuth.instance.currentUser;
-                if (cached == null && user != null) {
-                  cached = await FirestoreService.instance.getUserProfile(user.uid);
-                }
-                if (cached != null) {
-                  final updated = cached.copyWith(upiId: text, updatedAt: DateTime.now());
-                  await FirestoreService.instance.saveUserProfile(updated);
-                }
-              },
-              child: const Text('SAVE', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ],
-        );
+      initialUpiId: _upiId,
+      merchantName: _merchantName,
+      onSave: (validUpi) async {
+        setState(() => _upiId = validUpi);
+        // Persist to Firestore via cached profile update
+        var cached = FirestoreService.instance.cachedProfile;
+        final user = FirebaseAuth.instance.currentUser;
+        if (cached == null && user != null) {
+          cached = await FirestoreService.instance.getUserProfile(user.uid);
+        }
+        if (cached != null) {
+          final updated = cached.copyWith(upiId: validUpi, updatedAt: DateTime.now());
+          await FirestoreService.instance.saveUserProfile(updated);
+        }
       },
     );
   }
@@ -361,6 +265,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   String get _todayTotalFmt => CurrencyFormatter.format(_todayTotal);
 
   PaymentRecord? get _lastPayment => _history.isNotEmpty ? _history.first : null;
+
+  Color _getAppTint(String appName) {
+    final lower = appName.toLowerCase();
+    if (lower.contains('phonepe')) return const Color(0xFF5F259F);
+    if (lower.contains('google') || lower.contains('gpay')) return const Color(0xFF1A73E8);
+    if (lower.contains('paytm')) return const Color(0xFF002970);
+    if (lower.contains('bhim')) return const Color(0xFFE65100);
+    if (lower.contains('amazon')) return const Color(0xFFFF9900);
+    return AppColors.primaryBlue;
+  }
 
   String _getGreeting() {
     final h = DateTime.now().hour;
@@ -510,7 +424,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Widget _buildSoundboxStatusCard({required bool notifOk, required bool checking}) {
     if (!_soundboxEnabled) {
-      // OFF = prominent Amber card: "Soundbox is OFF — payments won't be spoken" + [Turn on]
       return Container(
         constraints: const BoxConstraints(minHeight: 56),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -529,7 +442,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Soundbox is OFF',
+                    'Soundbox is Paused',
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -538,7 +451,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                   SizedBox(height: 2),
                   Text(
-                    "Payments won't be spoken",
+                    "Payments won't be announced aloud",
                     style: TextStyle(
                       fontSize: 12,
                       color: Color(0xFFB45309),
@@ -564,7 +477,61 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       );
     }
 
-    // ON = Calm healthy card: "● Soundbox is ON [ ON ▮] / Listening for payments"
+    if (!checking && !notifOk) {
+      return Container(
+        constraints: const BoxConstraints(minHeight: 56),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.warningBg,
+          borderRadius: AppRadius.mdRadius,
+          border: Border.all(color: AppColors.warningBorder, width: 1.2),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 24),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Notification Access Needed',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF92400E),
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Grant access so MyUPI can announce payments',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFFB45309),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.warning,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+                minimumSize: const Size(0, 36),
+              ),
+              onPressed: _openAccessSettings,
+              child: const Text('Enable', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ON & Active
     return Container(
       constraints: const BoxConstraints(minHeight: 56),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -579,9 +546,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           Container(
             width: 10,
             height: 10,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: AppColors.success,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.success.withAlpha(120),
+                  blurRadius: 6,
+                  spreadRadius: 2,
+                ),
+              ],
             ),
           ),
           const SizedBox(width: 12),
@@ -591,7 +565,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Soundbox is ON',
+                  'Soundbox is Active',
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -600,7 +574,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
                 SizedBox(height: 2),
                 Text(
-                  'Listening for payments',
+                  'Listening for incoming UPI payments',
                   style: TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary,
@@ -676,27 +650,24 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Widget _buildLastPaymentHeroCard() {
     final last = _lastPayment;
-    return PremiumCard(
-      padding: const EdgeInsets.all(AppSpacing.base),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Last payment',
+    if (last != null) {
+      return PremiumCard(
+        padding: const EdgeInsets.all(AppSpacing.base),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'LATEST PAYMENT',
                   style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
                     color: AppColors.textSecondary,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              if (last != null) ...[
-                const SizedBox(width: 8),
                 InkWell(
                   onTap: () {
                     TtsService.instance.speakPayment(last.amount);
@@ -716,81 +687,216 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: AppColors.softBlueBorder, width: 0.8),
                     ),
-                    child: const FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.volume_up_rounded, size: 13, color: AppColors.primaryBlue),
-                          SizedBox(width: 4),
-                          Text(
-                            'Repeat',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.primaryBlue,
-                            ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.volume_up_rounded, size: 13, color: AppColors.primaryBlue),
+                        SizedBox(width: 4),
+                        Text(
+                          'Repeat',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryBlue,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 10),
-          if (last != null) ...[
-            Wrap(
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 10,
-              runSpacing: 4,
-              children: [
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    CurrencyFormatter.format(last.amount),
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.textPrimary,
-                      letterSpacing: -0.8,
-                    ),
-                  ),
-                ),
-                Text(
-                  '${last.appName} · ${_formatTime(last.timestamp)}',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
             ),
-          ] else ...[
-            const Row(
+            const SizedBox(height: 8),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                CurrencyFormatter.format(last.amount),
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.8,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
               children: [
-                Icon(Icons.wifi_tethering_rounded, color: AppColors.primaryBlue, size: 22),
-                SizedBox(width: 8),
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: _getAppTint(last.appName),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Waiting for payments... Soundbox is ready.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                    'Received via ${last.appName.isEmpty ? "UPI" : last.appName} • ${_formatTime(last.timestamp)}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
                       color: AppColors.textSecondary,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 14),
+            const Divider(height: 1, color: AppColors.borderLight),
+            const SizedBox(height: 12),
+            InkWell(
+              onTap: () => widget.onNavigateToTab?.call(1),
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  children: [
+                    const Icon(Icons.insights_rounded, size: 16, color: AppColors.primaryBlue),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Today: ${_todayRecs.isEmpty ? '₹0' : _todayTotalFmt} (${_todayRecs.length} ${_todayRecs.length == 1 ? "payment" : "payments"})',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const Text(
+                      'History',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primaryBlue,
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    const Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.primaryBlue),
+                  ],
+                ),
+              ),
+            ),
           ],
-          const SizedBox(height: 14),
+        ),
+      );
+    }
+
+    // Ready State (No payments received yet)
+    return PremiumCard(
+      padding: const EdgeInsets.all(AppSpacing.base),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'SOUNDBOX STATUS',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.successBg,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.check_circle_rounded, size: 11, color: AppColors.success),
+                    SizedBox(width: 3),
+                    Text(
+                      'Ready',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.success,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.lightBlue,
+                  borderRadius: AppRadius.mdRadius,
+                  border: Border.all(color: AppColors.softBlueBorder),
+                ),
+                child: const Icon(Icons.sensors_rounded, color: AppColors.primaryBlue, size: 24),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Waiting for payments',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Scan QR to test audio announcement',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 38,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                TtsService.instance.speakTest();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Playing sample soundbox announcement...'),
+                    duration: Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+              icon: const Icon(Icons.play_arrow_rounded, size: 18),
+              label: const Text('Test Announcement Audio', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primaryBlue,
+                side: const BorderSide(color: AppColors.softBlueBorder),
+                shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
           const Divider(height: 1, color: AppColors.borderLight),
           const SizedBox(height: 12),
-          // Combined stats row (→ History)
           InkWell(
             onTap: () => widget.onNavigateToTab?.call(1),
             borderRadius: BorderRadius.circular(8),
@@ -798,19 +904,28 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               padding: const EdgeInsets.symmetric(vertical: 2),
               child: Row(
                 children: [
-                  Expanded(
+                  const Icon(Icons.insights_rounded, size: 16, color: AppColors.primaryBlue),
+                  const SizedBox(width: 6),
+                  const Expanded(
                     child: Text(
-                      'Today ${_todayRecs.isEmpty ? '₹0' : _todayTotalFmt} · ${_todayRecs.length} ${_todayRecs.length == 1 ? "payment" : "payments"}',
-                      style: const TextStyle(
+                      "Today's Collection: ₹0 (0 payments)",
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const Icon(Icons.arrow_forward_ios_rounded, size: 13, color: AppColors.textSecondary),
+                  const Text(
+                    'History',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primaryBlue,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  const Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.primaryBlue),
                 ],
               ),
             ),
@@ -819,29 +934,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       ),
     );
   }
-
-  // ── Anti-Fraud Footnote Notice ─────────────────────────────────────────────
-
   Widget _buildAntiFraudNotice() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: const Color(0xFFF8FAFC),
         borderRadius: AppRadius.mdRadius,
-        border: Border.all(color: AppColors.borderLight),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: const Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline_rounded, size: 16, color: AppColors.textSecondary),
-          SizedBox(width: 8),
+          Icon(Icons.shield_outlined, size: 18, color: AppColors.primaryBlue),
+          SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Confirm large payments in your bank app.',
+              '100% On-Device Soundbox • Confirm high-value payments directly in your bank app.',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w500,
                 color: AppColors.textSecondary,
+                height: 1.35,
               ),
             ),
           ),

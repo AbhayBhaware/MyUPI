@@ -27,6 +27,7 @@ import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../utils/currency_formatter.dart';
+import '../utils/upi_validator.dart';
 
 class QrCodeCard extends StatefulWidget {
   final String upiId;
@@ -370,23 +371,23 @@ class _QrCodeCardState extends State<QrCodeCard> {
             ),
             const SizedBox(height: AppSpacing.sm),
 
-            // ── Show QR & Set Amount action buttons (Bounded, responsive) ──
+            // ── Fullscreen & Set Bill action buttons ──
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _showFullScreenQr(context),
-                    icon: const Icon(Icons.fullscreen_rounded, size: 16),
+                    icon: const Icon(Icons.qr_code_scanner_rounded, size: 16),
                     label: const FittedBox(
                       fit: BoxFit.scaleDown,
-                      child: Text('Show QR to customer', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                      child: Text('Fullscreen QR', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
                     ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.primaryBlue,
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                      side: const BorderSide(color: AppColors.softBlueBorder),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      side: const BorderSide(color: AppColors.softBlueBorder, width: 1.2),
                       shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
-                      minimumSize: const Size(0, 40),
+                      minimumSize: const Size(0, 42),
                     ),
                   ),
                 ),
@@ -395,24 +396,25 @@ class _QrCodeCardState extends State<QrCodeCard> {
                   child: OutlinedButton.icon(
                     onPressed: () => _showSetAmountDialog(context),
                     icon: Icon(
-                      _fixedAmount != null ? Icons.edit_rounded : Icons.add_circle_outline_rounded,
+                      _fixedAmount != null ? Icons.edit_rounded : Icons.request_quote_rounded,
                       size: 16,
                     ),
                     label: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
-                        _fixedAmount != null ? 'Edit Bill (₹$_fixedAmount)' : 'Set Amount',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        _fixedAmount != null ? 'Edit Bill (₹$_fixedAmount)' : 'Set Bill Amount',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primaryBlue,
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      foregroundColor: _fixedAmount != null ? AppColors.accentOrange : AppColors.primaryBlue,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                       side: BorderSide(
-                        color: _fixedAmount != null ? AppColors.primaryBlue : AppColors.softBlueBorder,
+                        color: _fixedAmount != null ? AppColors.accentOrange : AppColors.softBlueBorder,
+                        width: 1.2,
                       ),
                       shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
-                      minimumSize: const Size(0, 40),
+                      minimumSize: const Size(0, 42),
                     ),
                   ),
                 ),
@@ -481,37 +483,32 @@ class _QrCodeCardState extends State<QrCodeCard> {
                 ),
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: 6),
 
-            // ── Short Centered UPI Banner (Rule 5: "Scan with any UPI app") ──
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.shield_outlined, size: 14, color: AppColors.primaryBlue),
-                  SizedBox(width: 6),
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
+            // ── Verified App Badge ──
+            Builder(
+              builder: (context) {
+                final appName = UpiValidator.getAppName(widget.upiId);
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.verified_rounded, size: 13, color: Color(0xFF16A34A)),
+                    const SizedBox(width: 4),
+                    Flexible(
                       child: Text(
-                        'Scan with any UPI app',
-                        style: TextStyle(
+                        appName != null ? 'Active • $appName' : 'Active UPI QR',
+                        style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                          color: Color(0xFF166534),
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -826,6 +823,52 @@ class _FullScreenQrDialogState extends State<_FullScreenQrDialog> with WidgetsBi
                     const Icon(Icons.copy_rounded, size: 16, color: AppColors.primaryBlue),
                   ],
                 ),
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // ── Verified App Badge ──
+            Builder(
+              builder: (context) {
+                final appName = UpiValidator.getAppName(widget.upiId);
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.verified_rounded, size: 14, color: Color(0xFF16A34A)),
+                    const SizedBox(width: 4),
+                    Text(
+                      appName != null ? 'Active • $appName' : 'Active UPI QR',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF166534),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+
+            // ── Test Payment in UPI App Button ──
+            OutlinedButton.icon(
+              onPressed: () {
+                UpiValidator.launchUpiTestPayment(
+                  upiId: widget.upiId,
+                  merchantName: widget.merchantName,
+                  amount: 1.0,
+                );
+              },
+              icon: const Icon(Icons.open_in_new_rounded, size: 15),
+              label: const Text(
+                'Test Pay / Verify Name in UPI App',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primaryBlue,
+                side: const BorderSide(color: AppColors.softBlueBorder),
+                shape: const RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               ),
             ),
             const SizedBox(height: 16),

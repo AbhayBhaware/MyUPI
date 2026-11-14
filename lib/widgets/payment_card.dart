@@ -1,8 +1,7 @@
 // lib/widgets/payment_card.dart
 //
 // High-polish transaction card for Dashboard recent payment and History list.
-// Master Brief Part 2 & Part 3: Dominant amount, channel badges (Notification / SMS / Both),
-// and trust-level indicators.
+// Clean fintech layout with app brand tinting and one-tap re-announcement.
 
 import 'package:flutter/material.dart';
 
@@ -46,7 +45,17 @@ class PaymentCard extends StatelessWidget {
     return AppColors.primaryBlue;
   }
 
-  Widget _buildChannelBadge() {
+  Color _getAppBgTint(String appName) {
+    final lower = appName.toLowerCase();
+    if (lower.contains('phonepe')) return const Color(0xFFF4EEFD);
+    if (lower.contains('google') || lower.contains('gpay')) return const Color(0xFFE8F0FE);
+    if (lower.contains('paytm')) return const Color(0xFFE6EEFA);
+    if (lower.contains('bhim')) return const Color(0xFFFFF3E0);
+    if (lower.contains('amazon')) return const Color(0xFFFFF8E1);
+    return AppColors.successBg;
+  }
+
+  Widget? _buildChannelBadge() {
     switch (record.source) {
       case PaymentSource.both:
         return Container(
@@ -56,23 +65,20 @@ class PaymentCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             border: Border.all(color: AppColors.successBorder, width: 0.8),
           ),
-          child: const FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.mark_chat_read_rounded, size: 10, color: AppColors.success),
-                SizedBox(width: 3),
-                Text(
-                  'Notif + SMS',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.success,
-                  ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.mark_chat_read_rounded, size: 10, color: AppColors.success),
+              SizedBox(width: 3),
+              Text(
+                'Dual',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.success,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
 
@@ -84,54 +90,27 @@ class PaymentCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             border: Border.all(color: const Color(0xFFCBD5E1), width: 0.8),
           ),
-          child: const FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.sms_rounded, size: 10, color: Color(0xFF475569)),
-                SizedBox(width: 3),
-                Text(
-                  'SMS',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF334155),
-                  ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.sms_rounded, size: 10, color: Color(0xFF475569)),
+              SizedBox(width: 3),
+              Text(
+                'SMS',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF334155),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
 
       case PaymentSource.notification:
       default:
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-          decoration: BoxDecoration(
-            color: AppColors.lightBlue,
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: AppColors.softBlueBorder, width: 0.8),
-          ),
-          child: const FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.notifications_active_rounded, size: 10, color: AppColors.primaryBlue),
-                SizedBox(width: 3),
-                Text(
-                  'Notif',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primaryBlue,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+        // No redundant tag for standard notifications
+        return null;
     }
   }
 
@@ -144,15 +123,12 @@ class PaymentCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
           border: Border.all(color: const Color(0xFFFDE68A), width: 0.8),
         ),
-        child: const FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            'Verify in bank',
-            style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFFB45309),
-            ),
+        child: const Text(
+          'Verify in bank',
+          style: TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFFB45309),
           ),
         ),
       );
@@ -163,156 +139,135 @@ class PaymentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appColor = _getAppTint(record.appName);
+    final appBg = _getAppBgTint(record.appName);
+    final channelBadge = _buildChannelBadge();
     final trustBadge = _buildTrustBadge();
-
-    // Leading icon tint and symbol
-    final isDual = record.source == PaymentSource.both;
-    final isSms = record.source == PaymentSource.sms;
-
-    final IconData leadingIcon = isDual
-        ? Icons.currency_rupee_rounded
-        : (isSms ? Icons.mark_chat_read_rounded : Icons.currency_rupee_rounded);
-
-    final Color leadingBg = isDual
-        ? AppColors.successBg
-        : (isSms ? const Color(0xFFF1F5F9) : AppColors.successBg);
-
-    final Color leadingColor = isDual
-        ? AppColors.success
-        : (isSms ? const Color(0xFF475569) : AppColors.success);
 
     return PremiumCard(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base, vertical: 12),
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Row(
         children: [
-          // Icon badge
+          // App-branded Leading Icon Container
           Container(
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: leadingBg,
+              color: appBg,
               borderRadius: AppRadius.mdRadius,
               border: Border.all(
-                color: isDual ? AppColors.successBorder : (isSms ? const Color(0xFFE2E8F0) : AppColors.successBorder),
+                color: appColor.withAlpha(35),
                 width: 1.0,
               ),
             ),
             child: Center(
-              child: Icon(leadingIcon, color: leadingColor, size: 22),
+              child: Icon(Icons.currency_rupee_rounded, color: appColor, size: 22),
             ),
           ),
           const SizedBox(width: AppSpacing.md),
-          // Amount and App Details
+          // Amount and Source Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 6,
-                  runSpacing: 2,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Dominant Amount with Indian grouping
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        CurrencyFormatter.format(record.amount),
-                        style: AppTypography.currencyMedium.copyWith(
-                          fontSize: 19,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.4,
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          CurrencyFormatter.format(record.amount),
+                          style: AppTypography.currencyMedium.copyWith(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.4,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                       ),
                     ),
-                    _buildChannelBadge(),
-                    ?trustBadge,
+                    if (channelBadge != null) ...[
+                      const SizedBox(width: 6),
+                      channelBadge,
+                    ],
+                    if (trustBadge != null) ...[
+                      const SizedBox(width: 6),
+                      trustBadge,
+                    ],
                   ],
                 ),
-                const SizedBox(height: 4),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: appColor,
-                          shape: BoxShape.circle,
-                        ),
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: appColor,
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(width: 5),
-                      Text(
-                        record.appName,
+                    ),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        '${record.appName.isEmpty ? "UPI App" : record.appName} • ${_formatTime(record.timestamp)}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.caption.copyWith(
                           color: AppColors.textSecondary,
                           fontWeight: FontWeight.w500,
+                          fontSize: 12,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
           const SizedBox(width: AppSpacing.xs),
-          // Timestamp & Action (single source badge is already on the card)
-          Flexible(
-            flex: 0,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerRight,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _formatTime(record.timestamp),
-                    style: AppTypography.caption.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  if (onRespeak != null) ...[
-                    const SizedBox(height: 5),
-                    InkWell(
-                      onTap: onRespeak,
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppColors.lightBlue,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.softBlueBorder, width: 0.8),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.volume_up_rounded, size: 11, color: AppColors.primaryBlue),
-                            SizedBox(width: 3),
-                            Text(
-                              'Repeat',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primaryBlue,
-                              ),
+          // Quick Re-announce Button & Chevron
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (onRespeak != null) ...[
+                Tooltip(
+                  message: 'Re-announce',
+                  child: InkWell(
+                    onTap: onRespeak,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.softBlueBorder, width: 0.8),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.volume_up_rounded, size: 13, color: AppColors.primaryBlue),
+                          SizedBox(width: 3),
+                          Text(
+                            'Repeat',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primaryBlue,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ],
-              ),
-            ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+              ],
+              const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textTertiary),
+            ],
           ),
         ],
       ),

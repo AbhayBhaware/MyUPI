@@ -461,6 +461,21 @@ object SharedPreferencesManager {
         Log.d(TAG, "Payment history cleared.")
     }
 
+    /**
+     * Wipes merchant session and payment history on logout.
+     * Guarantees complete data isolation between different accounts on the same device.
+     */
+    @Synchronized
+    fun resetSession() {
+        prefs.edit()
+            .remove(KEY_HISTORY)
+            .remove(KEY_MERCHANT_NAME)
+            .remove(KEY_MERCHANT_ID)
+            .remove(KEY_INCLUDE_SHOP_NAME)
+            .apply()
+        Log.d(TAG, "Merchant session and payment history completely reset.")
+    }
+
     // ── Diagnostic Logging (Zero-PII) ─────────────────────────────────────────
 
     private const val KEY_DIAGNOSTIC_LOGS = "diagnostic_logs"

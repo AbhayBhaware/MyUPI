@@ -19,6 +19,7 @@ import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_typography.dart';
 import '../../tts_service.dart';
+import '../../utils/upi_validator.dart';
 
 class SetupWizardScreen extends StatefulWidget {
   final User user;
@@ -49,15 +50,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   bool _isLoading = false;
   String? _duplicateAccountWarning;
 
-  final List<String> _upiHandles = const [
-    '@okhdfcbank',
-    '@okaxis',
-    '@oksbi',
-    '@okicici',
-    '@ybl',
-    '@paytm',
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -77,20 +69,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   }
 
   bool get _isStep1Valid => _shopNameController.text.trim().isNotEmpty;
-
-  void _applyHandle(String handle) {
-    HapticFeedback.selectionClick();
-    final text = _upiIdController.text.trim();
-    if (text.isEmpty) {
-      _upiIdController.text = handle;
-    } else if (text.contains('@')) {
-      final prefix = text.split('@').first;
-      _upiIdController.text = '$prefix$handle';
-    } else {
-      _upiIdController.text = '$text$handle';
-    }
-    setState(() {});
-  }
 
   void _playSampleAnnouncement() {
     final shop = _shopNameController.text.trim();
@@ -125,6 +103,20 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     final phone = widget.user.phoneNumber ?? '';
     final email = widget.user.email ?? '';
     final upiId = _upiIdController.text.trim().toLowerCase();
+    if (upiId.isNotEmpty) {
+      final valRes = UpiValidator.validate(upiId);
+      if (!valRes.isValid) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(valRes.errorMessage ?? 'Invalid UPI ID format.'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+    }
 
     String authMethod = 'phone';
     if (widget.user.providerData.any((p) => p.providerId == 'google.com')) {
@@ -521,42 +513,62 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             controller: _upiIdController,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.done,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             style: const TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 15),
+            onChanged: (_) => setState(() {}),
             decoration: const InputDecoration(
-              hintText: 'e.g. shopname@okhdfcbank',
+              hintText: 'e.g. 9876543210@ybl or shop@okhdfcbank',
               prefixIcon: Icon(Icons.qr_code_rounded, color: AppColors.primaryBlue),
             ),
             validator: (val) {
-              if (val != null && val.trim().isNotEmpty && !val.trim().contains('@')) {
-                return 'UPI ID must contain @ (e.g. name@okhdfcbank).';
+              if (val != null && val.trim().isNotEmpty) {
+                final res = UpiValidator.validate(val);
+                if (!res.isValid) {
+                  return res.errorMessage;
+                }
               }
               return null;
             },
           ),
-          const SizedBox(height: 8),
 
-          // ── Handle suggestion chips ───────────────────────────────────────
-          const Text(
-            'Popular handle suggestions:',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: _upiHandles.map((handle) {
-              return ActionChip(
-                label: Text(
-                  handle,
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primaryBlue),
+          // ── Clean App Name Pill (Only shows App Name: PhonePe, Paytm, Google Pay, BHIM) ──
+          Builder(
+            builder: (context) {
+              final text = _upiIdController.text.trim();
+              if (text.isEmpty) return const SizedBox.shrink();
+              final appName = UpiValidator.getAppName(text);
+              if (appName == null) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.softBlueBorder),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.check_circle_rounded, size: 14, color: AppColors.primaryBlue),
+                          const SizedBox(width: 5),
+                          Text(
+                            appName,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primaryBlue,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                backgroundColor: AppColors.lightBlue,
-                side: const BorderSide(color: AppColors.softBlueBorder),
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                visualDensity: VisualDensity.compact,
-                onPressed: () => _applyHandle(handle),
               );
-            }).toList(),
+            },
           ),
           const SizedBox(height: AppSpacing.xl),
 

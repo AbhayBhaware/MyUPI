@@ -15,6 +15,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../app_channels.dart';
 import 'firestore_service.dart';
 
 class AuthService {
@@ -226,7 +227,8 @@ class AuthService {
 
   // ─── Sign Out & Local State Clean Up ───────────────────────────────────────
 
-  /// Clean sign-out: signs out of Firebase Auth, Google, and wipes local caches.
+  /// Clean sign-out: signs out of Firebase Auth, Google, wipes local device payment history,
+  /// resets native soundbox profile, and clears all offline caches (Option 1 - Clean Slate).
   Future<void> signOut() async {
     try {
       await GoogleSignIn().signOut();
@@ -234,6 +236,15 @@ class AuthService {
     try {
       await _auth?.signOut();
     } catch (_) {}
+
+    // Reset local merchant session and payment history on device
+    // to guarantee financial confidentiality and avoid leaking history to the next logged-in user.
+    try {
+      await kMethodChannel.invokeMethod('resetSession');
+    } catch (e) {
+      debugPrint('[AuthService] Failed to reset native session: $e');
+    }
+
     FirestoreService.instance.clearLocalCache();
   }
 
@@ -251,7 +262,12 @@ class AuthService {
     // 2. Delete the Firebase user
     await user.delete();
 
-    // 3. Sign out of Google & cleanup local cache
+    // 3. Reset native soundbox session & payment history
+    try {
+      await kMethodChannel.invokeMethod('resetSession');
+    } catch (_) {}
+
+    // 4. Sign out of Google & cleanup local cache
     try {
       await GoogleSignIn().signOut();
     } catch (_) {}
