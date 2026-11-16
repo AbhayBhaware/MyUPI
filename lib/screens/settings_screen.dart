@@ -181,11 +181,18 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
         setState(() => _language = langCode);
         await kMethodChannel.invokeMethod('setLanguage', {'language': langCode});
       } else {
+        setState(() => _language = langCode);
+        await kMethodChannel.invokeMethod('setLanguage', {'language': langCode});
+        final langName = kLanguages[langCode] ?? langCode;
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Selected language is not available on this device voice engine.'),
-            backgroundColor: AppColors.warning,
+          SnackBar(
+            content: Text(
+              '$langName selected. If silent, install device voice data in Android Settings or enable Human Voice.',
+            ),
+            backgroundColor: AppColors.primaryBlue,
             behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 4),
           ),
         );
       }

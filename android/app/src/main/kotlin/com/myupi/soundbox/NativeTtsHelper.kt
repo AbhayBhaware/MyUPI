@@ -27,7 +27,9 @@ private const val TAG = "MyUPI_BACKGROUND"
 class NativeTtsHelper(private val context: Context) : TextToSpeech.OnInitListener {
 
     private val tts: TextToSpeech = TextToSpeech(context.applicationContext, this)
+    @Volatile
     private var isReady = false
+    private val initLatch = java.util.concurrent.CountDownLatch(1)
     private val pendingQueue: LinkedList<String> = LinkedList()
 
     private fun isHumanVoiceEnabled(): Boolean {
@@ -73,36 +75,69 @@ class NativeTtsHelper(private val context: Context) : TextToSpeech.OnInitListene
     // ── TextToSpeech.OnInitListener ──────────────────────────────────────────
 
     override fun onInit(status: Int) {
-        if (status == TextToSpeech.SUCCESS) {
-            val lang = SharedPreferencesManager.getLanguage()
-            setLanguageWithFallback(lang)
-            // Read persisted speech speed (Slow/Normal/Fast).
-            tts.setSpeechRate(SharedPreferencesManager.getSpeechRate())
-            tts.setPitch(1.0f)
-            isReady = true
-            Log.d(TAG, "TTS initialized successfully (rate=${SharedPreferencesManager.getSpeechRate()}).")
-            drainQueue()             // speak anything that was queued before init
-        } else {
-            Log.e(TAG, "TTS initialization failed (status=$status). Background TTS unavailable.")
+        try {
+            if (status == TextToSpeech.SUCCESS) {
+                val lang = SharedPreferencesManager.getLanguage()
+                setLanguageWithFallback(lang)
+                // Read persisted speech speed (Slow/Normal/Fast).
+                tts.setSpeechRate(SharedPreferencesManager.getSpeechRate())
+                tts.setPitch(1.0f)
+                isReady = true
+                Log.d(TAG, "TTS initialized successfully (rate=${SharedPreferencesManager.getSpeechRate()}).")
+                drainQueue()             // speak anything that was queued before init
+            } else {
+                Log.e(TAG, "TTS initialization failed (status=$status). Background TTS unavailable.")
+            }
+        } finally {
+            initLatch.countDown()
         }
     }
 
     // ── Language setup ───────────────────────────────────────────────────────
 
     fun isLanguageAvailable(langCode: String): Boolean {
-        if (!isReady) return false
+        // 1. If human-voice offline pack exists for this language, it is guaranteed available
+        if (ClipAnnouncer.isPackAvailable(context, langCode)) {
+            return true
+        }
+
+        // 2. Wait up to 1500 ms for TTS engine to initialize if not ready
+        if (!isReady) {
+            try {
+                initLatch.await(1500, java.util.concurrent.TimeUnit.MILLISECONDS)
+            } catch (_: InterruptedException) {}
+        }
+
+        if (!isReady) {
+            // If TTS engine is still not ready, check if it's one of the supported Indic languages
+            return SpeechTemplateBuilder.brandNames.containsKey(langCode)
+        }
+
         val parts = langCode.split("-")
-        val locale = if (parts.size == 2) Locale(parts[0], parts[1]) else Locale(langCode)
-        val result = tts.isLanguageAvailable(locale)
-        return result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED
+        val fullLocale = if (parts.size == 2) Locale(parts[0], parts[1]) else Locale(langCode)
+        val langOnlyLocale = Locale(parts[0])
+
+        val fullRes = tts.isLanguageAvailable(fullLocale)
+        if (fullRes >= TextToSpeech.LANG_AVAILABLE || fullRes == TextToSpeech.LANG_MISSING_DATA) {
+            return true
+        }
+
+        val langRes = tts.isLanguageAvailable(langOnlyLocale)
+        if (langRes >= TextToSpeech.LANG_AVAILABLE || langRes == TextToSpeech.LANG_MISSING_DATA) {
+            return true
+        }
+
+        return SpeechTemplateBuilder.brandNames.containsKey(langCode)
     }
 
     private fun setLanguageWithFallback(langCode: String) {
         val parts = langCode.split("-")
         val targetLocale = if (parts.size == 2) Locale(parts[0], parts[1]) else Locale(langCode)
+        val langOnlyLocale = Locale(parts[0])
         
         val candidates = listOf(
             targetLocale,
+            langOnlyLocale,
             Locale("en", "IN"),
             Locale.US,
             Locale.UK,
@@ -110,9 +145,11 @@ class NativeTtsHelper(private val context: Context) : TextToSpeech.OnInitListene
         )
         for (locale in candidates) {
             val result = tts.setLanguage(locale)
-            if (result != TextToSpeech.LANG_MISSING_DATA &&
-                result != TextToSpeech.LANG_NOT_SUPPORTED) {
+            if (result >= TextToSpeech.LANG_AVAILABLE) {
                 Log.d(TAG, "TTS language set to: $locale")
+                return
+            } else if (result == TextToSpeech.LANG_MISSING_DATA && (locale == targetLocale || locale == langOnlyLocale)) {
+                Log.d(TAG, "TTS language set to: $locale (voice data downloading/missing)")
                 return
             }
         }
@@ -201,20 +238,35 @@ class NativeTtsHelper(private val context: Context) : TextToSpeech.OnInitListene
         }
     }
 
-    /** Release the TTS engine. Call from NotificationListenerService.onDestroy(). */
+    /** Release the TTS engine. */
     fun shutdown() {
         try {
             tts.stop()
             tts.shutdown()
+            isReady = false
+            synchronized(NativeTtsHelper::class.java) {
+                if (instance == this) {
+                    instance = null
+                }
+            }
             Log.d(TAG, "TTS shut down.")
         } catch (e: Exception) {
             Log.e(TAG, "TTS shutdown error: ${e.message}")
         }
     }
 
-    // ── Speech text builder ──────────────────────────────────────────────────
+    // ── Speech text builder & Singleton ──────────────────────────────────────
 
     companion object {
+        @Volatile
+        private var instance: NativeTtsHelper? = null
+
+        fun getInstance(context: Context): NativeTtsHelper {
+            return instance ?: synchronized(this) {
+                instance ?: NativeTtsHelper(context.applicationContext).also { instance = it }
+            }
+        }
+
         fun buildPaymentSpeech(rawAmount: String): String {
             val lang = SharedPreferencesManager.getLanguage()
             val formatType = SharedPreferencesManager.getAnnouncementFormat()

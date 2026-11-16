@@ -160,7 +160,7 @@ class SmsReceiver : BroadcastReceiver() {
 
                     if (soundboxEnabled) {
                         Log.d(TAG, "TTS: Speaking SMS payment of ₹${result.amount}")
-                        val helper = PaymentNotificationListener.ttsHelper ?: NativeTtsHelper(context.applicationContext)
+                        val helper = NativeTtsHelper.getInstance(context.applicationContext)
                         helper.speakPayment(result.amount)
                     } else {
                         Log.d(TAG, "TTS: Soundbox OFF — skipping announcement for SMS payment.")

@@ -26,7 +26,6 @@ import '../widgets/qr_code_card.dart';
 import 'paywall_screen.dart';
 import '../services/counter_kiosk_service.dart';
 import '../utils/currency_formatter.dart';
-import '../utils/upi_validator.dart';
 import '../widgets/volume_indicator_pill.dart';
 import '../widgets/upi_id_verification_dialog.dart';
 

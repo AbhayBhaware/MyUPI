@@ -108,7 +108,7 @@ class PaymentNotificationListener : NotificationListenerService() {
         Log.d(TAG, "PaymentNotificationListener created — initializing storage and TTS.")
         // Initialize persistent storage first (required before TTS reads speech rate).
         SharedPreferencesManager.init(applicationContext)
-        ttsHelper = NativeTtsHelper(applicationContext)
+        ttsHelper = NativeTtsHelper.getInstance(applicationContext)
     }
 
     override fun onListenerConnected() {
@@ -121,7 +121,7 @@ class PaymentNotificationListener : NotificationListenerService() {
             Log.e(TAG, "Failed to initialize SharedPreferencesManager: ${e.message}")
         }
         if (ttsHelper == null) {
-            ttsHelper = NativeTtsHelper(applicationContext)
+            ttsHelper = NativeTtsHelper.getInstance(applicationContext)
         }
 
         // Reliability Technique 1: Reconcile on reconnect (Master Brief Part 1a)
@@ -143,9 +143,8 @@ class PaymentNotificationListener : NotificationListenerService() {
 
     override fun onDestroy() {
         super.onDestroy()
-        ttsHelper?.shutdown()
         ttsHelper = null
-        Log.d(TAG, "PaymentNotificationListener destroyed — TTS shut down.")
+        Log.d(TAG, "PaymentNotificationListener destroyed.")
     }
 
     override fun onNotificationRankingUpdate(rankingMap: RankingMap?) {

@@ -213,7 +213,6 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
 
   Widget _buildArchitectureCard(ThemeData theme) {
     final parserVer = _diagnostics['parserVersion'] ?? 1;
-    final smsParserVer = _diagnostics['smsParserVersion'] ?? 1;
     final pkgCount = _diagnostics['supportedPackagesCount'] ?? 12;
     final packages = (_diagnostics['supportedPackages'] as List<dynamic>?)
             ?.map((e) => e.toString())

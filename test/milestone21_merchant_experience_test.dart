@@ -382,10 +382,10 @@ void main() {
       expect(find.text('Abhay General Store'), findsOneWidget);
 
       // Pro Redesign Soundbox Status Card (Section 4.1)
-      expect(find.text('Soundbox is ON'), findsOneWidget);
+      expect(find.text('Soundbox is Active'), findsOneWidget);
 
       // Last payment hero card
-      expect(find.text('Last payment'), findsOneWidget);
+      expect(find.text('LATEST PAYMENT'), findsOneWidget);
       expect(find.text('₹500'), findsWidgets);
       expect(find.textContaining('PhonePe'), findsWidgets);
     });

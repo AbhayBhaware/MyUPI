@@ -30,6 +30,9 @@ class MainActivity : FlutterActivity() {
         // Initialize SharedPreferences (safe to call multiple times — idempotent).
         SharedPreferencesManager.init(applicationContext)
 
+        // Pre-initialize NativeTtsHelper singleton early so it is warm and ready
+        NativeTtsHelper.getInstance(applicationContext)
+
         // ── MethodChannel ─────────────────────────────────────────────────────
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, METHOD_CHANNEL)
             .setMethodCallHandler { call, result ->
@@ -179,7 +182,7 @@ class MainActivity : FlutterActivity() {
 
                     // ── TTS test ──────────────────────────────────────────────
                     "speakTest" -> {
-                        PaymentNotificationListener.ttsHelper?.speakTest()
+                        NativeTtsHelper.getInstance(applicationContext).speakTest()
                         result.success(null)
                     }
 
@@ -201,7 +204,7 @@ class MainActivity : FlutterActivity() {
                         val speed = call.argument<String>("speed") ?: "normal"
                         try {
                             SharedPreferencesManager.setSpeechSpeed(speed)
-                            PaymentNotificationListener.ttsHelper?.updateSpeechRate()
+                            NativeTtsHelper.getInstance(applicationContext).updateSpeechRate()
                         } catch (e: IllegalArgumentException) {
                             result.error("INVALID_SPEED", e.message, null)
                             return@setMethodCallHandler
@@ -281,12 +284,12 @@ class MainActivity : FlutterActivity() {
                     "setLanguage" -> {
                         val lang = call.argument<String>("language") ?: "en-IN"
                         SharedPreferencesManager.setLanguage(lang)
-                        PaymentNotificationListener.ttsHelper?.updateLanguage()
+                        NativeTtsHelper.getInstance(applicationContext).updateLanguage()
                         result.success(null)
                     }
                     "checkLanguageAvailability" -> {
                         val lang = call.argument<String>("language") ?: "en-IN"
-                        val available = PaymentNotificationListener.ttsHelper?.isLanguageAvailable(lang) ?: false
+                        val available = NativeTtsHelper.getInstance(applicationContext).isLanguageAvailable(lang)
                         result.success(available)
                     }
 

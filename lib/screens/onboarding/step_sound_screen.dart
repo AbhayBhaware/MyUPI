@@ -81,15 +81,22 @@ class _StepSoundScreenState extends State<StepSoundScreen> {
         {'language': langCode},
       );
       if (available == true) {
+        if (!mounted) return;
         setState(() => _language = langCode);
         await kMethodChannel.invokeMethod('setLanguage', {'language': langCode});
       } else {
         if (!mounted) return;
+        setState(() => _language = langCode);
+        await kMethodChannel.invokeMethod('setLanguage', {'language': langCode});
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Selected language is not available on this device voice engine.'),
-            backgroundColor: AppColors.warning,
+            content: Text(
+              'Language selected. If silent, install device voice data in Android Settings or enable Human Voice in Settings.',
+            ),
+            backgroundColor: AppColors.primaryBlue,
             behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 4),
           ),
         );
       }
